@@ -1,0 +1,59 @@
+/* Faultline explainer: shared look (DESIGN.md). Every scene links this file. */
+@font-face { font-family: "CM Serif"; src: url("../assets/katex/fonts/KaTeX_Main-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "CM Serif"; src: url("../assets/katex/fonts/KaTeX_Main-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "CM Serif"; src: url("../assets/katex/fonts/KaTeX_Main-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Plex Mono"; src: url("../assets/fonts/ibm-plex-mono-latin-300-normal.woff2") format("woff2"); font-weight: 300; }
+@font-face { font-family: "Plex Mono"; src: url("../assets/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Plex Mono"; src: url("../assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; }
+@font-face { font-family: "Plex Mono"; src: url("../assets/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+
+:root {
+  --canvas: #0b0c10;
+  --ink: #ece6d8;
+  --muted: #8a909b;      /* footnotes, labels: brightened from #5d6470 to pass contrast on the canvas */
+  --faint: #3a3f48;      /* grids, faint edges (decorative only, never text) */
+  --blue: #58c4dd;       /* true data, proposer */
+  --yellow: #f7d96f;     /* guess, chosen path */
+  --green: #83c167;      /* pass, verifier */
+  --red: #fc6255;        /* fail */
+  --purple: #b48fc4;     /* map, coverage (Manim purple, lifted for contrast) */
+  --serif: "CM Serif", Georgia, serif;
+  --mono: "Plex Mono", ui-monospace, Menlo, monospace;
+}
+
+/* each scene puts this in its own <style> (the scoper only rewrites #root there):
+   #root { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; color: var(--ink); font-family: var(--serif);
+           background: radial-gradient(ellipse 70% 60% at 50% 45%, #13151c 0%, var(--canvas) 70%); }
+   It is opaque, so a scene's fade-in (K.enter) crossfades over the scene before it. */
+
+.scene-content { width: 100%; height: 100%; padding: 120px 160px; display: flex; flex-direction: column; gap: 32px; box-sizing: border-box; }
+
+.serif { font-family: var(--serif); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.title { font-family: var(--serif); font-size: 96px; letter-spacing: -0.01em; line-height: 1.05; }
+.head { font-family: var(--serif); font-size: 64px; line-height: 1.1; }
+.label { font-family: var(--serif); font-size: 36px; }
+.data { font-family: var(--mono); font-weight: 300; font-size: 28px; font-variant-numeric: tabular-nums; }
+.num { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.foot { font-family: var(--mono); font-weight: 400; font-size: 22px; color: var(--muted); }
+.blue { color: var(--blue); } .yellow { color: var(--yellow); } .green { color: var(--green); }
+.red { color: var(--red); } .purple { color: var(--purple); } .muted { color: var(--muted); }
+
+/* the corner strip that names this part's proposer and verifier */
+.strip { position: absolute; top: 48px; right: 64px; display: flex; gap: 28px; align-items: center; font-family: var(--mono); font-size: 22px; color: var(--muted); }
+.strip .role { display: flex; gap: 10px; align-items: center; }
+.strip .dot { width: 12px; height: 12px; border-radius: 50%; }
+.strip b { font-weight: 500; color: var(--ink); }
+
+/* model text typed by K.words / K.typeIn: highlighted words */
+.hl { color: var(--yellow); }
+
+/* a vocabulary token (K.tok): mono chip; .sp marks a leading space; .gloss is a small English note under CJK */
+.tok { display: inline-flex; flex-direction: column; align-items: center; padding: 6px 14px; border-radius: 8px; background: #1a1d24;
+       font-family: var(--mono); font-size: 30px; color: var(--ink); white-space: pre; }
+.tok .row { display: inline-flex; align-items: baseline; }
+.tok .sp { color: var(--muted); margin-right: 2px; }
+.tok .gloss { font-family: var(--serif); font-size: 22px; color: var(--muted); margin-top: 2px; }
+
+svg text { font-family: var(--mono); }
+canvas { display: block; }

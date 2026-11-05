@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "explainer-video",
+  "description": "Make narrated, animated explainer videos with Claude Code.",
+  "owner": {
+    "name": "Ryan Hartman",
+    "url": "https://github.com/ryanhartman4"
+  },
+  "plugins": [
+    {
+      "name": "explainer-video",
+      "description": "Narrated, animated explainer videos in the 3Blue1Brown style, plus a setup skill that gets a Mac ready.",
+      "source": "./",
+      "version": "1.0.0",
+      "category": "productivity"
+    }
+  ]
+}

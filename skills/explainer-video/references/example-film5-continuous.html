@@ -1,0 +1,385 @@
+<!-- Film 5 (permanent underclass explainer): a CONTINUOUS film, one sub-composition for the whole film. The contract:
+     <template id="film-template"> around <div data-composition-id="film" id="root">; a #film-root container (missing-cue
+     text and the harness use it); scripts in this order: data/timing.js, the film's data, data/captions.js, three.min.js,
+     lib/three-extras.js, lib/fl.js, lib/clawd.js, then the timeline; cues by K.at (root time); captions drawn from window.CAPS
+     when window.__FILM_VARS.captions (see "captions (X cut only)"); register window.__timelines["film"]. -->
+<template id="film-template">
+  <div data-composition-id="film" data-width="1920" data-height="1080" id="root">
+    <link rel="stylesheet" href="../lib/fl.css" />
+    <style>
+      #root { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; color: var(--ink); font-family: var(--serif);
+              background: radial-gradient(ellipse 70% 60% at 50% 45%, #13151c 0%, var(--canvas) 70%); }
+      #film-root { position: absolute; inset: 0; }
+      .layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      #f-title { position: absolute; left: 160px; top: 168px; width: 980px; font-size: 84px; line-height: 1.08; letter-spacing: -0.01em; }
+      .rung { position: absolute; right: 1222px; text-align: right; font-size: 26px; line-height: 30px; color: var(--muted); white-space: nowrap; }
+      #f-ytitle { position: absolute; right: 1222px; top: 100px; font-size: 30px; color: var(--ink); white-space: nowrap; }
+      #f-xtitle { position: absolute; left: 1030px; top: 924px; width: 120px; text-align: center; font-size: 30px; color: var(--ink); }
+      #f-bandlab { position: absolute; left: 744px; top: 509px; font-size: 28px; line-height: 36px; font-style: italic; color: var(--ink); white-space: nowrap; }
+      #f-pu { position: relative; }
+      #f-strike { position: absolute; left: -6px; right: -6px; top: 20px; height: 3px; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); }
+      .leg { position: absolute; left: 760px; display: flex; align-items: center; gap: 14px; font-size: 28px; white-space: nowrap; }
+      .leg i { display: block; width: 40px; height: 5px; border-radius: 3px; }
+      #f-foot { position: absolute; right: 60px; top: 96px; width: 500px; text-align: right; font-family: var(--mono); font-size: 26px; line-height: 34px; color: var(--muted); }
+      #f-tib { position: absolute; left: 1040px; top: 928px; width: 400px; text-align: right; font-size: 28px; color: var(--ink); white-space: nowrap; }
+      #f-q { position: absolute; left: 1466px; top: 350px; font-size: 44px; line-height: 48px; font-style: italic; color: var(--amber, #f2b33d); }
+      #f-end { position: absolute; right: 60px; top: 96px; text-align: right; font-family: var(--mono); font-size: 32px; color: var(--ink); white-space: nowrap; }
+      #f-endfoot { position: absolute; right: 60px; top: 148px; text-align: right; font-family: var(--mono); font-size: 26px; line-height: 34px; color: var(--muted); white-space: nowrap; }
+      #f-caps { position: absolute; left: 0; right: 0; top: 982px; height: 76px; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+      .cap { position: absolute; padding: 12px 22px 13px; border-radius: 8px; background: rgba(11,12,16,0.86); font-size: 36px; line-height: 44px; color: var(--ink); white-space: nowrap; opacity: 0; }
+      #f-illus { position: absolute; left: 160px; top: 930px; font-family: var(--mono); font-size: 26px; color: var(--muted); white-space: nowrap; }
+      #f-black { position: absolute; inset: 0; background: #000; opacity: 0; }
+      .later { opacity: 0; }
+      .reveal { clip-path: inset(0% 100% 0% 0%); }
+    </style>
+
+    <div id="film-root">
+      <svg class="layer" id="f-svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+      <div class="layer" id="f-dom">
+        <div id="f-title">Will AI create a<br />permanent underclass?</div>
+        <div id="f-ytitle" class="reveal">Economically useful AI capabilities</div>
+        <div id="f-xtitle" class="reveal">Time</div>
+        <div id="f-bandlab">conditions for a <span id="f-pu">permanent underclass<i id="f-strike"></i></span></div>
+        <div class="leg reveal" id="f-leg1" style="top:150px"><i style="background:var(--yellow)"></i><span style="color:var(--yellow)">capital holders</span></div>
+        <div class="leg reveal" id="f-leg2" style="top:194px"><i style="background:var(--blue)"></i><span style="color:var(--blue)">everyone else</span></div>
+        <div class="leg later" id="f-leg3" style="top:172px"><i style="background:var(--green)"></i><span style="color:var(--green)">everyone</span></div>
+        <div id="f-foot" class="reveal">why the gap might stop closing:<br />Trammell &amp; Patel,<br />“Capital in the 22nd Century”<br />(2025)</div>
+        <div id="f-tib" class="later">time in the band</div>
+        <div id="f-q" class="later">?</div>
+        <div id="f-end" class="reveal">yoursite.com</div>
+        <div id="f-endfoot" class="later">Claw'd is fan art of<br />Claude Code's mascot,<br />not made or endorsed<br />by Anthropic</div>
+        <div id="f-illus" class="later">illustrative · time has no units</div>
+      </div>
+      <div class="layer" id="f-stage"></div>
+      <div id="f-caps"></div>
+      <div id="f-black"></div>
+    </div>
+
+    <script src="../data/timing.js"></script>
+    <script src="../data/chart.js"></script>
+    <script src="../data/captions.js"></script>
+    <script src="../assets/vendor/three.min.js"></script>
+    <script src="../lib/three-extras.js"></script>
+    <script src="../lib/fl.js"></script>
+    <script src="../lib/clawd.js"></script>
+    <script>
+      (() => {
+        const C = window.CHART, tl = gsap.timeline({ paused: true });
+        const $ = id => document.getElementById(id);
+        const at = (n, w, o = 1, off = 0) => K.at(n, w, o, off), atEnd = (n, w, o = 1, off = 0) => K.atEnd(n, w, o, off);
+        const TOTAL = window.TIMING.total;
+        const INK = "#ece6d8", MUTED = "#8a909b", FAINT = "#3a3f48", YEL = "#f7d96f", BLU = "#58c4dd", GRN = "#83c167", RED = "#fc6255", AMB = "#f2b33d";
+
+        // ---------------- geometry: the chart's origin, its scales, and Claw'd's ground ----------------
+        const O = { x: 720, y: 900 }, XR = 1460, YT = 140;
+        const SX = (XR - O.x) / C.X_RIGHT, SY = (O.y - YT) / C.Y_TOP;
+        const px = t => O.x + t * SX, py = y => O.y - y * SY;
+        const svg = $("f-svg"), dom = $("f-dom");
+        const S = K.svg;
+
+        // band, amber wash, drops and braces (under the lines)
+        const band = S("rect", { x: O.x, y: py(C.UPPER), width: XR - O.x, height: (C.UPPER - C.LOWER) * SY, fill: RED, "fill-opacity": 0.15 }, svg);
+        const wash = S("rect", { x: O.x, y: py(6.6), width: XR - O.x, height: (6.6 - C.UPPER) * SY, fill: AMB, "fill-opacity": 0 }, svg);
+        const edges = [C.LOWER, C.UPPER].map(y => S("line", { x1: O.x, y1: py(y), x2: O.x, y2: py(y), stroke: RED, "stroke-width": 2, "stroke-dasharray": "9 7" }, svg));
+        const T_YIN = C.cross(C.capital, C.LOWER, C.T_SPLIT);            // capital holders enter the band first
+        const drops = [[T_YIN, C.LOWER], [C.T_OUT, C.UPPER]].map(([t, y]) => S("line", { x1: px(t), y1: py(y), x2: px(t), y2: py(y), stroke: INK, "stroke-width": 1.5, "stroke-dasharray": "5 5", opacity: 0.8 }, svg));
+        const tbx0 = px(T_YIN), tbx1 = px(C.T_OUT);
+        const tbrace = S("path", { d: `M${tbx0},910 L${tbx0},918 L${tbx1},918 L${tbx1},910 M${(tbx0 + tbx1) / 2},918 L${(tbx0 + tbx1) / 2},926`, fill: "none", stroke: INK, "stroke-width": 2, opacity: 0 }, svg);
+
+        // the ground: the time axis, and Claw'd's floor to its right (there from frame 0)
+        S("line", { x1: 1480, y1: O.y, x2: 1860, y2: O.y, stroke: FAINT, "stroke-width": 2 }, svg);
+        const xaxis = S("line", { x1: O.x, y1: O.y, x2: O.x, y2: O.y, stroke: MUTED, "stroke-width": 2 }, svg);
+
+        // the capability axis and its rungs, built upright and turned flat (rot 90 = lying along the floor)
+        const ladder = S("g", {}, svg);
+        const yaxis = S("line", { x1: O.x, y1: O.y, x2: O.x, y2: O.y, stroke: MUTED, "stroke-width": 2 }, ladder);
+        const ticks = C.LEVELS.map(L => S("line", { x1: O.x - 10, y1: py(L.y), x2: O.x + 10, y2: py(L.y), stroke: MUTED, "stroke-width": 2, opacity: 0 }, ladder));
+        const labels = C.LEVELS.map((L, i) => K.el("div", { class: "rung reveal", id: `f-r${i}`, html: L.lines.join("<br>"),
+          style: `top:${Math.round(py(L.y) - (L.lines.length * 30) / 2)}px` }, dom));
+
+        // the lines: everyone (ink) until the split, capital holders (yellow) and everyone else (blue) until the merge,
+        // then everyone (green). Each is a polyline cut at the pen's chart time.
+        const leadArea = S("path", { fill: YEL, "fill-opacity": 0, stroke: "none" }, svg);          // the lead, between the lines
+        const gLines = S("g", {}, svg);
+        const mk = (col, w = 5) => S("path", { fill: "none", stroke: col, "stroke-width": w, "stroke-linecap": "round", "stroke-linejoin": "round" }, gLines);
+        const pWhite = mk(INK), pBlue = mk(BLU), pYel = mk(YEL), pGreen = mk(GRN);
+        const pSlow = S("path", { fill: "none", stroke: AMB, "stroke-width": 5, "stroke-linecap": "round", "stroke-dasharray": "2 12", opacity: 0 }, gLines);
+        const gbrace = S("path", { fill: "none", stroke: INK, "stroke-width": 2, opacity: 0 }, svg);
+        const gDots = S("g", {}, svg);
+        const heads = [INK, BLU, YEL, GRN].map(c => S("circle", { r: 7, cx: O.x, cy: O.y, fill: c, opacity: 0 }, gDots));
+        const arrow = S("polygon", { fill: GRN, opacity: 0 }, svg);
+
+        const DT = 0.004, sample = f => { const a = []; for (let t = 0; t <= C.T_END + 1e-9; t += DT) a.push([px(t), py(f(t))]); return a; };
+        const ptsCap = sample(C.capability), ptsCapi = sample(C.capital);
+        const cut = (pts, f, a, b) => {                                    // polyline of f from chart time a to b
+          if (b <= a) return "";
+          const i0 = Math.ceil(a / DT), i1 = Math.floor(b / DT), out = [[px(a), py(f(a))]];
+          for (let i = i0; i <= i1; i++) out.push(pts[i]);
+          out.push([px(b), py(f(b))]);
+          return "M" + out.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
+        };
+
+        // ---------------- the pen: chart time of the leading line, as a function of root time ----------------
+        // Linear for the long climb (progress), an ease-out into the hypothetical stall, an ease-in for the takeoff
+        // (it accelerates through the band in about 0.7 s), an ease-out into the merge, then on up to Dyson spheres.
+        const T_STALL = C.T_IN - 0.12;
+        const SEG = [
+          { a: at(4, "climbs", 1, -0.3), b: at(4, "splits"), from: 0, to: C.T_SPLIT, ease: "none" },
+          { a: at(4, "splits"), b: at(4, "stalled", 1, 0.15), from: C.T_SPLIT, to: T_STALL, ease: "power1.out" },
+          { a: at(5, "takeoff"), b: atEnd(5, "blink", 1, 0.05), from: T_STALL, to: C.T_OUT + 0.03, ease: "power3.in" },
+          { a: atEnd(5, "blink", 1, 0.05), b: atEnd(5, "blink", 1, 0.55), from: C.T_OUT + 0.03, to: C.T_OUT + 0.06, ease: "power2.out" },
+          { a: at(5, "catches", 1, -0.2), b: at(5, "one"), from: C.T_OUT + 0.06, to: C.T_MERGE, ease: "power1.inOut" },
+          { a: at(5, "one"), b: at(5, "one", 1, 1.7), from: C.T_MERGE, to: C.T_END, ease: "power1.in" },
+        ];
+        const EASE = SEG.map(s => gsap.parseEase(s.ease));
+        // the root time the pen reaches chart time tau (inverts each segment's ease by bisection)
+        const when = tau => {
+          for (let k = 0; k < SEG.length; k++) {
+            const s = SEG[k];
+            if (tau < s.from - 1e-9 || tau > s.to + 1e-9) continue;
+            const p = (tau - s.from) / (s.to - s.from);
+            let lo = 0, hi = 1;
+            for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; EASE[k](m) < p ? (lo = m) : (hi = m); }
+            return s.a + ((lo + hi) / 2) * (s.b - s.a);
+          }
+          return null;
+        };
+
+        // ---------------- Claw'd ----------------
+        const cl = K.clawd($("f-stage"), { w: 420, h: 420, feet: [1670, O.y], seed: 5 });
+        const st = Object.assign(cl.pose, {
+          pen: 0, rot: 90, ax: 0, xax: 0, band: 0.15, edge: 0, wash: 0, drop: 0, follow: 0, fx: 520, fy: 280, arrow: 0,
+          lead: 0, grip: 1, slow: 0, lo: 0, up: 0,
+        });
+        K.feelInit(st, "curious");                                           // the poster frame shows it, no tween
+        // the slower climb (paragraph 7): a quadratic from where the line leaves the band, bending right, to blue-collar work
+        const SL0 = [C.T_OUT, C.UPPER], SL1 = [C.T_OUT + 0.12, C.UPPER + 0.75], SL2 = [10.35, 6.6];
+        const SLOW = u => { const a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; return [px(a * SL0[0] + b * SL1[0] + c * SL2[0]), py(a * SL0[1] + b * SL1[1] + c * SL2[1])]; };
+        const tip = () => [px(st.pen), py(C.capability(st.pen))];          // the leading point of everyone else's line, for Claw'd's gaze
+        const go = K.driver(tl, st, (p, t) => {
+          // ladder: turn, axis length
+          ladder.setAttribute("transform", `rotate(${p.rot.toFixed(3)} ${O.x} ${O.y})`);
+          yaxis.setAttribute("y2", O.y - (O.y - YT) * p.ax);
+          xaxis.setAttribute("x2", O.x + (XR - O.x) * p.xax);
+          band.setAttribute("fill-opacity", p.band);
+          edges.forEach(e => e.setAttribute("x2", O.x + (XR - O.x) * p.edge));
+          edges[0].setAttribute("stroke-width", 2 + 1.5 * p.lo); edges[1].setAttribute("stroke-width", 2 + 1.5 * p.up);
+          wash.setAttribute("fill-opacity", 0.1 * p.wash);
+          drops.forEach((d, i) => d.setAttribute("y2", +d.getAttribute("y1") + (O.y - +d.getAttribute("y1")) * p.drop));
+          // lines
+          const t0 = p.pen;
+          pWhite.setAttribute("d", cut(ptsCap, C.capability, 0, Math.min(t0, C.T_SPLIT)));
+          const mEnd = Math.min(t0, C.T_MERGE);
+          pBlue.setAttribute("d", cut(ptsCap, C.capability, C.T_SPLIT, mEnd));
+          pYel.setAttribute("d", cut(ptsCapi, C.capital, C.T_SPLIT, mEnd));
+          pYel.setAttribute("opacity", 0.45 + 0.55 * p.grip);
+          if (p.lead > 0 && mEnd > C.T_SPLIT) {                               // capital's curve forward, everyone else's back
+            const top = cut(ptsCapi, C.capital, C.T_SPLIT, mEnd), bot = cut(ptsCap, C.capability, C.T_SPLIT, mEnd).slice(1).split("L").reverse().join("L");
+            leadArea.setAttribute("d", top + "L" + bot + "Z");
+          } else leadArea.setAttribute("d", "");
+          leadArea.setAttribute("fill-opacity", 0.32 * p.lead * (0.4 + 0.6 * p.grip));
+          if (p.slow > 0) {                                                  // a slower fork from the band's top to blue-collar work
+            const pts = [];
+            for (let k = 0; k <= 60 * p.slow; k++) { const u = k / 60, q = SLOW(u); pts.push(q[0].toFixed(1) + "," + q[1].toFixed(1)); }
+            pSlow.setAttribute("d", "M" + pts.join("L"));
+          }
+          pSlow.setAttribute("opacity", p.slow > 0 ? 1 : 0);
+          pGreen.setAttribute("d", cut(ptsCap, C.capability, C.T_MERGE, Math.min(t0, C.T_END)));
+          const drawing = t0 > 0.002 && t0 < C.T_END - 0.002;
+          const hp = [[t0 <= C.T_SPLIT, C.capability], [t0 > C.T_SPLIT && t0 < C.T_MERGE, C.capability], [t0 > C.T_SPLIT && t0 < C.T_MERGE, C.capital], [t0 >= C.T_MERGE, C.capability]];
+          heads.forEach((h, i) => {
+            const on = drawing && hp[i][0];
+            h.setAttribute("opacity", on ? 1 : 0);
+            if (on) { h.setAttribute("cx", px(t0)); h.setAttribute("cy", py(hp[i][1](t0))); }
+          });
+          // gaze: a fixed point (fx, fy), blended toward the leading point by `follow`
+          const [hx, hy] = tip();
+          p.tx = K.lerp(p.fx, hx, p.follow); p.ty = K.lerp(p.fy, hy, p.follow);
+          // the arrowhead
+          if (p.arrow > 0) {
+            const e = C.T_END, x = px(e), y = py(C.capability(e)), dx = px(e) - px(e - 0.01), dy = py(C.capability(e)) - py(C.capability(e - 0.01));
+            const L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, s = 22 * p.arrow;
+            arrow.setAttribute("points", `${x + ux * s},${y + uy * s} ${x - uy * s * 0.5},${y + ux * s * 0.5} ${x + uy * s * 0.5},${y - ux * s * 0.5}`);
+          }
+          arrow.setAttribute("opacity", p.arrow > 0 ? 1 : 0);
+          cl.draw(p, t);
+        });
+
+        // fixed gaze targets, each tweened from the one before (calls in time order)
+        let gz = { x: st.fx, y: st.fy };
+        const look = (t, x, y, dur = K.f(18)) => { tl.fromTo(st, { fx: gz.x, fy: gz.y }, { fx: x, fy: y, duration: dur, ease: "power2.inOut", immediateRender: false }, t); gz = { x, y }; };
+        let lk = 1;                                                           // 1: look at (tx, ty); 0: at the viewer
+        const viewer = (t, on, dur = K.f(18)) => { tl.fromTo(st, { look: lk }, { look: on ? 0 : 1, duration: dur, ease: "power2.inOut", immediateRender: false }, t); lk = on ? 0 : 1; };
+        let fw = 0;
+        const follow = (t, v, dur = K.f(24)) => { tl.fromTo(st, { follow: fw }, { follow: v, duration: dur, ease: "power2.inOut", immediateRender: false }, t); fw = v; };
+        const noBlink = (a, b) => { tl.set(st, { blink: 0 }, a); tl.set(st, { blink: 1 }, b); };
+
+        // ---------------- reveals (no fade-and-slide-up: text writes on left to right, or fades in place) ----------------
+        const write = (el, t, dur = K.M.enterDur) => tl.fromTo(el, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: dur, ease: "power2.out", immediateRender: false }, t);
+        const fadeIn = (el, t, dur = K.M.enterDur) => tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: dur, ease: K.M.enter, immediateRender: false }, t);
+        const fadeOut = (el, t, dur = K.M.exitDur) => tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: dur, ease: K.M.exit, immediateRender: false }, t);
+        const color = (el, prop, from, to, t, dur = K.f(12)) => tl.fromTo(el, { [prop]: from }, { [prop]: to, duration: dur, ease: "power1.out", immediateRender: false }, t);
+
+        // =========================== 1. the question (frame 0 is the poster) ===========================
+        const feels = [];
+        const hopAt = at(1, "clawed", 1, 0.05);
+        K.hop(tl, st, hopAt, 1.0, K.f(26)); noBlink(hopAt - 0.2, hopAt + 0.7); K.hit("hop", hopAt + K.f(26));
+        feels.push(["glad", hopAt - K.f(6), K.f(16)], ["curious", at(1, "stands"), K.f(24)]);
+        viewer(at(1, "stands"), true);                                        // "It stands for the AI": looks at you
+        const tChart = K.snap(at(1, "chart"));
+        viewer(tChart, false);
+        tl.fromTo("#f-title", { opacity: 1, y: 0 }, { opacity: 0, y: -40, duration: K.M.exitDur, ease: K.M.exit, immediateRender: false }, tChart);
+        // the capability axis draws on, lying flat along the floor; its rungs tick in on eighth notes
+        go("ax", tChart + K.f(6), K.f(45), 1, K.M.cross);
+        look(tChart + K.f(6), O.x + 0.3 * SY, O.y, K.f(45));
+        const tick0 = K.snap(at(1, "wants"), 2, 1);
+        ticks.forEach((tk, i) => {
+          const t = tick0 + i * K.beat(0.5);
+          tl.fromTo(tk, { opacity: 0 }, { opacity: 1, duration: K.f(6), ease: "power2.out", immediateRender: false }, t);
+          K.hit("tick", t, { pitch: i });
+        });
+        tl.fromTo(st, { fx: O.x + 0.3 * SY }, { fx: O.x + 8.8 * SY, duration: 8 * K.beat(0.5), ease: "none", immediateRender: false }, tick0);
+        gz = { x: O.x + 8.8 * SY, y: O.y };
+
+        // =========================== 2. the ladder ===========================
+        const tUp = K.vo(2);                                                  // on a bar line: the axis stands up on "Up"
+        go("rot", tUp, K.M.crossDur, 0, K.M.cross, 90);
+        look(tUp, O.x, YT + 60, K.M.crossDur);
+        K.hit("stand", tUp + K.M.crossDur);
+        write("#f-ytitle", at(2, "economically"), K.f(30));
+        const lab = (i, t) => { write(labels[i], t); return t; };
+        lab(0, at(2, "summarizing")); look(at(2, "summarizing"), 560, py(0.3));
+        lab(1, at(2, "codebase", 1, -0.25)); lab(2, at(2, "codebase", 1, -0.25) + K.M.stagger * 3); look(at(2, "codebase", 1, -0.25), 560, py(1.35));
+        lab(3, at(2, "agents", 1, -0.2)); look(at(2, "agents", 1, -0.2), 560, py(2.6));
+        const tOnUp = at(2, "up", 2, -0.1);
+        for (let i = 4; i < 9; i++) lab(i, tOnUp + (i - 4) * K.M.stagger);
+        look(tOnUp, 560, py(7), K.f(30));
+        const tTime = K.snap(at(2, "time"));
+        go("xax", tTime, K.M.crossDur, 1, K.M.cross);
+        write("#f-xtitle", tTime + K.M.crossDur * 0.6);
+        fadeIn("#f-illus", tTime + K.M.crossDur, K.f(30));
+        look(tTime, 1100, O.y);
+
+        // =========================== 3. the band ===========================
+        const tBetween = K.snap(at(3, "band"));
+        go("edge", tBetween, K.M.crossDur, 1, K.M.cross);
+        look(tBetween, 1000, py((C.LOWER + C.UPPER) / 2), K.f(24));
+        color(labels[4], "color", MUTED, INK, at(3, "office", 1, -0.1));
+        color(labels[5], "color", MUTED, INK, at(3, "superintelligence", 1, -0.1));
+        go("lo", at(3, "needed", 1, -0.1), K.f(18), 1, K.M.enter); go("up", at(3, "control", 1, -0.1), K.f(18), 1, K.M.enter);
+        go("lo", at(3, "underclass", 1, -0.1), K.f(24), 0, "power1.inOut", 1); go("up", at(3, "underclass", 1, -0.1), K.f(24), 0, "power1.inOut", 1);
+        const tUnder = at(3, "underclass", 1, -0.1);
+        go("band", tUnder, K.f(30), 0.25, "power2.out", 0.15);
+        feels.push(["uneasy", tUnder]);
+
+        // =========================== 4. the split ===========================
+        follow(SEG[0].a, 1, K.f(30));
+        feels.push(["curious", SEG[0].a]);
+        SEG.forEach(s => go("pen", s.a, s.b - s.a, s.to, s.ease, s.from));
+        K.hit("split", at(4, "splits"));
+        write("#f-leg1", at(4, "splits", 1, 0.1)); write("#f-leg2", at(4, "splits", 1, 0.1) + K.M.stagger);
+        feels.push(["uneasy", at(4, "splits", 1, 0.2)]);
+        // the widest gap: a brace between the lines, shown once the pen has passed it
+        const W = C.widest, gx = px(W.t), gy0 = py(C.capability(W.t)), gy1 = py(C.capital(W.t));
+        gbrace.setAttribute("d", `M${gx - 8},${gy0} L${gx - 14},${gy0} L${gx - 14},${gy1} L${gx - 8},${gy1} M${gx - 14},${(gy0 + gy1) / 2} L${gx - 22},${(gy0 + gy1) / 2}`);
+        const tWide = Math.max(at(4, "widest"), when(W.t) + K.f(4));
+        fadeIn(gbrace, tWide, K.f(18));
+        feels.push(["tense", at(4, "widest")]);
+        write("#f-foot", at(4, "class", 1, -0.1), K.f(36));
+        go("lead", at(4, "harden", 1, -0.1), K.f(36), 1, "power2.out");
+
+        // rung callouts: a dot where a line reaches a rung (a leader to the axis for the first three), the rung's label
+        // takes that line's colour (at most once per 20 frames), and a pluck sounds on the dot's frame.
+        const ev = [];
+        for (let i = 0; i <= 2; i++) ev.push({ i, f: C.capability, col: INK, lead: true });
+        for (let i = 3; i <= 5; i++) ev.push({ i, f: C.capital, col: YEL, from: C.T_SPLIT }, { i, f: C.capability, col: BLU, from: C.T_SPLIT });
+        for (let i = 6; i <= 8; i++) ev.push({ i, f: C.capability, col: GRN, from: C.T_MERGE });
+        const lastChange = {};
+        ev.map(e => { const tau = C.cross(e.f, C.LEVELS[e.i].y, e.from || 0); return { ...e, tau, t: when(tau) }; })
+          .filter(e => e.t != null).sort((a, b) => a.t - b.t)
+          .forEach(e => {
+            const x = px(e.tau), y = py(C.LEVELS[e.i].y);
+            const dot = S("circle", { cx: x, cy: y, r: 0, fill: e.col }, gDots);
+            tl.fromTo(dot, { attr: { r: 0 } }, { attr: { r: 8 }, duration: K.f(10), ease: "power3.out", immediateRender: false }, e.t);
+            tl.fromTo(dot, { opacity: 1 }, { opacity: 0, duration: K.f(30), ease: "power1.in", immediateRender: false }, e.t + K.f(40));
+            if (e.lead) {
+              const ld = S("line", { x1: x, y1: y, x2: O.x, y2: y, stroke: e.col, "stroke-width": 1.5, "stroke-dasharray": "5 5", opacity: 0 }, gDots);
+              tl.fromTo(ld, { opacity: 0 }, { opacity: 0.8, duration: K.f(10), ease: "power2.out", immediateRender: false }, e.t);
+              tl.fromTo(ld, { opacity: 0.8 }, { opacity: 0, duration: K.f(30), ease: "power1.in", immediateRender: false }, e.t + K.f(40));
+            }
+            const tc = Math.max(e.t, (lastChange[e.i] ?? -1) + K.f(20));
+            const prev = labels[e.i].__col || (e.i === 4 || e.i === 5 ? INK : MUTED);
+            color(labels[e.i], "color", prev, e.col, tc);
+            labels[e.i].__col = e.col; lastChange[e.i] = tc;
+            K.hit("pluck", e.t, { pitch: e.i, gain: e.col === GRN ? 0.9 : 0.7 });
+          });
+
+        // =========================== 5. the crossing ===========================
+        const tIn = when(C.T_IN);
+        K.hit("thump", tIn);
+        feels.push(["alarmed", tIn - K.f(4), K.f(14)]);
+        K.hop(tl, st, tIn + K.f(2), 1.6, K.f(30)); noBlink(tIn - 0.4, tIn + 1.0); K.hit("hop", tIn + K.f(32));
+        feels.push(["uneasy", at(5, "control", 1, -0.3), K.f(30)]);        // uneasy: nothing celebrates loss of control
+        go("grip", at(5, "grip", 1, -0.1), K.f(36), 0, "power2.inOut", 1);
+        const tOne = at(5, "one");
+        K.hit("merge", tOne);
+        fadeOut("#f-leg1", tOne); fadeOut("#f-leg2", tOne + K.M.stagger);
+        fadeIn("#f-leg3", tOne + K.M.lag);
+        const tAny = at(5, "anything", 1, -0.1);                            // "The head start stops buying anything"
+        go("lead", tAny, K.f(40), 0, "power1.inOut", 1);
+        fadeOut(gbrace, tAny, K.f(30));
+        fadeOut("#f-foot", tOne - 0.3);
+        feels.push(["relief", tOne]);                                       // lift, exhale with eyes shut, eyes open (K.relief)
+        go("arrow", SEG.at(-1).b, K.f(10), 1, "power3.out");
+
+        // =========================== 6. relief ===========================
+        follow(K.vo(6) - 0.3, 0, K.f(24));
+        const tReal = K.snap(at(6, "real"));
+        go("band", tReal, K.f(60), 0.04, "power2.inOut", 0.25);
+        edges.forEach(e => color(e, "stroke", RED, FAINT, tReal, K.f(60)));
+        color(labels[4], "color", BLU, MUTED, tReal + K.f(20), K.f(40)); color(labels[5], "color", BLU, MUTED, tReal + K.f(20), K.f(40));
+        look(tReal, 840, 527);
+        const tShort = K.snap(at(6, "closes"));
+        go("drop", tShort, K.f(24), 1, K.M.enter);
+        fadeIn(tbrace, tShort + K.f(18), K.f(18)); fadeIn("#f-tib", tShort + K.f(18) + K.M.lag);
+        look(tShort, (tbx0 + tbx1) / 2, O.y + 20);
+        const tDig = K.snap(at(6, "harden"));
+        tl.fromTo("#f-strike", { scaleX: 0 }, { scaleX: 1, duration: K.f(20), ease: "power2.inOut", immediateRender: false }, tDig);
+        K.hit("scratch", tDig);
+        look(tDig, 900, 527);
+        K.sigh(tl, st, tDig + K.f(10));                                     // relief settles: an exhale, no hop
+
+        // =========================== 7. the next test ===========================
+        const tHard = K.snap(at(7, "harder"));
+        go("wash", tHard, K.f(36), 1, "sine.inOut");
+        fadeIn("#f-q", at(7, "build", 1, -0.1), K.f(24));
+        go("slow", at(7, "wages", 1, -0.1), K.f(45), 1, K.M.cross);
+        color(labels[6], "color", GRN, AMB, at(7, "bluecollar", 1, -0.1), K.f(18));
+        look(tHard, 1440, py(6.6));
+        feels.push(["curious", tHard, K.f(30)]);
+        // "an AI that no one controls still has to be good for us": Claw'd, the AI, is the one asked. It turns to the
+        // viewer, steady and attentive; not pleased, not glad.
+        const tGood = at(7, "good", 1, -0.15);
+        viewer(tGood, true, K.f(30));
+        tl.fromTo(st, { yaw: 0 }, { yaw: 0.18, duration: K.f(30), ease: "power2.inOut", immediateRender: false }, tGood);
+        feels.push(["attentive", tGood, K.f(30)]);
+        noBlink(tGood, tGood + 1.2);
+        const tPost = K.snap(at(7, "post"));
+        write("#f-end", tPost, K.f(30)); fadeIn("#f-endfoot", tPost + K.M.lag);
+        K.hit("card", tPost);
+        // captions (X cut only): each one on and off at its own times, never moving while it is read
+        const VARS = window.__FILM_VARS || (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        if (VARS.captions && window.CAPS) for (const cp of window.CAPS) {
+          const el = K.el("div", { class: "cap", text: cp.text }, $("f-caps"));
+          tl.set(el, { opacity: 1 }, cp.a); tl.set(el, { opacity: 0 }, cp.b);
+        }
+        tl.fromTo("#f-black", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "sine.in", immediateRender: false }, TOTAL - 1.0);
+
+        feels.sort((a, b) => a[1] - b[1]).forEach(([name, t, dur]) => name === "relief" ? K.relief(tl, st, t) : K.feel(tl, st, name, t, dur));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["film"] = tl;
+      })();
+    </script>
+  </div>
+</template>

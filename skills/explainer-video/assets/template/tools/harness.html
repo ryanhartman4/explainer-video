@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- harness.html: the film outside HyperFrames. Serve the project root and open /tools/harness.html (tools/hits.mjs does).
+     ?t=62 seeks the film to 62 s, the meta-prompt's way to freeze any frame in a plain browser; ?captions=1 turns the
+     X cut's captions on. It mounts compositions/film.html's <template> with ../ paths pointed at /video/, then runs its
+     scripts in order. Sets window.__done when built. -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=1920, height=1080">
+<style>html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0b0c10; } #film-host { position: relative; width: 1920px; height: 1080px; }</style>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script></head><body><div id="film-host"></div>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  window.__FILM_VARS = { captions: q.get("captions") === "1" };
+  const html = await (await fetch("/video/compositions/film.html")).text();
+  const outer = document.createElement("template"); outer.innerHTML = html;
+  const frag = outer.content.querySelector("template").content.cloneNode(true);
+  const root = frag.firstElementChild, scripts = [...root.querySelectorAll("script")];
+  scripts.forEach(s => s.remove());
+  const fix = v => v.replace(/^\.\.\//, "/video/");
+  root.querySelectorAll("[src],[href]").forEach(e => ["src", "href"].forEach(a => e.getAttribute(a) && e.setAttribute(a, fix(e.getAttribute(a)))));
+  document.getElementById("film-host").appendChild(root);
+  for (const s of scripts) {
+    await new Promise((ok, bad) => {
+      const n = document.createElement("script");
+      if (s.getAttribute("src")) { n.src = fix(s.getAttribute("src")); n.onload = ok; n.onerror = bad; document.body.appendChild(n); }
+      else { n.textContent = s.textContent; document.body.appendChild(n); ok(); }
+    });
+  }
+  if (q.has("t")) window.__timelines.film.seek(+q.get("t"));
+  window.__done = true;
+})().catch(e => { window.__err = String(e && e.stack || e); });
+</script></body></html>

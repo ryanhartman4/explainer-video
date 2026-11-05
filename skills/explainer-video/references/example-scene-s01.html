@@ -1,0 +1,111 @@
+<template id="s01-template">
+  <div data-composition-id="s01" data-width="1920" data-height="1080" id="root">
+    <link rel="stylesheet" href="../lib/fl.css" />
+    <style>
+      #root { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; color: var(--ink); font-family: var(--serif);
+              background: radial-gradient(ellipse 70% 60% at 50% 45%, #13151c 0%, var(--canvas) 70%); }
+      .grid { position: absolute; left: 0; top: 0; }
+      .side { position: absolute; left: 1290px; top: 330px; width: 640px; display: flex; flex-direction: column; gap: 18px; }
+      .count { font-size: 132px; line-height: 1; color: var(--ink); }
+      .count-label { font-size: 30px; color: var(--muted); }
+      .raw { font-size: 30px; color: var(--muted); margin-top: 22px; }
+      .name { position: absolute; left: 1120px; top: 400px; display: flex; flex-direction: column; gap: 22px; }
+      .name .title { font-size: 150px; }
+    </style>
+
+    <div class="grid" id="s01-grid"></div>
+    <div class="side" id="s01-side">
+      <div class="count-label serif" id="s01-clabel">bits sent</div>
+      <div class="count num" id="s01-count">0</div>
+      <div class="raw mono" id="s01-raw">one bit per pixel: 4,096</div>
+      <div class="raw mono yellow" id="s01-ratio"></div>
+    </div>
+    <div class="name" id="s01-name">
+      <div class="title" id="s01-title">Faultline</div>
+      <div class="foot" id="s01-src">research/early/faultline.py</div>
+    </div>
+
+    <script src="../data/timing.js"></script>
+    <script src="../data/data.js"></script>
+    <script src="../data/data_repo.js"></script>
+    <script src="../lib/fl.js"></script>
+    <script>
+      (() => {
+        const N = 1, P = window.FL.pixels;
+        const tl = gsap.timeline({ paused: true });
+        const W = P.w, H = P.h, CELL = 12, X0 = 420, Y0 = 156;
+        const img = Array.from(P.img, Number), order = P.order, cost = P.cost;
+        const rank = new Int32Array(W * H); order.forEach((p, i) => (rank[p] = i));
+        const prefix = [0]; for (const c of cost) prefix.push(prefix.at(-1) + c);
+        const total = prefix.at(-1);
+        document.getElementById("s01-ratio").textContent = `fault lines only: ${Math.round(total).toLocaleString("en-US")} bits, ${Math.round(100 * total / (W * H))}%`;
+
+        const host = document.getElementById("s01-grid");
+        const ctx = K.canvas(host, 1920, 1080);
+        const countEl = document.getElementById("s01-count"), labelEl = document.getElementById("s01-clabel");
+        const fmt = n => Math.round(n).toLocaleString("en-US");
+
+        // look of every cell is a pure function of these values
+        const st = { grid: 0, scan: 0, wipe: 0, fill: 0, heat: 0, fade: 0, shrink: 0 };
+        const ON = [236, 230, 216], OFF = [24, 26, 33], YEL = [247, 217, 111];
+        const mix = (a, b, t) => [0, 1, 2].map(i => a[i] + (b[i] - a[i]) * t);
+        const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+        function draw(s) {
+          ctx.clearRect(0, 0, 1920, 1080);
+          if (s.grid <= 0) return;
+          const k = 1 - 0.42 * s.shrink, cx = X0 + (W * CELL) / 2, cy = Y0 + (H * CELL) / 2;
+          const ox = cx - (W * CELL * k) / 2 - 220 * s.shrink, oy = cy - (H * CELL * k) / 2, c = CELL * k;
+          const nScan = s.scan * W * H, nFill = s.fill * W * H;
+          for (let p = 0; p < W * H; p++) {
+            const y = (p / W) | 0, x = p % W, v = img[p];
+            // which cells appear in the grid's entrance: a diagonal sweep
+            const g = K.clamp(s.grid * 2.2 - (x + y) / (W + H));
+            if (g <= 0) continue;
+            let col = OFF, a = 0.55 * g;
+            if (p < nScan && s.wipe < 1) {                     // raster pass: every pixel costs one bit
+              const age = nScan - p;
+              col = v ? ON : [44, 47, 56]; a = (1 - s.wipe) * g;
+              if (age < 70) col = mix(col, YEL, 1 - age / 70);
+            }
+            const r = rank[p];
+            if (r < nFill) {                                   // the edge-spending coder, in its real decode order
+              const age = nFill - r, cb = cost[r];
+              col = v ? ON : [30, 33, 41]; a = g;
+              if (age < 260) col = mix(col, YEL, K.clamp(cb) * (1 - age / 260));
+              if (s.heat > 0) col = mix(col, cb > 0.12 ? YEL : col, s.heat * K.clamp(cb * 1.6));
+              if (s.fade > 0 && cb < 0.12) a = g * (1 - 0.86 * s.fade);
+            }
+            ctx.fillStyle = rgb(col, a);
+            ctx.fillRect(ox + x * c + 1, oy + y * c + 1, c - 2, c - 2);
+          }
+          // the counter: raster bits, then the coder's real bit cost so far
+          if (s.wipe < 0.5) countEl.textContent = fmt(nScan);
+          else countEl.textContent = fmt(prefix[Math.min(cost.length, Math.floor(nFill))]);
+          labelEl.textContent = s.wipe < 0.5 ? "bits sent" : "bits sent, guessing from neighbors";
+        }
+        const go = K.driver(tl, st, draw);
+
+        const c = (w, i, o) => K.cue(N, w, i, o);
+        K.enter(tl, N);
+        go("grid", 0.2, 1.4, 1, "power2.out");
+        tl.from("#s01-side", { opacity: 0, y: 24, duration: 0.8, ease: "power3.out" }, c("send", 1, -0.2));
+        go("scan", c("one", 1), c("guess", 1) - c("one", 1) - 0.4, 1, "power1.inOut");
+        tl.from("#s01-raw", { opacity: 0, x: -20, duration: 0.6, ease: "expo.out" }, c("pixel", 1, 0.2));
+        go("wipe", c("guess", 1, -0.3), 0.6, 1, "power2.in");
+        go("fill", c("guess", 1, 0.4), c("fault", 1) - c("guess", 1) - 0.6, 1, "power1.inOut");
+        go("heat", c("black", 2), 1.2, 1, "sine.inOut");
+        tl.from("#s01-ratio", { opacity: 0, y: 14, duration: 0.7, ease: "power2.out" }, c("lines", 1, 0.1));
+        go("fade", c("fault", 1), 1.4, 1, "power2.inOut");
+        // the coder's picture moves aside and the name arrives
+        go("shrink", c("experiments", 1), 1.4, 1, "power3.inOut");
+        tl.to("#s01-side", { opacity: 0, duration: 0.6, ease: "power1.in" }, c("exactly", 1));
+        tl.from("#s01-title", { opacity: 0, y: 40, filter: "blur(10px)", duration: 1.2, ease: "power3.out" }, c("this", 1, -0.3));
+        tl.from("#s01-src", { opacity: 0, duration: 0.8, ease: "sine.out" }, c("shares", 1, 0));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["s01"] = tl;
+      })();
+    </script>
+  </div>
+</template>

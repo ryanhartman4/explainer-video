@@ -1,0 +1,1 @@
+Ask a small language model who it is. Then pick one neuron out of almost three hundred thousand, number twenty-seven forty-two in layer twenty-two, and push it.

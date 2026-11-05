@@ -1,0 +1,317 @@
+<title>Narrator Voice Bake-off</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* Layout: one listening sheet. Rows are lines of script; each row lays its takes out as a wrapping grid of cells,
+   so six engines sit side by side on a desktop and stack on a phone. Palette follows the film's canvas. */
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --line: #dde0e7; --fg: #15171d; --muted: #5d6373;
+  --blue: #2a64c9; --blue-soft: #9db7e6; --green: #1d8048; --red: #c23a3a; --yellow: #8f6a00; --mark: #fbeeb8;
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0c10; --panel: #13151b; --line: #262a35; --fg: #e8eaef; --muted: #8d93a3;
+  --blue: #7aa9ff; --blue-soft: #3b4f78; --green: #5cd08a; --red: #ff7a7a; --yellow: #f2c94c; --mark: #4a3d10;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b0c10; --panel: #13151b; --line: #262a35; --fg: #e8eaef; --muted: #8d93a3;
+  --blue: #7aa9ff; --blue-soft: #3b4f78; --green: #5cd08a; --red: #ff7a7a; --yellow: #f2c94c; --mark: #4a3d10;
+  color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--sans); }
+.wrap { max-width: 78rem; margin: 0 auto; padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 2.75rem; }
+h1, h2 { font-family: var(--serif); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.1; }
+h2 { font-size: 1.45rem; }
+p { margin: 0; }
+.eyebrow { font: 500 0.75rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { max-width: 65ch; color: var(--muted); }
+header { display: grid; gap: 0.9rem; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.status { font: 0.8rem/1.4 var(--mono); color: var(--muted); }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.play { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid var(--line); background: var(--bg);
+  border-radius: 999px; padding: 0.3rem 0.8rem 0.3rem 0.55rem; font-size: 0.85rem; font-weight: 500; }
+.play svg { width: 0.85rem; height: 0.85rem; fill: currentColor; }
+.play[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
+.ref { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.ref q { color: var(--muted); font-style: italic; max-width: 60ch; }
+
+.board { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 46rem; font-size: 0.9rem; }
+th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 0.72rem/1.3 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td .sub { display: block; color: var(--muted); font-size: 0.8rem; }
+.good { color: var(--green); } .bad { color: var(--red); }
+
+section { display: grid; gap: 1.1rem; }
+.section-head { display: grid; gap: 0.4rem; }
+.section-head p { max-width: 70ch; color: var(--muted); }
+.row { display: grid; gap: 0.8rem; padding-block: 1.1rem; border-top: 1px solid var(--line); }
+.line { display: grid; gap: 0.25rem; max-width: 70ch; }
+.line .text { font-family: var(--serif); font-size: 1.12rem; line-height: 1.45; }
+.line .hint { font: 0.8rem/1.4 var(--mono); color: var(--muted); }
+mark { background: var(--mark); color: inherit; padding: 0 0.15em; border-radius: 3px; }
+.cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.6rem; }
+.cell { display: grid; gap: 0.5rem; align-content: start; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 0.7rem; min-width: 0; }
+.cell.picked { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.cell.right { border-color: var(--green); } .cell.wrong { border-color: var(--red); }
+.cell-label { font-weight: 600; font-size: 0.86rem; line-height: 1.25; }
+.cell-label span { display: block; font: 400 0.72rem/1.3 var(--mono); color: var(--muted); }
+.trace { width: 100%; height: 44px; display: block; }
+.trace .zero { stroke: var(--line); stroke-dasharray: 3 3; }
+.trace .body { stroke: var(--blue-soft); fill: none; stroke-width: 1.5; }
+.trace .end { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.metrics { font: 0.76rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.metrics b { font-weight: 500; }
+.warn { color: var(--yellow); font: 0.74rem/1.35 var(--mono); }
+.choices { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.choice { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 0.2rem 0.6rem;
+  font-size: 0.8rem; }
+.choice[aria-pressed="true"][data-v="right"] { background: var(--green); border-color: var(--green); color: var(--bg); }
+.choice[aria-pressed="true"][data-v="wrong"] { background: var(--red); border-color: var(--red); color: var(--bg); }
+.choice[aria-pressed="true"][data-v="pick"] { background: var(--blue); border-color: var(--blue); color: var(--bg); }
+.choice:disabled { opacity: 0.45; cursor: default; }
+
+.notes { display: grid; gap: 0.6rem; max-width: 70ch; }
+textarea { font: 0.95rem/1.5 var(--sans); color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 0.75rem; min-height: 7rem; resize: vertical; width: 100%; box-sizing: border-box; }
+footer { color: var(--muted); font-size: 0.82rem; max-width: 75ch; display: grid; gap: 0.4rem; }
+footer code { font-family: var(--mono); font-size: 0.78rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">Explainer video · narration engines</p>
+    <h1>Narrator voice bake-off</h1>
+    <p class="lede">Four engines running on this Mac read the same lines in the film's narrator voice, each cloned from
+      the same reference clip. One seeded take per line, loudness-matched to −20 LUFS so no engine wins by volume.
+      Your marks save to this page, and Claude reads them back.</p>
+    <div class="ref">
+      <button class="play" id="ref-play" type="button" aria-pressed="false" data-src="audio/reference.mp3" data-label="Reference"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l7 4-7 4z"/></svg>Reference</button>
+      <q id="ref-text">The clip every engine clones.</q>
+    </div>
+    <p class="status" id="status">Loading the clips…</p>
+  </header>
+
+  <section aria-labelledby="board-h">
+    <div class="section-head">
+      <h2 id="board-h">Scoreboard</h2>
+      <p>Measured columns come from pitch tracks of these clips. Question ends: how many of the six question and
+        statement lines end in the expected direction. Pitch range: the mean spread of pitch per line, in semitones.
+        Your columns fill in as you mark clips below.</p>
+    </div>
+    <div class="board"><table>
+      <thead><tr><th>Engine</th><th>Question ends</th><th>With direction</th><th>Pitch range</th><th>Speed</th><th>Heteronyms (yours)</th><th>Best picks (yours)</th><th>License</th></tr></thead>
+      <tbody id="board"></tbody>
+    </table></div>
+  </section>
+
+  <div id="sections" style="display:grid;gap:2.75rem"></div>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Notes for Claude</h2>
+    <p class="lede">Anything the buttons can't say: a voice that sounds off, a line that glitched, which engine you'd ship.</p>
+    <textarea id="notes" aria-label="Notes for Claude" placeholder="Higgs sounds closest to the old narrator, but…"></textarea>
+    <p class="status" id="notes-status"></p>
+  </section>
+
+  <footer>
+    <p>Directions: Higgs gets <code id="dir-higgs"></code> before the text. Breeze gets the instruction
+      <q id="dir-breeze"></q> at guidance 4.</p>
+    <p>Made by <code>review/tts-bakeoff/bakeoff.py</code> (the explainer-video skill's bake-off). Pitch by pYIN at 10 ms;
+      end move is the median pitch of the last 200 ms of voicing minus the 400 ms before it.</p>
+  </footer>
+</main>
+
+<script type="application/json" id="bakeoff-data">/*DATA*/</script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const PLAY = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l7 4-7 4z"/></svg>';
+  const STOP = '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6"/></svg>';
+  const state = { verdicts: {}, picks: {}, notes: "", canWrite: false, db: null };
+  let D = null;
+
+  // ---- playback: one shared player; pressing another clip stops the first
+  const player = new Audio(); let current = null;
+  function setBtn(btn, on) { btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.innerHTML = (on ? STOP : PLAY) + esc(btn.dataset.label || "Play"); }
+  function toggle(btn) {
+    if (current === btn) { player.pause(); setBtn(btn, false); current = null; return; }
+    if (current) setBtn(current, false);
+    current = btn; setBtn(btn, true); player.src = btn.dataset.src; player.currentTime = 0;
+    player.play().catch(() => { setBtn(btn, false); current = null; });
+  }
+  player.addEventListener("ended", () => { if (current) setBtn(current, false); current = null; });
+  document.addEventListener("click", e => { const b = e.target.closest(".play"); if (b) toggle(b); });
+
+  // ---- drawing
+  function hit(clip, expect) {
+    if (!expect || clip.end_move_st == null) return null;
+    return expect === "rise" ? clip.end_move_st > 1 : clip.end_move_st < -1;
+  }
+  function trace(clip, expect) {
+    const W = 160, H = 44, dur = Math.max(clip.audio_s, 0.5), lim = 9;
+    const x = t => (t / dur) * W, y = s => H / 2 - (Math.max(-lim, Math.min(lim, s)) / lim) * (H / 2 - 3);
+    const pts = clip.contour; if (!pts.length) return "";
+    const runs = [[]];
+    pts.forEach((p, i) => { if (i && p[0] - pts[i - 1][0] > 0.08) runs.push([]); runs[runs.length - 1].push(p); });
+    const line = r => r.map(p => x(p[0]).toFixed(1) + "," + y(p[1]).toFixed(1)).join(" ");
+    const tEnd = pts[pts.length - 1][0], h = hit(clip, expect);
+    const tail = pts.filter(p => p[0] > tEnd - 0.6);
+    const color = h === null ? "var(--muted)" : h ? "var(--green)" : "var(--red)";
+    return `<svg class="trace" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="pitch trace">
+      <line class="zero" x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>
+      ${runs.map(r => `<polyline class="body" points="${line(r)}"/>`).join("")}
+      ${tail.length > 1 ? `<polyline class="end" stroke="${color}" points="${line(tail)}"/>` : ""}</svg>`;
+  }
+  const signed = v => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1);
+  function highlight(text, targets) {
+    let out = esc(text);
+    (targets || []).forEach(w => { out = out.replace(new RegExp("\\b(" + w + ")\\b", "g"), "<mark>$1</mark>"); });
+    return out;
+  }
+
+  function cellHTML(sec, row, col) {
+    const clip = D.clips[col + "/" + row.id], meta = D.cols[col];
+    const eng = D.engines[meta.engine];
+    if (!clip) return `<div class="cell"><div class="cell-label">${esc(meta.label)}<span>not generated for this row</span></div></div>`;
+    const key = col + "__" + row.id;
+    let body = "";
+    if (sec.key === "q") {
+      const h = hit(clip, row.expect);
+      body = trace(clip, row.expect) + `<div class="metrics">end <b class="${h === null ? "" : h ? "good" : "bad"}">${signed(clip.end_move_st)} st</b> · range ${clip.range_st.toFixed(1)}</div>`;
+    } else if (sec.key === "para") {
+      body = trace(clip, null) + `<div class="metrics">range <b>${clip.range_st.toFixed(1)} st</b> · ${clip.syl_per_s.toFixed(1)} syl/s · ${clip.audio_s.toFixed(1)} s</div>`;
+    }
+    if (clip.tail_s > 1.5) body += `<div class="warn">${clip.tail_s.toFixed(1)} s of quiet noise after the words</div>`;
+    const controls = sec.kind === "verdict"
+      ? `<div class="choices"><button type="button" class="choice" data-v="right" data-key="${key}" aria-pressed="false">Right</button><button type="button" class="choice" data-v="wrong" data-key="${key}" aria-pressed="false">Wrong</button></div>`
+      : `<div class="choices"><button type="button" class="choice" data-v="pick" data-row="${row.id}" data-col="${col}" aria-pressed="false">Best in row</button></div>`;
+    return `<div class="cell" data-key="${key}" data-row="${row.id}" data-col="${col}">
+      <div class="cell-label">${esc(meta.label)}<span>${esc(meta.dir ? "with its delivery control" : eng.sub)}</span></div>
+      <div><button class="play" type="button" aria-pressed="false" data-src="${clip.src}" data-label="Play">${PLAY}Play</button></div>
+      ${body}${controls}</div>`;
+  }
+
+  function render() {
+    $("#ref-text").textContent = "“" + D.reference.text + "”";
+    $("#dir-higgs").textContent = D.directions.higgs;
+    $("#dir-breeze").textContent = D.directions.breeze;
+    $("#sections").innerHTML = D.sections.map(sec => `<section aria-labelledby="h-${sec.key}">
+      <div class="section-head"><h2 id="h-${sec.key}">${esc(sec.title)}</h2><p>${esc(sec.intro)}</p></div>
+      ${sec.rows.map(row => `<div class="row"><div class="line"><p class="text">${highlight(row.text, row.targets)}</p>
+        <p class="hint">${esc(row.hint)}</p></div>
+        <div class="cells">${sec.cols.map(c => cellHTML(sec, row, c)).join("")}</div></div>`).join("")}
+    </section>`).join("");
+    paint();
+  }
+
+  // ---- marks: reflect stored state on buttons, cells and the scoreboard
+  function paint() {
+    if (!D) return;
+    document.querySelectorAll(".choice[data-key]").forEach(b => {
+      const v = state.verdicts[b.dataset.key]; b.setAttribute("aria-pressed", v === b.dataset.v ? "true" : "false");
+      b.disabled = !state.canWrite;
+    });
+    document.querySelectorAll(".choice[data-row]").forEach(b => {
+      b.setAttribute("aria-pressed", state.picks[b.dataset.row] === b.dataset.col ? "true" : "false");
+      b.disabled = !state.canWrite;
+    });
+    document.querySelectorAll(".cell[data-key]").forEach(c => {
+      const v = state.verdicts[c.dataset.key];
+      c.classList.toggle("right", v === "right"); c.classList.toggle("wrong", v === "wrong");
+      c.classList.toggle("picked", state.picks[c.dataset.row] === c.dataset.col);
+    });
+    const het = D.sections.find(s => s.key === "het").rows.length;
+    $("#board").innerHTML = Object.entries(D.summary).map(([e, s]) => {
+      const eng = D.engines[e];
+      const marks = Object.entries(state.verdicts).filter(([k]) => k.startsWith(e + "__"));
+      const right = marks.filter(([, v]) => v === "right").length, wrong = marks.length - right;
+      const picks = Object.values(state.picks).filter(c => c.split("__")[0] === e).length;
+      const frac = f => { if (!f) return "–"; const [a, b] = f.split("/").map(Number);
+        return `<span class="num ${a === b ? "good" : a <= b / 2 ? "bad" : ""}">${a} of ${b}</span>`; };
+      return `<tr><td><b>${esc(eng.label)}</b><span class="sub">${esc(eng.sub)}</span></td>
+        <td>${frac(s.contour)}</td><td>${s.contour_dir ? frac(s.contour_dir) : '<span class="sub">no control used</span>'}</td>
+        <td class="num">${s.range.toFixed(1)} st</td><td class="num">${s.speed.toFixed(2)}× real time</td>
+        <td class="num">${marks.length ? `<span class="good">${right} right</span> · <span class="bad">${wrong} wrong</span> <span class="sub">${marks.length} of ${het} marked</span>` : '<span class="sub">not marked yet</span>'}</td>
+        <td class="num">${picks || '<span class="sub">none yet</span>'}</td>
+        <td>${esc(eng.license)}</td></tr>`;
+    }).join("");
+  }
+
+  // ---- storage: one write at a time per document
+  const chains = {};
+  function write(path, data) {
+    if (!state.db) return Promise.resolve();
+    const run = () => (data ? state.db.doc(path).set(data) : state.db.doc(path).delete())
+      .catch(err => { $("#status").textContent = err && err.code === "invalid_argument"
+        ? "This view can't save marks." : "A mark didn't save. Try it again in a moment.";
+        if (err && err.code === "invalid_argument") { state.canWrite = false; paint(); } });
+    chains[path] = (chains[path] || Promise.resolve()).then(run);
+    return chains[path];
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".choice"); if (!b || b.disabled) return;
+    if (b.dataset.key) {
+      const k = b.dataset.key, v = state.verdicts[k] === b.dataset.v ? null : b.dataset.v;
+      if (v) state.verdicts[k] = v; else delete state.verdicts[k];
+      const cell = b.closest(".cell");
+      paint(); write("verdicts/" + k, v ? { col: cell.dataset.col, row: cell.dataset.row, verdict: v, at: new Date().toISOString() } : null);
+    } else {
+      const r = b.dataset.row, c = state.picks[r] === b.dataset.col ? null : b.dataset.col;
+      if (c) state.picks[r] = c; else delete state.picks[r];
+      paint(); write("picks/" + r, c ? { row: r, col: c, at: new Date().toISOString() } : null);
+    }
+  });
+
+  let noteTimer = null, savedNote = "";
+  $("#notes").addEventListener("input", () => {
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { const t = $("#notes").value; if (t === savedNote || !state.canWrite) return;
+      savedNote = t; $("#notes-status").textContent = "Saving…";
+      write("notes/main", { text: t, at: new Date().toISOString() }).then(() => { $("#notes-status").textContent = "Saved."; });
+    }, 900);
+  });
+
+  async function connect() {
+    const use = window.claude && window.claude.use;
+    const db = use ? await window.claude.use("db") : null;
+    const user = use ? await window.claude.use("user") : null;
+    if (!db) { $("#status").textContent = "Marks can't be saved in this view. You can still listen."; paint(); return; }
+    state.db = db;
+    let can = user ? await user.can("data.write") : null;
+    state.canWrite = can !== false;
+    $("#status").textContent = state.canWrite ? "Connecting to your saved marks…" : "You can listen here; only the owner can mark clips.";
+    $("#notes").readOnly = !state.canWrite;
+    const timer = setTimeout(() => { $("#status").textContent = "Saved marks can't be reached yet. Marks you make now will save once it connects."; }, 10000);
+    const ready = () => { clearTimeout(timer); if (state.canWrite) $("#status").textContent = "Your marks save as you click. Claude reads them back."; };
+    const onErr = () => { clearTimeout(timer); $("#status").textContent = "Saved marks are unavailable in this view."; };
+    db.collection("verdicts").onSnapshot(snap => { state.verdicts = {};
+      snap.docs.forEach(d => { const v = d.data(); if (v && v.verdict) state.verdicts[d.id] = v.verdict; });
+      if (!snap.metadata.fromCache) ready(); paint(); }, onErr);
+    db.collection("picks").onSnapshot(snap => { state.picks = {};
+      snap.docs.forEach(d => { const v = d.data(); if (v && v.col) state.picks[d.id] = v.col; });
+      if (!snap.metadata.fromCache) ready(); paint(); }, onErr);
+    db.doc("notes/main").onSnapshot(d => { const t = d.exists ? (d.data().text || "") : "";
+      if (document.activeElement !== $("#notes") && t !== $("#notes").value) { $("#notes").value = t; savedNote = t; } }, () => {});
+  }
+
+  try { D = JSON.parse(document.getElementById("bakeoff-data").textContent); render(); $("#status").textContent = "Clips loaded."; }
+  catch (e) { $("#status").textContent = "The clip list didn't load. Reload the page to try again."; }
+  connect();
+})();
+</script>
