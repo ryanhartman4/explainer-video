@@ -1,5 +1,21 @@
 # Explainer video playbook
 
+**How to read this now.** This is the record of films 1 to 5: what was made, every setting the author approved by ear
+or eye, and what went wrong. Since then the skill's default has moved to its own engine (`stage.js`,
+`references/stage.md`) and a design method (`references/method.md`). This playbook stays as the reference for
+everything those two do not replace:
+
+- **Applies to both engines:** "Real data", "Voice", "Local voice: Breeze TTS 2", "Music", "Sound hits" (the sounds
+  and levels; with `stage.js` the call is `film.hit` and `tools/audio.sh` runs the chain), "Last mile for X",
+  "Accuracy", "Environment notes". Where a step says `node tools/build.mjs` or `sh tools/rebuild.sh`, the `stage.js`
+  equivalent is `sh tools/audio.sh`; where it says `npx hyperframes render`, it is `node tools/render.mjs`.
+- **Back-up engine only (HyperFrames):** "The stack", "Project layout", "The pipeline", "Scene structure",
+  "A 3D character", "Parallel build", "HyperFrames gotchas", "Reusing this for the next video". The whole back-up
+  process is in `assets/hyperframes/README.md`.
+- **Superseded as defaults, kept as the house style of films 1 to 5:** "Visual identity" (now the `chalk` look, one
+  of three) and "Directed prompt, motion numbers and the beat grid" (the numbers agree with the method's; the method
+  adds the anchor picture, the beat sheet and the review tests).
+
 How we made the Faultline explainer (2026-10-27), written so the next explainer can reuse the stack, the code and the lessons. The result: a 4:35, 1080p30 video in the 3Blue1Brown style, with word-synced ElevenLabs narration, an original music bed and a subtitle file. From first prompt to final render took one long session.
 
 The one idea worth carrying forward: **write the script first, then make every animation fire on a spoken word.** Everything else in the pipeline follows from that.
@@ -10,7 +26,7 @@ A third film followed on 2026-10-29: the steering explainer (8:37, 17 scenes, fi
 
 A fourth, the dopplergeo explainer (2026-11-03, 5:26), ran the subject's own script for its data; its notes are not folded in here.
 
-A fifth, the permanent underclass explainer (2026-11-04, 1:46, 1080p60, a blog cut and an X cut), redid the author's silent chart animation with a meta-prompt's ideas: a directed prompt (GOAL, FORMAT, SHOTS, TECHNICAL, BAN LIST, MATERIALS, SOUND), motion numbers in frames, a beat grid, frame-exact sound hits, frame 0 as a poster, review rounds pointed at frames, and a 3D character (Claw'd, Three.js) inside HyperFrames. It is one continuous composition, not scenes. Its lessons are marked *(film 5)*; its `DESIGN.md` is `references/design-example-film5.md`.
+A fifth, the permanent underclass explainer (2026-11-04, 1:46, 1080p60, a blog cut and an X cut), redid the author's silent chart animation with a meta-prompt's ideas: a directed prompt (GOAL, FORMAT, SHOTS, TECHNICAL, BAN LIST, MATERIALS, SOUND), motion numbers in frames, a beat grid, frame-exact sound hits, frame 0 as a poster, review rounds pointed at frames, and a 3D character (Claw'd, Three.js) inside HyperFrames. It is one continuous composition, not scenes. Its lessons are marked *(film 5)*; its `DESIGN.md` is `assets/hyperframes/references/design-example-film5.md`.
 
 ## The stack
 
@@ -27,7 +43,7 @@ A fifth, the permanent underclass explainer (2026-11-04, 1:46, 1080p60, a blog c
 | Scene data | Python (numpy) on real code and real weights | `tools/make_data*.py` |
 | Python runs | `uv run --python 3.12 --with <pkgs> python -I ...` | uv 0.9.15 |
 | Code on screen *(film 3)* | `K.code` / `K.mark` / `K.term` panels cut from the real files | film 3's `video/lib/fl.js` |
-| 3D character *(film 5)* | Three.js 0.160.1 `build/three.min.js` (the last UMD build) + `lib/three-extras.js` (RoundedBox, RoomEnvironment) + `lib/clawd.js` | `assets/template/vendor/three.min.js` in this skill (first line patched); unpatched source: `npm pack three@0.160.1`, then `package/build/three.min.js` |
+| 3D character *(film 5)* | Three.js 0.160.1 `build/three.min.js` (the last UMD build) + `lib/three-extras.js` (RoundedBox, RoomEnvironment) + `lib/clawd.js` | `assets/hyperframes/vendor/three.min.js` in this skill (first line patched); unpatched source: `npm pack three@0.160.1`, then `package/build/three.min.js` |
 | Sound hits *(film 5)* | `K.hit` in the composition, `tools/hits.mjs` (headless Chrome via the cached puppeteer-core), `tools/make_hits.py` | numpy + scipy |
 | Design lint *(film 5, optional)* | Impeccable's rule-based detector, `npx -y impeccable@4.8.0 detect` (Apache 2.0, about 18 MB) | on source files and on `tools/harness.html?t=…` |
 | Node | scripts, TTS, build | Node 25.2.1 |
@@ -66,13 +82,13 @@ faultline-explainer/
 ## The pipeline, start to finish
 
 1. **Learn the subject and the viewer.** Clone the repo into a scratch folder and read it. Read the viewer's site and repos to set the level (the author knows KL divergence and bits per byte, so there was no ML primer).
-2. **Write `DESIGN.md` and `SCRIPT.md`.** Ten scenes, each with exact narration plus Screen notes. Every number on screen cites a file in the repo. *(film 5)* Give DESIGN.md a **Directed prompt** section that fills every slot: GOAL (what the viewer should feel), FORMAT (length, size, fps, engines, scenes or one continuous shot), SHOTS (a table: narration, one hero move, secondary moves, the character's feeling), TECHNICAL, BAN LIST (it grows after each render), MATERIALS / LIGHT / NUMBERS, SOUND. Model: `references/design-example-film5.md`.
+2. **Write `DESIGN.md` and `SCRIPT.md`.** Ten scenes, each with exact narration plus Screen notes. Every number on screen cites a file in the repo. *(film 5)* Give DESIGN.md a **Directed prompt** section that fills every slot: GOAL (what the viewer should feel), FORMAT (length, size, fps, engines, scenes or one continuous shot), SHOTS (a table: narration, one hero move, secondary moves, the character's feeling), TECHNICAL, BAN LIST (it grows after each render), MATERIALS / LIGHT / NUMBERS, SOUND. Model: `assets/hyperframes/references/design-example-film5.md`.
 3. **Review before spending anything.** Two fresh subagents ran at once: a fact-checker (every claim against the repo, with file:line evidence) and a builder check (what a builder would still have to guess). The fact-check caught missing credit to QTIP and the drafter authors, a misleading perplexity line, and a wrong description of Q4_K. Lock the script after this. *(film 3)* It caught a confidently wrong reason (two hooks called equal "because down_proj has no bias"; linearity gives it, and the real condition is that nothing scales the MLP output before the residual add), results presented as found that the subject's own log already had, and a closing claim wider than one prompt supports. Ask the fact-checker to search the subject's notes for every result the film presents as new, and to test each stated reason, not only each number.
 4. **Set up ElevenLabs.** From the project folder: `npx -y @elevenlabs/cli@latest onboard init`, then follow its JSON (`next`, `run`, `say`). It opens an OAuth page, writes the key to `.env.local` and gitignores it. Verify with `onboard check`, never by reading the file.
 5. **Pick the voice.** `npm run tts -- voices`, then `samples` for three candidates on one short line with a number in it (about 155 credits each). Variants that only change pitch can be made locally for free (see Voice).
 6. **Build the scenes on placeholder timing.** `node tools/build.mjs` invents word times at 2.9 words/s when no take exists, so scenes can be built and checked before the voice is final.
 7. **Generate scene data from real sources.** See "Real data".
-8. **Build one exemplar scene yourself**, then hand the rest to parallel builders (see "Parallel build"). *(film 5)* A continuous film has one `film.html`: build it yourself from `references/example-film5-continuous.html`; there is nothing to hand to parallel builders.
+8. **Build one exemplar scene yourself**, then hand the rest to parallel builders (see "Parallel build"). *(film 5)* A continuous film has one `film.html`: build it yourself from `assets/hyperframes/references/example-film5-continuous.html`; there is nothing to hand to parallel builders.
 9. **Record the full take.** Local alternative: see "Local voice: Breeze TTS 2". With ElevenLabs: `npm run tts -- scenes <voiceId> all` (one request per scene, with the neighbouring scenes' text passed as `previousText`/`nextText` so tone carries across). Then `tools/voice_post.sh`, then `node tools/build.mjs`. Every cue retimes itself. *(film 3)* With the local voice, recording before the fact-check costs nothing: afterwards re-record only the scenes whose words changed (compare each take's words with `say(text)`).
 10. **Music.** `uv run --python 3.12 --with numpy --with scipy python -I tools/make_music.py video/data/timing.js video/assets/audio/music.wav`, then `node tools/build.mjs` again so `index.html` picks it up. *(film 5)* Sound hits come next (see "Sound hits"); `tools/rebuild.sh` runs voice post, clock, captions, hits, music, hits synthesis, clock again and the glitch screen in the one safe order.
 11. **Check.** `npx hyperframes@0.9.13 lint`, `npx hyperframes@0.9.13 check --samples 20 --json`, and snapshots of every scene (`snapshot --composition sNN --frames 9`). Read the contact sheets. *(film 3)* `dead_stretch` is real when the stillness is DOM: a line that arrives seconds before its words are spoken leaves nothing new to see. Cue a line on the words it shows. *(film 5)* Review in rounds pointed at frames (see "Review in rounds"); optionally run Impeccable's detector (see there).
@@ -108,10 +124,11 @@ faultline-explainer/
 - Where a visual could not be real (scene 9's token probabilities), it says "illustrative" on screen.
 - *(film 2)* When the repo ships only derived caches (neuron-explorer shipped `explorer/cache/*.npz` but not its sweep outputs), read the caches with numpy in your own script (`tools/make_data.py`) and quote the research log for everything else, never inventing rows. Where the log gives only ranges, draw ranges (boxes spanning lo to hi). Where it gives only a count, draw count-to-scale with positions labelled arbitrary.
 - *(film 3)* When the film shows code, cut it from the real files by line range in `make_data.py`, so panels carry real line numbers, and lock those files first (a later docstring fix kept its line count so no cited line moved). Quote only runs made by the code on screen: rerun anything older on the final code before quoting it.
-- *(film 3)* A measurement script that imports the explained code's own hooks (`tools/measure.py`; model in `assets/examples/film3/tools/`) keeps the film's numbers and the code it shows on one path.
+- *(film 3)* A measurement script that imports the explained code's own hooks (`tools/measure.py`; model in `assets/hyperframes/examples/film3/tools/`) keeps the film's numbers and the code it shows on one path.
 - *(film 2)* A model's shape can come from its Hugging Face `config.json`, read through the Hugging Face MCP (`hf_fs cat`) without downloading anything.
 
 ### Voice
+- **ElevenLabs set-up, per project:** `npm install @elevenlabs/elevenlabs-js`, `npm pkg set scripts.tts="node --env-file=.env.local narration/tts.mjs"`, then `npx -y @elevenlabs/cli@latest onboard init` and follow its JSON (it opens an OAuth page and writes the key to `.env.local`; verify with `onboard check`, never by printing the file). Ask before each download and before spending credits. Then `npm run tts -- voices`, `npm run tts -- samples <ids>` (about 150 credits each), `npm run tts -- scenes <voiceId> all`, and `sh tools/audio.sh` (with `stage.js`; pass `-1.5 0.97` to deepen as below) or `tools/voice_post.sh` and `node tools/build.mjs` (back-up engine).
 - `eleven_v4` with stability 0.7, similarity 0.5 (the ElevenLabs narration preset). v4 has no speed or pitch control.
 - The author wanted Eric "a little deeper": Praat PSOLA, −1.5 semitones with formants ×0.97 (`tools/deepen.py`). It keeps duration to the millisecond, so timestamps stay valid. Version b was −3 / 0.94.
 - Raw v4 output is quiet, about −25 LUFS. Our first fix normalized to −16 LUFS, and with the deepened voice the bass nearly blew out the author's speakers. The settled chain: high-pass 90 Hz, −4 dB at 170 Hz, +2 dB at 3 kHz, `loudnorm` to −20 LUFS with true peak −3 dB. The final mix is −18 LUFS.
@@ -166,7 +183,7 @@ faultline-explainer/
 
 ### Review in rounds, and Impeccable *(film 5)*
 - Each round: snapshot the moments that changed (`--at`), read them, write one or two follow-ups as frames and numbers ("the arrowhead shows at 71.6 s, before the line arrives"), fix, re-snapshot only those moments. Film 5 took four rounds; every fix was a number or a cue word.
-- `tools/harness.html` mounts the film in any browser (serve the project root, open `/tools/harness.html`); `?t=62` freezes 62 s and `?captions=1` turns captions on. It expects `compositions/film.html` to follow the contract in `references/example-film5-continuous.html` (a nested `<template>`, `#film-root`, `window.__timelines["film"]`).
+- `tools/harness.html` mounts the film in any browser (serve the project root, open `/tools/harness.html`); `?t=62` freezes 62 s and `?captions=1` turns captions on. It expects `compositions/film.html` to follow the contract in `assets/hyperframes/references/example-film5-continuous.html` (a nested `<template>`, `#film-root`, `window.__timelines["film"]`).
 - Impeccable (`npx -y impeccable@4.8.0 detect <files or URL> --viewport 1920x1080 --json`): 62 rules, no model. Source scan of `compositions/` and `lib/`; URL scan of `harness.html?t=…` at a few moments (about 10 s each). On film 5 it caught real things (captions with cramped padding; a one-side accent border on code lines, its "side-tab" tell, in film 3's `K.code` CSS) and agreed with HyperFrames on contrast and type size. Two findings are always false for a video: `content-hidden-at-rest` (later text waits at opacity 0) and `shape-assembled-illustration` (a data chart). Its model-based `critique` needs `npx impeccable install`, which adds skills and hooks to Claude Code: ask the user first.
 
 ### Parallel build
@@ -236,13 +253,13 @@ faultline-explainer/
 - *(film 5)* Never keep video work in the session scratchpad (`/private/tmp/claude-501/...`): macOS cleared it, and the 2026-10-19 ManimGX draft was lost. Film 5 rebuilt it from the session transcript by replaying its Write and Edit calls. Spikes go in the project (`spike/`).
 - *(film 5)* zsh's `${VAR}` vs `$VAR:x` modifiers (see "Last mile for X"); a background `http.server` for a scan is stopped with `lsof -ti tcp:PORT | xargs kill`.
 
-## Reusing this for the next video
+## Reusing this for the next video (back-up engine)
 
-1. Copy this skill's `assets/template/` into the new folder (SKILL.md step 4), and `references/builder-brief-example.md` as the start of `video/BRIEF.md`.
+1. Set the project up as `assets/hyperframes/README.md` step 4 says (`node scripts/new_film.mjs <project> --hyperframes` after `hyperframes init`), and copy `assets/hyperframes/references/builder-brief-example.md` as the start of `video/BRIEF.md`.
 2. Run the ElevenLabs onboarding in the new folder (keys are per project).
 3. Rewrite `DESIGN.md` and `SCRIPT.md`; keep the "> " narration format and the Screen notes.
 4. Update spoken spellings in `narration/script.mjs` and their reverse in `tools/captions.mjs`.
 5. Replace the data scripts with ones for the new subject; keep the rule that on-screen numbers are computed or cited.
-   *(film 3)* Start `lib/` from the newest film whose motifs fit (film 3's, in `assets/examples/film3/lib/`, has the code, terminal, card and row helpers), not only from the template.
+   *(film 3)* Start `lib/` from the newest film whose motifs fit (film 3's, in `assets/hyperframes/examples/film3/lib/`, has the code, terminal, card and row helpers), not only from the template.
 6. Follow the pipeline above from step 3.
-7. *(film 5)* For a film that never cuts (a chart, one diagram): copy `tools/build_continuous.mjs` over `tools/build.mjs`, write one `compositions/film.html` with `id="film-root"` on its container, and cue with `K.at` (root time). `tools/hits.mjs`, `harness.html` and `rebuild.sh` assume that layout. For a character, start from `lib/clawd.js` and `assets/template/vendor/three.min.js`.
+7. *(film 5)* For a film that never cuts (a chart, one diagram): copy `tools/build_continuous.mjs` over `tools/build.mjs`, write one `compositions/film.html` with `id="film-root"` on its container, and cue with `K.at` (root time). `tools/hits.mjs`, `harness.html` and `rebuild.sh` assume that layout. For a character, start from `lib/clawd.js` and `assets/hyperframes/vendor/three.min.js`.

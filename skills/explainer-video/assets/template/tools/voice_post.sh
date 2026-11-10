@@ -3,7 +3,7 @@
 # The default, 0, skips the pitch shift (local voices are designed or cloned at the pitch you want).
 # Deepens the ElevenLabs voice (Praat PSOLA, timing unchanged), takes out the boom the deepening adds, and
 # normalizes each scene to -20 LUFS (at -16 the bass was too much for the author's speakers; the music level is set
-# against this in tools/build.mjs).
+# against this in tools/mix.py, or in tools/build.mjs with the HyperFrames back-up engine).
 # The author picked "Eric, a little deeper": -1.5 semitones, formants x0.97 (version a); -3 / 0.94 was version b.
 set -e
 cd "$(dirname "$0")/../narration/audio"

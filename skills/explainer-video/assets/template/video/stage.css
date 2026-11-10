@@ -1,0 +1,114 @@
+/* stage.css: the film's look. One <div id="stage"> of 1920 x 1080 px; everything inside is positioned by stage.js.
+   A LOOK is a block of tokens (ground, ink, hues, fonts). Pick one with Stage.film({ look: "paper" }) or add your own
+   block below: copy a look, change the values, run `node tools/check.mjs` (it measures text contrast against the ground).
+   Colours are named by hue here; DESIGN.md says what each hue MEANS in this film (one meaning per hue, kept all film). */
+
+/* ---- fonts (bundled latin subsets, see assets/fonts/LICENSES.md). Latin covers A-Z, digits, punctuation, × ÷ ± · − ↑ ↓.
+        It does NOT cover → ← ≈ ≤ ≥ or Greek: draw arrows as shapes (arrow()), write "about", or use KaTeX via tex(). ---- */
+@font-face { font-family: "Newsreader"; src: url("assets/fonts/newsreader-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-style: normal; }
+@font-face { font-family: "Newsreader"; src: url("assets/fonts/newsreader-latin-wght-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; }
+@font-face { font-family: "Instrument Sans"; src: url("assets/fonts/instrument-sans-latin-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-style: normal; }
+@font-face { font-family: "Instrument Sans"; src: url("assets/fonts/instrument-sans-latin-wght-italic.woff2") format("woff2"); font-weight: 400 700; font-style: italic; }
+@font-face { font-family: "Space Grotesk"; src: url("assets/fonts/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 800; font-style: normal; }
+@font-face { font-family: "CM Serif"; src: url("assets/fonts/KaTeX_Main-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "CM Serif"; src: url("assets/fonts/KaTeX_Main-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "CM Serif"; src: url("assets/fonts/KaTeX_Main-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Plex Mono"; src: url("assets/fonts/ibm-plex-mono-latin-300-normal.woff2") format("woff2"); font-weight: 300; }
+@font-face { font-family: "Plex Mono"; src: url("assets/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Plex Mono"; src: url("assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; }
+@font-face { font-family: "Plex Mono"; src: url("assets/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+
+/* ---- looks ---- */
+
+/* paper: warm off-white, near-black ink, one vermilion accent. For ideas, arguments, history, economics, anything for a
+   general audience. Light grounds stand out in a feed of dark videos and survive compression well. */
+#stage[data-look="paper"] {
+  --bg: #f4efe6; --panel: #ebe4d6; --ink: #1d1b19; --muted: #6a645b; --faint: #cfc6b4;
+  --accent: #d6432a; --red: #d6432a; --blue: #2c5fb8; --green: #2f7d4f; --yellow: #b7791f; --purple: #7a4fa3;
+  --display: "Newsreader", Georgia, serif; --text: "Instrument Sans", Helvetica, Arial, sans-serif; --mono: "JetBrains Mono", Menlo, monospace;
+  --display-weight: 500; --display-track: -0.022em; --text-weight: 500; --stroke: 3px; --radius: 10px;
+}
+
+/* slate: deep blue-black, cool white ink, amber accent. For code, systems, infrastructure, protocols, data pipelines. */
+#stage[data-look="slate"] {
+  --bg: #0e1319; --panel: #18202a; --ink: #e9edf2; --muted: #8e9aa8; --faint: #2b3643;
+  --accent: #ffb547; --yellow: #ffb547; --blue: #62b6ff; --green: #5fd38d; --red: #ff6b5e; --purple: #b79cff;
+  --display: "Space Grotesk", Helvetica, Arial, sans-serif; --text: "Space Grotesk", Helvetica, Arial, sans-serif; --mono: "JetBrains Mono", Menlo, monospace;
+  --display-weight: 500; --display-track: -0.03em; --text-weight: 400; --stroke: 3px; --radius: 8px;
+}
+
+/* chalk: the house look of films 1 to 5 (3Blue1Brown lineage): near-black, cream ink, Computer Modern for ideas, Plex Mono
+   for numbers. For mathematics, ML and anything with equations. Colours as the author approved them. */
+#stage[data-look="chalk"] {
+  --bg: #0b0c10; --panel: #1a1d24; --ink: #ece6d8; --muted: #8a909b; --faint: #3a3f48;
+  --accent: #f7d96f; --yellow: #f7d96f; --blue: #58c4dd; --green: #83c167; --red: #fc6255; --purple: #b48fc4;
+  --display: "CM Serif", Georgia, serif; --text: "CM Serif", Georgia, serif; --mono: "Plex Mono", Menlo, monospace;
+  --display-weight: 400; --display-track: -0.01em; --text-weight: 400; --stroke: 3px; --radius: 8px;
+}
+/* a soft local lift behind the picture; never a full-screen linear gradient (those band in H.264) */
+#stage[data-look="chalk"] { background: radial-gradient(ellipse 70% 60% at 50% 45%, #13151c 0%, var(--bg) 70%); }
+
+/* ---- the stage ---- */
+html, body { margin: 0; padding: 0; background: #08090b; overflow: hidden; height: 100%; }
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0;
+         background: var(--bg); color: var(--ink); font-family: var(--text); font-weight: var(--text-weight);
+         -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; font-kerning: normal; }
+#stage * { box-sizing: border-box; }
+.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.world { transform-origin: 0 0; }
+.n { position: absolute; left: 0; top: 0; }
+.n svg.fx { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.n .fill { position: absolute; inset: 0; }
+.n .lab { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 16px; }
+
+/* ---- type: six sizes, no others. At 1080p nothing a viewer must read goes under 24 px. ---- */
+.t { white-space: pre; line-height: 1.25; }
+.t.wrap { white-space: pre-wrap; }
+.t-display { font-family: var(--display); font-weight: var(--display-weight); font-size: 144px; line-height: 1.0; letter-spacing: var(--display-track); }
+.t-title { font-family: var(--display); font-weight: var(--display-weight); font-size: 96px; line-height: 1.05; letter-spacing: var(--display-track); }
+.t-head { font-family: var(--display); font-weight: var(--display-weight); font-size: 64px; line-height: 1.1; letter-spacing: calc(var(--display-track) * 0.6); }
+.t-body { font-size: 44px; line-height: 1.3; }
+.t-label { font-size: 34px; line-height: 1.25; }
+.t-note { font-size: 26px; line-height: 1.3; color: var(--muted); }
+.f-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: 0; font-weight: 400; }
+.f-display { font-family: var(--display); font-weight: var(--display-weight); }
+.f-text { font-family: var(--text); font-weight: var(--text-weight); letter-spacing: 0; }
+.t b, .t strong { font-weight: 700; }
+.t i, .t em { font-style: italic; }
+.t .num, .num { font-variant-numeric: tabular-nums; }
+/* text.mark("phrase", t): the phrase takes the mark colour and an underline draws under it */
+.t .mk { --m: 0; --mc: var(--accent); color: color-mix(in oklab, currentColor, var(--mc) calc(var(--m) * 100%));
+         background: linear-gradient(var(--mc), var(--mc)) 0 100% / calc(var(--m) * 100%) 0.07em no-repeat; padding-bottom: 0.04em; }
+.t .mk.strike { background-position: 0 58%; background-size: calc(var(--m) * 100%) 0.08em; padding: 0 0.06em; margin: 0 -0.06em; }
+
+/* ---- code panel ---- */
+.code { background: var(--panel); border-radius: var(--radius); padding: 22px 0; font-family: var(--mono); font-variant-numeric: tabular-nums; overflow: hidden; }
+.code .ttl { padding: 0 28px 14px; color: var(--muted); font-size: 0.8em; }
+.code .ln { position: relative; display: flex; white-space: pre; line-height: 1.55; padding: 0 28px 0 0; }
+.code .no { width: 3.6em; flex: none; text-align: right; padding-right: 1.1em; color: var(--muted); opacity: 0.6; }
+.code .gap .src { color: var(--muted); }
+.code .bar { position: absolute; left: 0; right: 0; background: color-mix(in oklab, var(--accent) 16%, transparent); border-left: 0 solid var(--accent); }
+.code .kw { font-weight: 700; } .code .cm { color: var(--muted); font-style: italic; } .code .st { color: var(--muted); }
+
+/* ---- burned-in captions (X cut): keep y 960-1050 clear when a film will have them ---- */
+#caps { position: absolute; left: 0; right: 0; top: 968px; height: 76px; display: flex; justify-content: center; align-items: center; z-index: 50; }
+#caps span { padding: 10px 22px 12px; border-radius: 8px; background: color-mix(in oklab, var(--bg) 88%, transparent); color: var(--ink);
+             font-family: var(--text); font-size: 36px; line-height: 44px; white-space: nowrap; }
+
+/* ---- problems (missing cue words and the like) print on the frame, so a contact sheet shows them ---- */
+#problems { position: absolute; left: 24px; bottom: 24px; z-index: 99; font: 600 24px/1.4 ui-monospace, Menlo, monospace; color: #ff2d20; background: #000c; padding: 8px 14px; white-space: pre; }
+#problems:empty { display: none; }
+
+/* ---- the preview player (never in a render) ---- */
+#player { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 18px;
+          background: #101216; color: #d7dbe0; font: 14px/1 ui-monospace, Menlo, monospace; border-top: 1px solid #23272e; user-select: none; }
+#player button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 6px; text-align: center; line-height: 34px; background: #1c2027; font-size: 15px; }
+#player button:hover { background: #2a2f38; }
+#player .bar { position: relative; flex: 1; height: 26px; cursor: pointer; }
+#player .bar i { position: absolute; left: 0; right: 0; top: 11px; height: 4px; background: #2a2f38; border-radius: 2px; }
+#player .bar b { position: absolute; left: 0; top: 11px; height: 4px; background: #d7dbe0; border-radius: 2px; }
+#player .bar u { position: absolute; top: 6px; width: 1px; height: 14px; background: #5a616c; }
+#player .bar s { position: absolute; top: -9px; font-size: 10px; color: #7b828d; text-decoration: none; transform: translateX(3px); }
+#player .tm { width: 150px; text-align: right; font-variant-numeric: tabular-nums; }
+#player .ww { width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #8b929c; }

@@ -1,6 +1,6 @@
 """make_music.py TIMING.js OUT.wav : an original ambient bed (soft piano arpeggios, warm pad, low bass, room reverb)
 as long as the video. Calm and curious, in the spirit of 3Blue1Brown's scores; ducking under the voice happens in
-index.html (volume lane), so this file stays at full level.
+the mix (tools/mix.py's volume lane; with the HyperFrames back-up engine, index.html's), so this file stays at full level.
 
 Run: uv run --python 3.12 --with numpy --with scipy python -I tools/make_music.py video/data/timing.js video/assets/audio/music.wav"""
 import sys, json, re, wave

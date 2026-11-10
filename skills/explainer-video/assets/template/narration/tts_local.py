@@ -1,6 +1,6 @@
 """tts_local.py: narration with Breeze TTS 2 (MLX, through mlx-audio) on this Mac, the local alternative to ElevenLabs
 (no API, no credits). Writes the same files as tts.mjs (narration/audio/sNN.mp3 + sNN.json with word times), so
-voice_post.sh, build.mjs and captions.mjs work unchanged.
+voice_post.sh, clock.mjs and captions.mjs work unchanged.
 
   design [count] [--instruct "A calm, middle-aged American man with a low, warm voice."] -> narration/voices/vK.wav + vK.txt
   scenes --ref narration/voices/v1.wav [n ... | all] [--force] [--out DIR] [--seed K]   -> narration/audio/sNN.mp3 + sNN.json

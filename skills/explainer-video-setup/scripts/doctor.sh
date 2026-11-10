@@ -23,7 +23,7 @@ if [ "$(uname -s)" = Darwin ] && [ "$(uname -m)" = arm64 ]; then
 else
   note "platform" "$(uname -s) $(uname -m): the local voice (Breeze on MLX) needs an Apple Silicon Mac; narrate with ElevenLabs"
 fi
-free_gb=$(df -g "$HOME" | awk 'NR == 2 { print $4 }')
+free_gb=$(df -g "$HOME" 2>/dev/null | awk 'NR == 2 { print $4 }'); [ -n "$free_gb" ] || free_gb=$(df -k "$HOME" | awk 'NR == 2 { print int($4 / 1048576) }')
 if [ "${free_gb:-0}" -ge 15 ]; then ok "free disk" "${free_gb} GB"; else note "free disk" "${free_gb} GB: setup needs about 7 GB, each film about 1 GB"; fi
 echo
 
@@ -33,7 +33,7 @@ else note "Homebrew" "not found: the easiest way to install the tools below (htt
 
 if command -v node >/dev/null 2>&1; then
   v=$(node -v); major=${v#v}; major=${major%%.*}
-  if [ "$major" -ge 22 ]; then ok "Node" "$v"; else miss "Node" "$v is too old, need 22 or newer: brew install node"; fi
+  if [ "$major" -ge 20 ]; then ok "Node" "$v"; else miss "Node" "$v is too old, need 20 or newer: brew install node"; fi
 else miss "Node" "not found: brew install node"; fi
 
 if command -v ffmpeg >/dev/null 2>&1; then
@@ -51,16 +51,30 @@ elif command -v git >/dev/null 2>&1; then ok "git" "$(git --version | awk '{ pri
 else note "git" "not found: only needed to clone a repo you explain"; fi
 echo
 
-echo "HyperFrames (renders the video)"
+echo "Chrome (draws the frames)"
+chrome=""
+for c in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "/Applications/Chromium.app/Contents/MacOS/Chromium" \
+         "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge" /usr/bin/google-chrome /usr/bin/chromium /usr/bin/chromium-browser; do
+  [ -x "$c" ] && [ -z "$chrome" ] && chrome="$c"
+done
+for d in "$HOME/Library/Caches/ms-playwright"/chromium-* "$HOME/.cache/ms-playwright"/chromium-* "$HOME/.cache/hyperframes/chrome/chrome-headless-shell"; do
+  [ -d "$d" ] && [ -z "$chrome" ] && chrome="$d"
+done
+if [ -n "$chrome" ]; then ok "Chrome" "$chrome"
+else miss "Chrome" "none found: install Google Chrome, or  npx playwright install chromium  (about 150 MB)"; fi
+note "playwright-core" "each film project needs it once (8 MB, no browser download): npm install --save-dev playwright-core. The project's own  node tools/doctor.mjs  checks it."
+echo
+
+echo "HyperFrames (optional: the back-up engine, for a 3D character or to revise films 1 to 5)"
 cli=""
 for d in "$HOME"/.npm/_npx/*/node_modules/hyperframes; do
   [ -f "$d/package.json" ] && grep -q "\"version\": *\"$HYPERFRAMES_VERSION\"" "$d/package.json" && cli="$d"
 done
 if [ -n "$cli" ]; then ok "CLI $HYPERFRAMES_VERSION" "in the npx cache"
-else miss "CLI $HYPERFRAMES_VERSION" "not downloaded yet (about 120 MB): npx --yes hyperframes@$HYPERFRAMES_VERSION doctor"; fi
+else note "CLI $HYPERFRAMES_VERSION" "not downloaded (about 120 MB): npx --yes hyperframes@$HYPERFRAMES_VERSION doctor"; fi
 
 if [ -d "$HOME/.cache/hyperframes/chrome/chrome-headless-shell" ]; then ok "headless Chrome" "~/.cache/hyperframes/chrome"
-else miss "headless Chrome" "not downloaded yet (about 190 MB): npx --yes hyperframes@$HYPERFRAMES_VERSION browser ensure"; fi
+else note "headless Chrome" "not downloaded (about 190 MB): npx --yes hyperframes@$HYPERFRAMES_VERSION browser ensure"; fi
 
 for s in hyperframes hyperframes-cli; do
   found=""
@@ -69,7 +83,7 @@ for s in hyperframes hyperframes-cli; do
     found=$(find "$HOME/.claude/plugins/cache" -maxdepth 6 -path "*/skills/$s/SKILL.md" -print -quit 2>/dev/null)
   fi
   if [ -n "$found" ]; then ok "skill: $s" "installed"
-  else miss "skill: $s" "not installed: the user runs  npx --yes hyperframes@$HYPERFRAMES_VERSION skills update  (last, then restarts Claude Code)"; fi
+  else note "skill: $s" "not installed: the user runs  npx --yes hyperframes@$HYPERFRAMES_VERSION skills update  (then restarts Claude Code)"; fi
 done
 echo
 
@@ -92,7 +106,7 @@ fi
 echo
 
 echo "Optional"
-note "ElevenLabs" "only for the ElevenLabs voice: an account and API key, set up per film (explainer-video step 4)"
+note "ElevenLabs" "only for the ElevenLabs voice: an account and API key, set up per film (the playbook, "Voice")"
 echo
 if [ "$fail" = 0 ]; then echo "Everything required is here."; else echo "Fix the MISSING items in the order listed, asking the user before each install or download."; fi
 exit "$fail"

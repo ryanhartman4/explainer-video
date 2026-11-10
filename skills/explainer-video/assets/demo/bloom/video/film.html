@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>How a Bloom filter works</title>
+<link rel="stylesheet" href="stage.css">
+<script src="data/timing.js"></script>
+<script src="data/captions.js"></script>
+<script src="stage.js"></script>
+</head><body>
+<script>
+// How a Bloom filter works. SCRIPT.md has the narration and the beat sheet; each beat there is one block here.
+Stage.film({ look: "paper" }, film => {
+  const [p1, p2, p3, p4, p5, p6] = film.paras;
+
+  // ---------- real data: a 16-bit filter with 3 hashes, computed here, never typed in ----------
+  const M = 16, K = 3, SALT = 1522133;
+  const fnv = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; return h >>> 0; };
+  const bitsOf = w => [0, 1, 2].map(i => fnv(`${SALT}:${i}:${w}`) % M);
+  const CAT = bitsOf("cat"), DOG = bitsOf("dog"), OWL = bitsOf("owl"), EMU = bitsOf("emu"), ON = new Set([...CAT, ...DOG]);
+  const OFF = OWL.find(b => !ON.has(b));
+  // the narration's claims, checked against the data
+  if (ON.size !== 6) film.problem("cat and dog should switch on six different bits");
+  if (OWL.filter(b => !ON.has(b)).length !== 1) film.problem("owl should land on exactly one bit that is off");
+  if (!EMU.every(b => ON.has(b)) || !EMU.some(b => CAT.includes(b)) || !EMU.some(b => DOG.includes(b))) film.problem("emu should be a false positive made by cat and dog together");
+  const rate = (b, k) => Math.pow(1 - Math.exp(-k / b), k);                 // false-yes rate at b bits per word, k hashes
+  const best = b => Math.max(1, Math.round(b * Math.LN2));                  // the best whole number of hashes
+  if (Math.abs(rate(10, 7) - 0.0082) > 0.0001) film.problem("the 0.82% in the narration no longer matches the formula");
+
+  // ---------- geometry shared by the scenes ----------
+  const X0 = 120, GAP = 10, CELL = (1680 - GAP * (M - 1)) / M, ROW_Y = 640;
+  const cx = i => X0 + i * (CELL + GAP) + CELL / 2;
+  const HASH_X = [520, 960, 1400], HASH_Y = 395, R = 62;
+  function bitRow(scene, on = {}) {                                           // on: { index: colour }
+    return Array.from({ length: M }, (_, i) => {
+      const cell = scene.box({ x: cx(i) - CELL / 2, y: ROW_Y, w: CELL, h: CELL, stroke: on[i] || "faint", fill: on[i] || null, label: on[i] ? "1" : "0",
+        labelFont: "mono", labelSize: "body", labelColor: on[i] ? "bg" : "muted", id: "bit" + i });
+      cell.index = scene.text(String(i), { x: cx(i), y: ROW_Y + CELL + 12, size: "note", font: "mono", align: "center", id: "index" + i });
+      return cell;
+    });
+  }
+  film.front.text("Bloom filter", { x: 1800, y: 56, size: "note", font: "mono", align: "right", id: "running-head" });
+
+  // =====================================================================================================
+  // Scene A (paragraphs 1 to 4): one picture that builds. The bit row arrives once and never moves again.
+  // =====================================================================================================
+  const A = film.scene(p1, p4);
+
+  // ---- 1. the question
+  const question = A.text("Is this word\nin the set?", { x: 120, y: 120, size: "display" });        // (start) the opening frame
+  const answers = A.text("It answers, almost always correctly.", { x: 124, y: 460, size: "body", color: "muted" }).show(p1.at("it still answers"));
+  answers.mark("almost always", p1.at("almost always"));
+  const ask = A.box({ x: 1300, y: 130, w: 340, h: 116, stroke: "ink", fill: null, label: "heron<span style='opacity:.45'> ?</span>", labelFont: "mono", labelSize: "body", id: "ask-heron" }).show(p1.at("this word"));
+  const words = ["gecko", "heron", "ibis", "jackal", "koala"];
+  const list = words.map((w, i) => A.text(w, { x: 1340, y: 300 + i * 58, size: "body", font: "mono", color: "muted", id: "list-" + w }));
+  list.push(A.text("and a million more", { x: 1340, y: 300 + 5 * 58 + 10, size: "label", color: "muted", id: "list-more" }));
+  Stage.each(list, p1.at("keep every word"), (n, t) => n.show(t), 0.06);
+  // "search them": a bar scans down the list and stops on the match
+  const scan = A.box({ x: 1316, y: 296, w: 330, h: 60, fill: "faint", stroke: null, radius: 8, z: -1, id: "scan" }).show(p1.at("search them"), { by: "fade", dur: 0.2 });
+  scan.to(p1.at("search them", 0.25), { y: 296 + 58 }, { dur: 0.5, ease: "inOut" });
+  list[1].to(p1.at("search them", 0.7), { color: "ink" }, { dur: 0.25 });
+  const gone = p1.at("keeps none of them");
+  Stage.each(list, gone, (n, t) => n.hide(t), 0.03); scan.hide(gone); ask.hide(gone + 0.15);
+  const row = bitRow(A);
+  Stage.each(row, p1.at("a row of bits"), (c, t) => { c.show(t, { dur: 0.35 }); c.index.show(t + 0.15, { by: "fade" }); }, 0.035);
+  film.hit("thock", p1.at("a row of bits") + 0.3);
+
+  // ---- 2. adding
+  const hide1 = p2.at("To add a word", -0.25);
+  question.hide(hide1); answers.hide(hide1);
+  const headAdd = A.hud.text("Add a word", { x: 120, y: 96, size: "head" }).show(p2.at("To add a word"));
+  const chip = (word, query) => A.box({ x: 960 - 170, y: 130, w: 340, h: 116, fill: query ? null : "panel", stroke: "ink", label: word + (query ? "<span style='opacity:.45'> ?</span>" : ""), labelFont: "mono", labelSize: "body", id: "chip-" + word });
+  const cat = chip("cat").show(p2.at("To add a word", 0.15));
+  const hashes = HASH_X.map((x, i) => A.circle({ x, y: HASH_Y, r: R, stroke: "ink", label: `h<sub>${i + 1}</sub>`, labelFont: "mono", labelSize: "body", id: "hash" + (i + 1) }));
+  const fan = hashes.map((h, i) => A.arrow(cat, h, { stroke: "muted", lw: 3, head: false, id: "fan" + (i + 1) }));
+  Stage.each(hashes, p2.at("three hash functions"), (h, t, i) => { fan[i].show(t, { dur: 0.4 }); h.show(t + 0.2); }, 0.14);
+  // three arrows, hash to bit. The same three arrows serve every word: they swing to the new word's bits.
+  const arrows = hashes.map((h, i) => A.arrow([HASH_X[i], HASH_Y + R + 14], [cx(CAT[i]), ROW_Y - 16], { stroke: "blue", id: "arrow" + (i + 1) }));
+  Stage.each(arrows, p2.at("a position in the row"), (a, t) => a.show(t, { dur: 0.7 }), 0.12);
+  const count = A.number(0, { x: 1800, y: 806, size: "label", align: "right", fmt: v => `${Math.round(v)} of ${M} bits on`, color: "muted", id: "count" }).show(p2.at("Add cat"));
+  const turnOn = (bits, colour, t) => bits.forEach((b, i) => {
+    row[b].to(t + i * 0.1, { fill: colour, stroke: colour, color: "bg", label: "1" }, { dur: 0.3, ease: "out" }).pulse(t + i * 0.1);
+    film.hit("tick", t + i * 0.1, { pitch: Math.round(b / 2) });
+  });
+  turnOn(CAT, "blue", p2.at("switched on"));
+  count.to(p2.at("Add cat"), { value: 3 }, { dur: 0.5, ease: "out" });
+  // dog takes cat's place; the arrows swing over and turn green
+  const dog = chip("dog").show(p2.at("Add dog"));
+  cat.hide(p2.at("Add dog", -0.1));
+  arrows.forEach((a, i) => a.to(p2.at("Add dog", 0.1 + i * 0.08), { x2: cx(DOG[i]), stroke: "green" }, { dur: 0.7 }));
+  turnOn(DOG, "green", p2.at("three more"));
+  count.to(p2.at("three more"), { value: 6 }, { dur: 0.5, ease: "out" });
+  const away = p2.at("thrown away");
+  dog.hide(away); fan.forEach(f => f.hide(away)); arrows.forEach(a => a.hide(away + 0.1));
+
+  // ---- 3. asking
+  headAdd.hide(p3.at("To ask about a word", -0.2));
+  const headAsk = A.hud.text("Ask about a word", { x: 120, y: 96, size: "head" }).show(p3.at("To ask about a word"));
+  const owl = chip("owl", true).show(p3.at("To ask about a word", 0.15));
+  fan.forEach((f, i) => f.show(p3.at("hash it the same way", i * 0.08), { dur: 0.4 }));
+  arrows.forEach((a, i) => { a.set(p3.at("look at its three bits", -0.3), { x2: cx(OWL[i]), stroke: "ink" }); a.show(p3.at("look at its three bits", i * 0.12), { dur: 0.7 }); });
+  const ring = A.box({ x: cx(OFF) - CELL / 2 - 12, y: ROW_Y - 12, w: CELL + 24, h: CELL + 24, stroke: "ink", fill: null, lw: 6, radius: 16, id: "ring" }).show(p3.at("still off"), { by: "draw", dur: 0.6 });
+  row[OFF].pulse(p3.at("still off", 0.3));
+  A.camera.to(p3.at("still off"), { x: 960, y: 560, zoom: 1.1 }).reset(p3.at("never added", -0.5), { dur: 1.0 });
+  const no = A.text("definitely not", { x: 960, y: 838, size: "title", align: "center", id: "verdict-no" }).show(p3.at("never added"));
+  no.mark("definitely", p3.at("always right"));
+  film.hit("pluck", p3.at("never added"), { pitch: 2 });
+
+  // ---- 4. the catch
+  const tEmu = p4.at("But try emu");
+  owl.hide(tEmu - 0.1); no.hide(tEmu - 0.2); ring.hide(tEmu - 0.2);
+  const emu = chip("emu", true).show(tEmu);
+  headAsk.hide(tEmu); A.hud.text("The catch", { x: 120, y: 96, size: "head" }).show(tEmu + 0.2);
+  arrows.forEach((a, i) => a.to(tEmu + 0.1 + i * 0.08, { x2: cx(EMU[i]) }, { dur: 0.7 }));
+  EMU.forEach((b, i) => row[b].pulse(p4.at("All three") + i * 0.16));
+  // whose bits are these? the index numbers under cat's and dog's bits give way to their names
+  [[CAT, "cat", "blue"], [DOG, "dog", "green"]].forEach(([bits, name, colour], k) => bits.forEach((b, i) => {
+    const t = p4.at(k ? "and by dog" : "by cat") + i * 0.08;
+    row[b].index.hide(t - 0.1);
+    A.text(name, { x: cx(b), y: ROW_Y + CELL + 8, size: "label", font: "mono", color: colour, align: "center", id: `${name}-under-${b}` }).show(t, { by: "fade" });
+  }));
+  const yes = A.text("yes", { x: 960, y: 838, size: "title", align: "center", id: "verdict-yes" }).show(p4.at("says yes"));
+  yes.strike("yes", p4.at("it is wrong"));
+  const fp = A.text("a false positive", { x: 1090, y: 870, size: "body", color: "accent", id: "false-positive" }).show(p4.at("it is wrong", 0.25), { by: "fade" });
+  film.hit("thump", p4.at("it is wrong"));
+  const tProb = p4.at("only means probably");
+  yes.hide(tProb - 0.15); fp.hide(tProb - 0.15);
+  A.text("probably yes", { x: 960, y: 838, size: "title", align: "center", id: "verdict-probably" }).show(tProb).mark("probably", tProb + 0.3);
+
+  // =====================================================================================================
+  // Scene B (paragraph 5): the trade, as a chart. The data is the formula, sampled.
+  // =====================================================================================================
+  const B = film.scene(p5);
+  B.text("How often is it wrong?", { x: 120, y: 96, size: "head" });
+  const pct = v => (v * 100).toFixed(0) + "%";
+  const ax = B.axes({ x: 220, y: 300, w: 860, h: 520, xr: [2, 16], yr: [0, 0.4], xticks: [2, 4, 6, 8, 10, 12, 14, 16], yticks: [0, 0.1, 0.2, 0.3, 0.4],
+    fmt: v => (v < 1 && v > 0 ? pct(v) : String(v)), xlabel: "bits per word", ylabel: "answers that are a false yes" }).show(p5.at("How often"));
+  const pts = []; for (let b = 2; b <= 16.001; b += 0.1) pts.push([b, rate(b, best(b))]);
+  ax.plot(pts, { stroke: "accent", lw: 6 }).show(p5.at("You choose"), { dur: 1.3 });
+  const [dx, dy] = ax.at(10, rate(10, 7));
+  B.line({ from: [dx, ax.base.y + 40], to: [dx, dy - 20], stroke: "muted", lw: 3, dash: [8, 10], id: "guide" }).show(p5.at("ten bits per word"), { dur: 0.5 });
+  B.circle({ x: dx, y: dy, r: 13, fill: "ink", stroke: "bg", lw: 4, id: "dot" }).show(p5.at("ten bits per word", 0.35));
+  film.hit("pluck", p5.at("ten bits per word", 0.35), { pitch: 4 });
+  B.text("10 bits per word, 7 hashes", { x: 1240, y: 300, size: "label", color: "muted" }).show(p5.at("ten bits per word", 0.2));
+  B.number(0, { x: 1236, y: 340, size: "display", decimals: 2, suffix: "%", color: "accent", id: "rate" }).show(p5.at("fewer than one"))
+    .to(p5.at("fewer than one"), { value: rate(10, 7) * 100 }, { dur: 0.9, ease: "out" });
+  B.text("of answers are a false yes", { x: 1240, y: 500, size: "label" }).show(p5.at("fewer than one", 0.3));
+  B.line({ from: [1240, 610], to: [1800, 610], stroke: "faint", lw: 3, id: "rule" }).show(p5.at("A million words", -0.2), { dur: 0.5 });
+  B.text("1,000,000 words × 10 bits", { x: 1240, y: 650, size: "label", font: "mono" }).show(p5.at("A million words"));
+  B.text("1.25 MB", { x: 1236, y: 705, size: "title", font: "mono", id: "megabytes" }).show(p5.at("just over a megabyte"));
+  B.text("however long the words are", { x: 1240, y: 830, size: "label", color: "muted" }).show(p5.at("however long"), { by: "fade" });
+
+  // =====================================================================================================
+  // Scene C (paragraph 6): the close, back on the picture the film built.
+  // =====================================================================================================
+  const C = film.scene(p6);
+  const onNow = {}; CAT.forEach(b => (onNow[b] = "blue")); DOG.forEach(b => (onNow[b] = "green"));
+  bitRow(C, onNow);
+  const lines = [["Never a false no.", "Never a false no"], ["Sometimes a false yes.", "Sometimes a false yes"], ["You set how often.", "you set how often"]];
+  lines.forEach(([text, cue], i) => {
+    const line = C.text(text, { x: 120, y: 130 + i * 138, size: "title", id: "close" + (i + 1) }).show(p6.at(cue));
+    if (i === 1) line.mark("false yes", p6.at(cue, 0.35));
+  });
+  film.hit("chord", p6.at("you set how often"));
+  C.text("Toy filter on screen: 16 bits, 3 hashes. Rates from Bloom's 1970 formula.", { x: 120, y: 900, size: "note" }).show(p6.at("you set how often", 0.5), { by: "fade" });
+});
+</script>
+</body></html>

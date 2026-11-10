@@ -1,87 +1,193 @@
 ---
 name: explainer-video
-description: Make a narrated, animated explainer video in the 3Blue1Brown style about a code repo, paper, system or idea, end to end. It covers the script and fact-check, voiceover (ElevenLabs, or Breeze TTS 2 locally for free) with word timestamps, HyperFrames scenes synced word by word, an original synthesized music bed, captions and the final MP4. Use this whenever the user asks for an explainer video, a video walkthrough of a repo or README, "explain X in a short video", a voiceover or narrated animation, a narrated animated chart or argument for a blog or X, a 3D character or mascot reacting on screen, or a 3b1b-style video of a concept, even if they never say "explainer". For a beat-synced music video, a silent chart animation, or an HTML page that explains something (visual-explainer), use those tools instead.
+description: Make a narrated, animated explainer video about a code repo, paper, system, algorithm, argument or idea, end to end - design the explanation, write and fact-check the script, animate it in sync with the spoken words, add voice, music and captions, and render the MP4. Use this whenever the user asks for an explainer video, a video walkthrough of a repo or README, "explain X in a short video", a narrated animation or animated diagram, a narrated chart or argument for a blog or X, a 3Blue1Brown-style video, or wants an existing explainer improved, even if they never say "explainer". Also use it to design or critique the storyboard, script or look of such a video. For a silent chart animation, a music video, or an HTML page that explains something, use other tools.
 ---
 
 # Explainer video
 
-This skill turns a subject into a finished narrated explainer: script, voice, animation, music, captions, MP4. It is the Faultline explainer (October 2026) turned into a reusable process; the author liked the result, and the process and the code are proven. A second film, the neuron-explorer explainer (2026-10-28, OmniVoice narration), ran the same pipeline end to end; its lessons are in the playbook, marked *(film 2)*. A third, the steering explainer (2026-10-29), put real code on screen; its lessons are marked *(film 3)*. A fifth, the permanent underclass explainer (2026-11-04, a blog cut and an X cut), added a meta-prompt's craft: a directed prompt, motion numbers in frames, a beat grid, frame-exact sound hits, a poster first frame, review rounds pointed at frames, and a 3D character (Claw'd, Three.js) in one continuous composition; its lessons are marked *(film 5)*. After it, the author found OmniVoice's reading flat and wrong on words like "lead", so a bake-off the author judged by ear (2026-11-04) made Breeze TTS 2 the local voice; that switch is marked *(local voice, 2026-11-04)*.
+This skill makes a finished explainer: a script, a voice, animation that lands on the spoken words, music, captions
+and an MP4. It has two layers.
 
-The one rule everything else follows: **write and lock the script first, then make every animation fire on a spoken word.** Scenes position their tweens with `K.cue(scene, "word")`, read from ElevenLabs' character timestamps. Nothing uses clock times, so a re-recorded line or a different voice retimes the whole film by itself.
+- **The method** (`references/method.md`): how to design the explanation. One picture that builds, the voice and the
+  picture saying the same thing at the same moment, one change at a time, and looking at your own frames.
+- **The engine** (`references/stage.md`): a small dependency-free film engine, `stage.js`, with tools that time the
+  film from the narration, take contact sheets, check frames mechanically and render.
 
-Read `references/playbook.md` before starting. It holds the full stack with versions, the 14-step pipeline with commands, every setting (voice chain, music lane, palette), the gotchas we hit, and the reasons behind each decision. This file is the map; the playbook is the detail.
+Read both before the first film. A complete film made this way is in `assets/demo/bloom/` (script, design, film):
+read its `SCRIPT.md` and `video/film.html` and work in the same shape.
 
-## Before the first film on a machine
+The two rules everything else follows:
+1. **Design the picture before the words are final.** Find the one picture the whole film can be told on.
+2. **Every change on screen is cued by a spoken phrase,** never by a clock time. `p.at("fault lines")` is when those
+   words are said, so a re-recorded voice retimes the whole film by itself.
 
-Run the `explainer-video-setup` skill (in this plugin) when anything below is missing or this is a new machine: Node, ffmpeg, uv, the HyperFrames CLI and its skills, the local voice's uv project at `~/Developer/mlx-audio` and its model. Its `doctor.sh` reports what is missing in a few seconds.
-
-## Load these with it
-
-- The `hyperframes` and `hyperframes-cli` skills (composition contract, lint, snapshot, render). Read their SKILL.md before writing scene HTML.
-- `superpowers:brainstorming` (or ask directly) for the intake below.
-
-## Intake: ask, then propose defaults
-
-Ask the user, one or two questions at a time, and offer a sensible default for each:
-- **Who watches it and where?** (Faultline was for the author only. A private repo shown publicly needs the owner's OK.)
-- **What should the viewer be able to explain afterwards?** This sets depth and the one idea to leave behind.
-- **Length.** Default: under 5 minutes, about 650 to 700 narrated words at roughly 155 words a minute.
-- **Voice engine.** ElevenLabs (exact word timestamps, polished, costs credits) or Breeze TTS 2 on the Mac (free, offline, unlimited re-takes; word timings estimated to about 0.2 s). Breeze's license covers research and non-commercial use only, so personal and unmonetized posts. The author picked Breeze by ear over OmniVoice, Higgs TTS 3 and Qwen3-TTS (playbook "Local voice"). For a video that will earn money (X's creator revenue sharing counts: ask whether the user's X account is enrolled), offer Higgs TTS 3 instead: its Creator Use Grant allows monetized videos credited "Boson AI's Higgs Audio" in the audio or prominently in the post text or description (playbook "Local voice" has the switch).
-- **Voice.** ElevenLabs: offer samples (`npm run tts -- samples <ids>`, about 150 credits each); the author's Faultline pick was Eric (`cjVigY5qzO86Huf0OWal`) deepened 1.5 semitones. Local: clone the narrator from films 2–5 (`w_mid.wav`, see step 4) unless the user wants a new voice. A Breeze clone keeps that voice's timbre but reads with Breeze's own delivery. Ask whether any lines need a different delivery than the default direction (`direction_for()` in `tts_local.py`); keep the default if not. For a new voice, run `tts_local.py design 3 --instruct "<a one-sentence description of the voice>"` and let the user pick one clip, which becomes the cloning reference for the whole film. Send the clips with their measured median pitch. For pitch options (film 2: "a woman's voice at three pitch levels"), shift one clip with `tools/deepen.py` rather than asking the model for pitches; the author picked an unshifted 177 Hz woman's voice for film 2.
-- **Where the project lives.** Default `~/Movies/<name>`; if the user names a place (film 2 went on the Desktop), say what iCloud will sync and follow their call.
-- **Subtitles** burned in or kept as an `.srt`. Default: `.srt` only. *(film 5)* For X, default to a second cut with burned-in captions (X autoplays muted), frame 0 composed as the poster, mixed at −16 LUFS.
-- **Scenes or one continuous shot?** *(film 5)* A single chart or diagram that builds should never cut: one composition, with the narration paragraphs only setting the clock.
-- **A character?** *(film 5)* If one stands for something (Claw'd stood for the AI), agree in DESIGN.md's anti-goals on what it must never read as.
-
-The user's level: ask what the audience already knows and skip primers it does not need; link ideas to the user's own projects where it is honest. (The author works in ML, so the example films skip ML primers.)
+The paths below call this skill's folder `<skill>`.
 
 ## The process
 
-1. **Research the subject.** Clone or read it in a scratch folder. Every on-screen number must cite a file or a measurement.
-2. **Write `DESIGN.md` and `SCRIPT.md`** in a new folder under `~/Movies/<name>` (off the iCloud Desktop) unless the user names another place. Follow `references/design-example.md` and `references/script-example.md`: scenes as `## N. Title`, narration as `> ` lines (exactly what TTS reads), then Screen notes. *(film 5)* Give DESIGN.md a **Directed prompt** section with every slot filled (GOAL, FORMAT, SHOTS with one hero move per shot, TECHNICAL, BAN LIST, MATERIALS / LIGHT / NUMBERS, SOUND); model: `references/design-example-film5.md`. Never keep work in the session scratchpad: macOS clears it (film 5's predecessor was lost that way).
-3. **Fact-check before spending.** (Spending means ElevenLabs credits and build time. A local-voice take may be recorded before the check and re-recorded after; see the playbook.) Start two fresh subagents at once: a fact-checker (every claim against the source, file:line evidence, flag misleading-but-true claims and missing credit) and a builder check (what a builder would still have to guess). Fix, then lock the script. In Faultline this caught missing credit to the paper the method came from and a flattering metric. In film 2 it caught weight links shown on the wrong pole (an early log entry predating a sign correction), quotes merged from three runs with different dose units, and co-authorship visible only in the git history. Ask the fact-checker to check each quote's run, prompt and dose, and to read early log entries against later corrections. In film 3 it caught a confidently wrong reason, results the subject's own log already had, and a closing claim wider than the test; ask it to test every stated reason and to search the subject's notes for any result the film calls new.
-4. **Set up the project.** Scaffold the video first: `npx hyperframes@0.9.13 init video --non-interactive --skip-skills`. Then copy `assets/template/` into the folder (`lib/` into `video/lib/`, `vendor/` into `video/assets/vendor/` only for a 3D character, the rest at the project root). `npm init -y`, `npm pkg set type=module`, `npm install @elevenlabs/elevenlabs-js`, `npm pkg set scripts.tts="node --env-file=.env.local narration/tts.mjs"`. Run `npx -y @elevenlabs/cli@latest onboard init` and follow its JSON; never print `.env.local`. Fonts (KaTeX, IBM Plex Mono) come from `npm pack` into a scratch folder, copied to `video/assets/` (see playbook). Ask before each download. *(film 5)* With the local voice, skip the ElevenLabs steps (`npm install`, `npm pkg set scripts.tts`, onboarding); copy the narrator clip and its transcript (films 2–5's voice: `assets/voices/w_mid.wav` and `w_mid.txt` in this skill) into `narration/voices/`.
-5. **Spoken spellings.** Put acronyms the voice would mangle in `SAY` (`narration/script.mjs`) and the reverse in `WRITE` (`tools/captions.mjs`).
-6. **Build on placeholder timing.** `node tools/build.mjs` invents word times when no take exists, so scenes can be built before the voice is final. Generate scene data from real code or real data (models in `assets/examples/`: `faultline/tools/make_data*.py`, `film3/tools/make_data.py` and `measure.py`); label anything illustrative as illustrative.
-7. **Build one exemplar scene yourself** (contract in `references/example-scene-s01.html`), snapshot it, and prove fonts, data, cues, canvas and crossfade work. *(film 5)* Use the motion numbers in `K.M` (frames at 60 fps) and the beat grid (`K.beat`, `K.snap`). For a continuous film, copy `tools/build_continuous.mjs` over `tools/build.mjs` and cue with `K.at`. Spike anything risky first (a 3D character, a new engine) in the project's `spike/` and prove it renders deterministically.
-8. **Parallel build.** Write a `video/BRIEF.md` adapted from `references/builder-brief-example.md` (add a "Scene notes" section from the builder check), then start about three builder subagents, each owning separate scene files. They can start while the voice records; cues retime when `build.mjs` reruns. Review every contact sheet; send fixes back to the builder that owns the scene. *(film 5)* A continuous film is one `film.html`, so there is nothing to split among builders: build it yourself from `references/example-film5-continuous.html`, and use a subagent for review and checks instead.
-9. **Record.**
-   - ElevenLabs: `npm run tts -- scenes <voiceId> all`, then `tools/voice_post.sh` (de-boom, normalize to −20 LUFS; `tools/voice_post.sh -1.5 0.97` also deepens, the author's setting for Eric).
-   - Local (Breeze TTS 2): `uv run --project ~/Developer/mlx-audio python narration/tts_local.py scenes --ref narration/voices/w_mid.wav all` (or `vK.wav`, a new design), then `tools/voice_post.sh 0` (0 skips the pitch shift). It generates one sentence at a time with a delivery direction (`direction_for()` in `tts_local.py`), trims silence by loudness only (a pitch-based trim cut real words on film 5), and estimates word times with `narration/align.py` (no ASR model). Run it in the background: about 2.5 minutes of compute per minute of speech.
-   - Then `node tools/build.mjs`. Both engines write the same `narration/audio/sNN.mp3` + `.json`, so nothing downstream changes.
-10. **Music and sound hits.** `uv run -q --python 3.12 --with numpy --with scipy python -I tools/make_music.py video/data/timing.js video/assets/audio/music.wav`, then `node tools/build.mjs` again (it writes the ducking lane). *(film 5)* Hits: call `K.hit(kind, t)` where each visual event is scheduled; `node tools/hits.mjs` reads them from the film, `tools/make_hits.py` synthesizes them sample-exact. `sh tools/rebuild.sh` runs the whole chain in order (continuous films).
-11. **Check.** `npx hyperframes@0.9.13 lint`, `npx hyperframes@0.9.13 check --samples 20 --json`, and `snapshot --composition sNN --frames 9` for every scene on the real timing. Look for red "missing cue" text. Also snapshot each scene at least once full-page (`snapshot --at <root seconds>`, no `--composition`): CSS percent transforms and layout reads break only there, and so in the render. With the local voice, screen for glitches by syllables per second per sentence (`tools/glitch.py`; `glitch.py narration/audio/altK` screens an alternate take), and ask the user to listen for words read as their twin (lead/lead, tear/tear): no measurement catches those, so respell any they hear in `SAY`. *(film 5)* Review in rounds: snapshot the changed moments, write follow-ups as frames and numbers, fix, re-snapshot only those. Optional: Impeccable's rule-based detector on the source and on `tools/harness.html?t=…` (playbook lists its two false positives for video).
-12. **Render** in `video/`: `npx hyperframes@0.9.13 render --quality high --fps 30 --output ../out/<name>.mp4` (about 2 minutes for 4.5 minutes of video). *(film 5)* 60 fps when motion matters (1:46 rendered in 85 s). X cut: `--variables '{"captions":true}'`, then master (playbook "Last mile for X").
-13. **Measure the audio**, since you cannot hear it: `ffmpeg -i out.mp4 -af ebur128=peak=true -f null -`. Target about −18 LUFS for the mix (−16 for the X cut), voice about −20 to −21, music under the voice about 14 to 18 dB lower, and check the band below 120 Hz. *(film 5)* Master the X cut with `sh tools/master_x.sh IN OUT` and check that hits still land after AAC with `uv run -q --python 3.12 --with numpy --with scipy python -I tools/sync_check.py OUT` (0 ms on film 5). Then send it and ask the user to listen.
-14. **Captions:** `node tools/captions.mjs`. Update the project's PLAYBOOK notes with anything new.
+Each step ends in a gate. Do not go on until the gate passes: later steps are built on earlier ones, and a wrong
+script costs more to fix after it has been animated and recorded.
 
-## Settings that worked (details in the playbook)
+### 1. Ask once, then decide
 
-- **Voice:** `eleven_v4`, stability 0.7, similarity 0.5, one request per scene with `previousText`/`nextText`. Raw v4 output is about −25 LUFS. Normalizing a deepened voice to −16 LUFS nearly blew out the author's speakers; the settled chain is high-pass 90 Hz, −4 dB at 170 Hz, +2 dB at 3 kHz, loudnorm −20 LUFS, true peak −3.
-- **Local voice *(2026-11-04)*:** Breeze TTS 2, `mlx-community/Breeze-TTS-2-mlx-8bit`, through mlx-audio 0.6.4 in the uv project `~/Developer/mlx-audio` (setup in the playbook). Every sentence cloned from the reference with a spoken direction at `cfg_scale` 4: the author picked directed takes in 5 of 7 bake-off rows. Run every Python step through uv: the voice tools with `uv run --project ~/Developer/mlx-audio`, the others as written (`uv run -q --python 3.12 --with <packages> python -I`); never a venv's own `python`. Design once, then clone, so one speaker carries the film.
-- **Music:** D major, 72 BPM, synthesized piano, pad, bass and reverb; ducking lane 0.55 intro, 0.11 under voice, 0.4 between scenes. The author approved this level. *(film 5)* Continuous films (`build_continuous.mjs`): 0.5 for the poster, 0.13 under the whole narration (the gaps are too short to lift between), lifted to 0.3 only in gaps of 2 s or more.
-- **Look:** canvas `#0b0c10`, Computer Modern serif for ideas, IBM Plex Mono for numbers; blue = truth, yellow = the guess, green = pass, red = fail, purple = map. Strokes draw on, dots glide, no bounce eases.
-- **Scenes:** one sub-composition each, overlapped 0.8 s, with each opaque `#root` fading in for the crossfade. *(film 5)* Or one continuous composition (`compositions/film.html`) when the picture never cuts.
-- **Motion and grid *(film 5)*:** enter `power3.out` 24 frames, exit `power2.in` 16, across `power2.inOut` 45, stagger 3, text still 8 frames before moving; one hero move per shot, secondary moves 6–12 frames late at 50–70% reach. 72 BPM at 60 fps = 50 frames a beat; voices start on beats, layout changes snap to eighth notes.
-- **3D character *(film 5)*:** Three.js r160 UMD in a `K.driver` (`lib/clawd.js`): non-metal IOR 1.5, satin roughness 0.5, key:fill 2:1 plus a rim, linear tone mapping, FOV 35°. Eyes carry the feeling; keep the body within a quarter radian of the camera.
+Ask these together, each with its default, and proceed on the defaults for anything the user does not answer. If
+the user said to just make it, do not ask: state your choices in one short list and go.
 
-## Ask the user first
+- **Who is it for, and what should they be able to explain afterwards?** This sets what to skip.
+- **Length.** Default 90 seconds to 3 minutes; about 2.5 words a second.
+- **Where will it be watched?** A blog or a shared screen: one cut. X or another feed: add a cut with captions
+  burned in (feeds autoplay muted).
+- **Voice.** Options are in step 6; default to the local voice on an Apple Silicon Mac, otherwise build on
+  placeholder timing and ask when the picture is done.
+- **Where the project lives.** Default `~/Movies/<name>` on a Mac (off the iCloud Desktop); in a cloud session, a
+  folder in the working directory. Never the session scratchpad: it gets cleared.
 
-- Downloads of any kind (packages, model weights, fonts): name, source and size. Fetch only the bytes you need (a single tensor from a big safetensors file by HTTP range request).
-- Running code from the repo being explained: auto mode blocks it until the user approves in chat. Re-implementing the formulas in your own script is the fallback.
-- ElevenLabs credits beyond samples (free plan: 10,000 a month; a 680-word take costs about 3,000 to 3,800).
-- Setting up the local voice on a machine that lacks it (the `explainer-video-setup` skill): the uv project (mlx-audio, librosa, soundfile and torch, about 1.2 GB of packages) and the 4.6 GB Breeze model.
-- *(film 5)* `npx impeccable install` (it adds skills and hooks to Claude Code); the detector alone (`npx -y impeccable@4.8.0 detect`, about 18 MB) is a download to name too.
-- *(film 5)* A choice that is the user's to make by eye (a character's expression, a poster): render two or three candidates side by side and let the user pick or combine. Asking the author to write pose numbers did not work.
+If the subject is someone's private repo and the film will be public, check the owner agrees.
+
+### 2. Set up the project
+
+```bash
+node <skill>/scripts/new_film.mjs <project-folder>
+```
+
+```bash
+cd <project-folder> && node tools/doctor.mjs
+```
+
+The first copies the engine, fonts, tools and narration scripts and downloads nothing. The doctor lists anything
+missing. On a machine that has never made a film, run the `explainer-video-setup` skill. Ask the user before any
+install or download, naming what it is, where it comes from and its size.
+
+*Gate: the doctor prints `Ready.`*
+
+### 3. Research, then write `SCRIPT.md`
+
+Read the subject itself (the code, the paper, the data), not a summary of it. Collect every fact the film will
+state, with where it comes from, in the `## Sources` section. A claim with no source line does not go in the film.
+
+Then follow `references/method.md` sections 1 to 4: the takeaway sentence, the question ladder, the anchor picture,
+the narration (one `## N. Title` paragraph per question, narration on `> ` lines exactly as spoken), and under each
+paragraph its beat sheet. Acronyms and numbers a voice would mangle go in `SAY` in `narration/script.mjs`, with the
+reverse in `WRITE` in `tools/captions.mjs`.
+
+```bash
+node tools/script_check.mjs --target 90
+```
+
+*Gate: no ERROR; every WARN fixed or justified. Then show the user the takeaway, the anchor picture and the script,
+unless they asked not to be consulted.*
+
+### 4. Fact-check, then lock the script
+
+Before any animation or recording, check the script against the subject. With subagents available, start two fresh
+ones at once: a **fact-checker** (every claim and every stated reason against the source, with file and line; flag
+true-but-misleading claims, missing credit for borrowed ideas, and results presented as new that the subject's own
+notes already have) and a **builder check** (what would someone animating this still have to guess?). Without
+subagents, do both passes yourself with the script in one window and the source in the other. Fix what they find.
+The playbook's "Accuracy" section lists what five films' fact-checks caught.
+
+*Gate: every finding fixed or answered; `script_check` still clean. The script is now locked: later changes go
+through this step again.*
+
+### 5. Design and build
+
+Fill in `DESIGN.md` (one page: the anchor picture's layout with coordinates, the look, what each colour means).
+Choose the look by `references/method.md` section 11.
+
+Then build `video/film.html` one paragraph at a time, each beat of the beat sheet becoming one block of code:
+
+```bash
+node tools/clock.mjs
+```
+
+```bash
+node tools/shots.mjs 2
+```
+
+```bash
+node tools/check.mjs
+```
+
+`clock` writes the word timings (placeholders until the voice exists). After each paragraph, take its contact sheet,
+**open the image and look at it**, and run the checker. Fix what you see before starting the next paragraph: a
+layout mistake copied into five paragraphs is five times the work. Put real data on screen: compute it in the film
+or in a script from the real source, and make the film call `film.problem(...)` if the data stops matching what the
+narration says (the demo does this).
+
+When all paragraphs are built, review the whole film with the five tests in `references/method.md` section 10,
+starting with `node tools/shots.mjs --film`. Review in rounds: name the two or three worst things as times and
+numbers, fix those, re-shoot those moments.
+
+*Gate: `node tools/check.mjs` reports 0 errors and no WARN you cannot justify (add `--captions` when a captioned cut
+is planned), and the whole-film sheet tells the story without sound.*
+
+### 6. Voice
+
+- **Local, free (Apple Silicon Mac):** Breeze TTS 2, cloning the bundled narrator.
+  `uv run --project ~/Developer/mlx-audio python narration/tts_local.py scenes --ref narration/voices/w_mid.wav all`
+  Run it in the background: about 2.5 minutes of compute per minute of speech. Research and non-commercial licence:
+  personal and unmonetized posts only.
+- **ElevenLabs** (any machine, exact word timestamps, costs credits): set-up and commands in the playbook, "Voice".
+- **Monetized video, a new voice, pitch changes, alternate takes, a misread word:** the playbook, "Local voice".
+- **No voice available here:** render on placeholder timing with music only and say so plainly; the user can record
+  on their machine and rerun steps 6 to 8 without touching the film.
+
+Then, after any take or any change to the narration:
+
+```bash
+sh tools/audio.sh
+```
+
+It post-processes the voice, rebuilds the clock on the real words, writes captions, synthesizes music and sound hits,
+mixes them and prints the loudness (about -18 LUFS is right for a blog cut).
+
+*Gate: re-run `node tools/check.mjs` and re-shoot the contact sheets on the real timing. Real speech is paced
+differently from the placeholder, so look again for beats that now crowd or drag.*
+
+### 7. Render and deliver
+
+```bash
+node tools/render.mjs
+```
+
+For a feed, also `node tools/render.mjs --captions --out out/<name>-x.mp4`, then `sh tools/master_x.sh` (playbook,
+"Last mile for X"). Pull two or three frames out of the MP4 and look at them. You cannot hear: report the measured
+loudness, then ask the user to listen for misread words (a voice can read "lead" as the metal) and for the music
+level. A misread word is respelled in `SAY` and that paragraph re-recorded.
+
+Tell the user plainly what was verified and what was not (for example: rendered on placeholder timing, voice not
+yet recorded, nobody has listened).
+
+*Gate: the MP4 plays, its frames match the contact sheets, and the user has what they need to judge the sound.*
+
+### 8. Leave notes
+
+Anything learned that the next film should know goes in the project's own `NOTES.md`; offer to fold durable lessons
+back into this skill.
+
+## When to use the back-up engine
+
+Films 1 to 5 were made on HyperFrames (HTML and GSAP rendered by HeyGen's CLI). That pipeline is kept whole in
+`assets/hyperframes/` with its record in `references/playbook.md`. Use it instead of `stage.js` when:
+
+- the film needs a **3D character** or other WebGL (the Claw'd rig, `assets/hyperframes/lib/clawd.js`);
+- you are **revising a film that was made on it**;
+- the user asks for HyperFrames, or needs its registry components.
+
+The playbook's sections on voice, music, sound hits, accuracy, captions and the last mile for X apply to **both**
+engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and gotchas apply only to the back-up.
 
 ## Bundled files
 
-- `references/playbook.md`: the full write-up. Read first.
-- `references/design-example.md`, `references/script-example.md`: the Faultline design and script, as models.
-- `references/example-scene-s01.html`: a finished scene showing the file contract, `K.cue`, `K.driver` canvas drawing and `K.enter`.
-- `references/builder-brief-example.md`: the brief the parallel builders worked from; adapt its data section to the new subject.
-- `assets/template/`: `lib/fl.js` and `lib/fl.css` (shared helpers and styles; `K.words`/`K.typeIn` type quoted text in time with the voice and `K.tok` draws vocabulary tokens; `K.glyph` and `K.strip` are Faultline's proposer/verifier motif, so replace them if the new subject has its own; `assets/examples/film3/lib/` adds `K.code`/`K.mark` code panels cut from real files, `K.term`, `K.card`, `K.row`, `K.num` and film 2's `K.stack`, a recurring canvas motif drawn from one cached texture: start a repo explainer's `lib/` there), `narration/script.mjs` and `tts.mjs` (ElevenLabs), `narration/tts_local.py` and `align.py` (Breeze TTS 2 through mlx-audio, run with `uv run --project ~/Developer/mlx-audio`), and `tools/build.mjs`, `voice_post.sh`, `deepen.py`, `make_music.py`, `captions.mjs` (also writes `video/data/captions.js` for a burned-in cut). *(film 5)* `tools/build_continuous.mjs` (one composition, voices on the beat grid), `hits.mjs` + `harness.html` (`?t=` freezes a frame in any browser) + `make_hits.py` (sound hits), `glitch.py`, `trim_check.py` (proves `trim()` keeps every word; run after any change to it), `rebuild.sh`, `master_x.sh` (X master), `sync_check.py` (hit sync after AAC); `lib/fl.js` now has `K.M`, `K.beat`, `K.snap`, `K.at`, `K.hit`; `lib/clawd.js` + `lib/three-extras.js` (the Claw'd rig; copy `assets/template/vendor/three.min.js` and its `LICENSE` into `video/assets/vendor/`: Three.js r160, MIT, its first line already patched).
-- `assets/voices/w_mid.wav` + `w_mid.txt`: the narrator of films 2–5, a synthetic voice designed with OmniVoice (CC-BY-NC), so use it for non-commercial work only.
-- `assets/bakeoff/`: the TTS bake-off (generate, measure, loudness-match, listening page); playbook "Local voice".
-- `references/design-example-film5.md`: film 5's DESIGN.md, the model for the directed prompt, a character spec and an X cut.
-- `references/example-film5-continuous.html`: film 5's whole composition, the contract for a continuous film (template, `#film-root`, script order, `K.at` cues, the pen schedule and its inverse, `K.hit`, Claw'd's emotions and gaze, burned-in captions).
+- `references/method.md`: the design method. `references/stage.md`: the engine's API, tools and traps.
+- `references/playbook.md`: the record of films 1 to 5: every voice, music and loudness setting the author approved,
+  what the fact-checks caught, and the HyperFrames pipeline.
+- `scripts/new_film.mjs`: start a project, or refresh its engine with `--update`.
+- `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (three looks) and fonts; `tools/`
+  (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master); `narration/` (script
+  parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
+- `assets/demo/bloom/`: a finished 99-second film, "How a Bloom filter works", as the model for a script with beat
+  sheets, a one-page design and a film file.
+- `assets/voices/`: the narrator of films 2 to 5 (synthetic, non-commercial). `assets/bakeoff/`: how to compare a new
+  voice model by ear.
+- `assets/hyperframes/`: the back-up engine's helpers, tools, examples and reference scenes.

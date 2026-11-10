@@ -1,6 +1,6 @@
 # Permanent underclass explainer (film 5): design, as a model for the directed prompt
 
-Paths in this file are relative to that film's project folder; its composition is `references/example-film5-continuous.html`.
+Paths in this file are relative to that film's project folder; its composition is `example-film5-continuous.html`, beside this file.
 
 ## Intent
 A narrated short, about 80 seconds, for the author's blog and X. It redoes the silent 25-second ManimGX chart from 2026-10-19 (the author's Excalidraw sketch, "economically useful AI capabilities vs time", with a pink band of "conditions sufficient for permanent underclass").

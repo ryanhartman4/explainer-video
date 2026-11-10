@@ -1,7 +1,7 @@
 {
   "name": "explainer-video",
-  "version": "1.0.0",
-  "description": "Narrated, animated explainer videos in the 3Blue1Brown style: script and fact-check, a local or ElevenLabs voice, HyperFrames animation synced word by word, synthesized music, captions and the final MP4. Includes a setup skill that gets a Mac ready.",
+  "version": "2.0.0",
+  "description": "Narrated, animated explainer videos: a design method, a dependency-free film engine that syncs animation to the spoken words, mechanical checks on script and frames, a local or ElevenLabs voice, synthesized music, captions and the final MP4. Includes a setup skill that gets a Mac ready.",
   "author": {
     "name": "Ryan Hartman",
     "url": "https://github.com/ryanhartman4"
@@ -9,5 +9,11 @@
   "homepage": "https://github.com/ryanhartman4/explainer-video",
   "repository": "https://github.com/ryanhartman4/explainer-video",
   "license": "MIT",
-  "keywords": ["video", "explainer", "hyperframes", "text-to-speech", "animation"]
+  "keywords": [
+    "video",
+    "explainer",
+    "animation",
+    "text-to-speech",
+    "storyboard"
+  ]
 }

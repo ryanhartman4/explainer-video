@@ -9,9 +9,9 @@
   "plugins": [
     {
       "name": "explainer-video",
-      "description": "Narrated, animated explainer videos in the 3Blue1Brown style, plus a setup skill that gets a Mac ready.",
+      "description": "Narrated, animated explainer videos: a design method, a film engine synced to the spoken words, and checks a smaller model can follow, plus a setup skill that gets a Mac ready.",
       "source": "./",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "category": "productivity"
     }
   ]

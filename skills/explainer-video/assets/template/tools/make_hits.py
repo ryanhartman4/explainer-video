@@ -4,6 +4,7 @@ Each hit starts on the exact sample of its visual event (round(t * SR)): on the 
 the music bed's key (D major pentatonic), so they sit inside the score. Every noise source is seeded.
 
 Run: uv run --python 3.12 --with numpy --with scipy python -I tools/make_hits.py video/data/hits.json video/data/timing.js video/assets/audio/hits.wav
+(tools/audio.sh runs it in the right order)
 """
 import sys, json, re, wave
 import numpy as np
@@ -74,9 +75,20 @@ def hop():
     t = t_(0.12); f = 330 - 90 * (t / 0.12)
     return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 32) * np.minimum(1, t / 0.003)
 
+pitch = lambda h: int(max(0, min(len(PENTA) - 1, h.get("pitch", 0))))   # a scale degree, 0 (low) to 8 (high)
+# kind -> (signal, gain, pan). film.hit("pluck", t, { pitch: 3 }) in film.html schedules one.
+#   tick     a glassy tick: small things arriving one after another (give each a pitch)
+#   pluck    a soft string on a scale degree: a value landing, a point reached (pitch rises with progress)
+#   thock    a soft wooden knock: a big part settling into place            (alias: stand)
+#   thump    a felt mallet on a low drum: the turn, the thing that matters
+#   rise     two rising notes: a split, a question opening                  (alias: split)
+#   chord    a resolving chord: things coming together, the answer          (alias: merge)
+#   scratch  a dry pencil stroke: a strike-through, something crossed out
+#   pop      a small round "bup": a small object appearing                  (alias: hop)
+#   bell     a high soft bell: the end card                                 (alias: card)
 SOUNDS = {
-    "tick": lambda h, k: (tick(h["pitch"]), 0.10, -0.2 + 0.05 * h["pitch"]),
-    "pluck": lambda h, k: (pluck(h["pitch"], 100 + k), 0.30 * h.get("gain", 0.7), -0.25 + 0.06 * h["pitch"]),
+    "tick": lambda h, k: (tick(pitch(h)), 0.10, -0.2 + 0.05 * pitch(h)),
+    "pluck": lambda h, k: (pluck(pitch(h), 100 + k), 0.30 * h.get("gain", 0.7), -0.25 + 0.06 * pitch(h)),
     "stand": lambda h, k: (stand(), 0.45, -0.1),
     "split": lambda h, k: (np.concatenate([bell(69, 0.14, 0.6)[: int(0.14 * SR)], bell(74, 1.6, 0.6)]), 0.16, 0.0),
     "thump": lambda h, k: (thump(), 0.55, 0.0),
@@ -85,7 +97,9 @@ SOUNDS = {
     "hop": lambda h, k: (hop(), 0.18, 0.35),
     "card": lambda h, k: (bell(81, 2.0, 0.5) + 0.6 * np.pad(bell(88, 1.6, 0.4), (0, int(0.4 * SR))), 0.07, 0.0),
 }
+for a, b in {"thock": "stand", "rise": "split", "chord": "merge", "pop": "hop", "bell": "card"}.items(): SOUNDS[a] = SOUNDS[b]
 for k, h in enumerate(hits):
+    if h["kind"] not in SOUNDS: sys.exit(f'unknown hit kind "{h["kind"]}" at {h["t"]} s; kinds: {", ".join(sorted(SOUNDS))}')
     sig, gain, pan = SOUNDS[h["kind"]](h, k)
     add(sig, h["t"], gain, pan)
 
