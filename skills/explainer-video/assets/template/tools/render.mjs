@@ -4,7 +4,9 @@
 //   node tools/render.mjs --captions --out out/film-x.mp4     the cut with burned-in captions
 //   node tools/render.mjs --from 10 --to 20       a part of the film, to look at motion
 //   options: --workers 4, --crf 16, --png (lossless frames, slower), --scale 2 (4K), --silent (no audio), --force
-// Frames are a pure function of time, so pages render disjoint frames in parallel and the result is identical each run.
+// Several pages render in parallel. Each page always draws the same frames in the same order (page k takes frames k,
+// k + workers, ...) and repaints the whole frame before each capture, so two runs with the same settings give the
+// same frames.
 // It refuses to render a film with problems (missing cue words, script errors) unless --force.
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
@@ -39,12 +41,12 @@ try {
   const done = new Promise((ok, bad2) => { enc.on("close", c => (c === 0 ? ok() : bad2(new Error("ffmpeg exited " + c)))); enc.on("error", bad2); });
   enc.stdin.on("error", () => {});
 
-  // each page takes the next frame; frames are written to ffmpeg strictly in order
-  const ready = new Map(); let next = 0, write = 0, lastLog = 0;
+  // page k draws frames k, k + workers, ...: a fixed order, so a run can be repeated exactly. Frames are written to
+  // ffmpeg strictly in order.
+  const ready = new Map(); let write = 0, lastLog = 0;
   const flush = async () => { while (ready.has(write)) { const buf = ready.get(write); ready.delete(write); if (!enc.stdin.write(buf)) await new Promise(r => enc.stdin.once("drain", r)); write++; } };
-  await Promise.all(pages.map(async ({ page }) => {
-    for (;;) {
-      const i = next++; if (i >= n) return;
+  await Promise.all(pages.map(async ({ page }, k) => {
+    for (let i = k; i < n; i += pages.length) {
       while (i - write > workers * 6) await new Promise(r => setTimeout(r, 5));          // do not run far ahead of the encoder
       await seek(page, (f0 + i) / fps);
       ready.set(i, await page.screenshot(A.png ? { type: "png" } : { type: "jpeg", quality: 97 }));

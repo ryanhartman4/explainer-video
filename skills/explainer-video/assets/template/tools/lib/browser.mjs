@@ -70,8 +70,17 @@ export async function openFilm(browser, base, opts = {}) {
 }
 
 // draw the frame at t and wait until it is painted
+// The film's state is a pure function of t, but Chrome's pixels are not quite: when a thing moves by a fraction of a
+// pixel, Chrome repaints only the area it thinks changed, so a few edge pixels can depend on the frame drawn before
+// (seen on macOS: PSNR 76 dB between two orders). Taking the stage out of the page and putting it back makes Chrome
+// paint the whole frame afresh, so the picture depends on t alone. STAGE_NO_REPAINT=1 turns this off, to compare.
+const REPAINT = !process.env.STAGE_NO_REPAINT;
 export async function seek(page, t) {
-  await page.evaluate(t => { window.__film.seek(t); return new Promise(r => requestAnimationFrame(() => r())); }, t);
+  await page.evaluate(([t, repaint]) => {
+    window.__film.seek(t);
+    if (repaint) { const st = document.getElementById("stage"); st.style.display = "none"; void st.offsetHeight; st.style.display = ""; }
+    return new Promise(r => requestAnimationFrame(() => r()));
+  }, [t, REPAINT]);
 }
 
 export function args(argv = process.argv.slice(2)) {

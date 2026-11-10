@@ -18,7 +18,7 @@ each change on screen to the words that cause it, rules for layout, type, colour
 them, and five tests for reviewing your own frames.
 
 **An engine** (`skills/explainer-video/assets/template/video/stage.js`, about 600 lines, no dependencies). A film is
-a pure function of time: one HTML file that opens in any browser with a scrubber, renders identically every run, and
+a pure function of time: one HTML file that opens in any browser with a scrubber, renders repeatably, and
 takes all its timing from the narration's word timestamps. Three looks ship with it (a warm paper look, a dark
 technical look, and the 3Blue1Brown-lineage look of the first five films) with bundled open-licence fonts.
 
@@ -90,10 +90,11 @@ and has not been tested:
   test cases in `skills/explainer-video/evals/`). Both finished with a clean checker and a rendered MP4, and each
   listed where the instructions or tools tripped it; those places were then fixed. The two films were not made again
   after the fixes.
-- The voice path (voice post, clock on recorded takes, captions, mix) was exercised with stand-in audio. **No real
-  narration has been recorded with version 2 yet**, and nobody has listened to a version 2 mix. The voice scripts
-  themselves are unchanged from films 2 to 5.
-- It has not been run on macOS yet. The Chrome lookup in `tools/lib/browser.mjs` covers the usual macOS paths.
+- On macOS (Apple Silicon) the Bloom demo has been built end to end with the local Breeze voice: checker clean, mix
+  at -17.4 LUFS, X master at -16.0 LUFS, sound hits in sync after encoding. Nobody has listened to it yet.
+- Rendering the same stretch twice gave identical frames on Linux. On macOS it first differed by a few edge pixels
+  with several render pages; the renderer now repaints each frame fully and fixes each page's frame order. That fix
+  has not been re-tested on macOS.
 - The back-up engine's files were moved, not changed; its set-up command (`new_film.mjs --hyperframes`) has been
   run, but no HyperFrames render has been made from the new layout.
 

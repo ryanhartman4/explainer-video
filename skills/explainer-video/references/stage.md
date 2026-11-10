@@ -11,8 +11,10 @@ numbers, code, charts, canvas · sound hits · the tools · splitting a long fil
 
 **A film is a pure function of time.** Every animated value is a track: a base value plus keyframes "from time t,
 go to v over dur". `film.seek(t)` evaluates every track at t and writes the page. So any frame can be drawn in any
-order and is always the same, the order you write the code in does not matter (keyframes sort by time), and there
-is no playback state to get wrong. Never use `Math.random()` (use `Stage.rng(seed)`), `Date`, timers or CSS
+order and has the same state, the order you write the code in does not matter (keyframes sort by time), and there
+is no playback state to get wrong. (Chrome's pixels can still differ by a hair with the frame drawn before, where a
+thing sits at a fraction of a pixel; the tools repaint the whole frame before each capture, and `render.mjs` gives
+each page a fixed order of frames, so a render can be repeated exactly.) Never use `Math.random()` (use `Stage.rng(seed)`), `Date`, timers or CSS
 animations: they would make a frame depend on something other than t.
 
 **Times come from words.** `p.at("fault lines")` is the second the narrator says those words. Never type a clock
