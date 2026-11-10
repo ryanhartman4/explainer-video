@@ -1,6 +1,6 @@
 #!/bin/sh
 # audio.sh [semitones] [formant_ratio]: everything between a voice take and a render, in the one safe order.
-#   voice post (EQ, -20 LUFS) -> clock (word times) -> captions -> sound hits read from the film -> music bed ->
+#   voice post (EQ, -20 LUFS) -> real clips cut (only when SCRIPT.md has @clip lines) -> clock (word times) -> captions -> sound hits read from the film -> music bed ->
 #   hits synthesized -> mix -> loudness report -> glitch screen (local voice)
 # Run it after a new take, after a change to SCRIPT.md, or after moving a film.hit(). With no take yet it still
 # builds music and a music-only mix, so the preview and a draft render have sound. Arguments go to voice_post.sh.
@@ -9,6 +9,7 @@ set -e
 cd "$(dirname "$0")/.."
 PY="uv run -q --python 3.12 --with numpy --with scipy python -I"
 if ls narration/audio/s[0-9][0-9].mp3 >/dev/null 2>&1; then sh tools/voice_post.sh "${1:-0}" "${2:-1.0}" > /dev/null; fi
+if grep -q '^@clip' SCRIPT.md 2>/dev/null; then $PY tools/clips.py; fi
 node tools/clock.mjs
 node tools/hits.mjs
 $PY tools/make_music.py video/data/timing.js video/assets/audio/music.wav

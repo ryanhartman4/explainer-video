@@ -38,6 +38,11 @@ the user said to just make it, do not ask: state your choices in one short list 
   (90 seconds is about 200 words); `tools/script_check.mjs` gives the real figure.
 - **Where will it be watched?** A blog or a shared screen: one cut. X or another feed: add a cut with captions
   burned in (feeds autoplay muted).
+- **A vertical cut as well?** Default: no. Only on a yes does the film also get a 1080 by 1920 cut for phone
+  feeds. A yes shapes the design from the first sketch, so settle it now: a film laid out for the wide frame is not
+  given a vertical cut afterwards.
+- **Real clips?** Default: no. Only on a yes may a paragraph play a short recording of a real person (a talk, an
+  interview) in place of the narrator. Without a yes the film uses no outside footage.
 - **Voice.** Options are in step 6; default to the local voice on an Apple Silicon Mac, otherwise build on
   placeholder timing and ask when the picture is done.
 - **Where the project lives.** Wherever the user says. Otherwise `~/Movies/<name>` on a Mac (off the iCloud
@@ -62,6 +67,9 @@ install or download, naming what it is, where it comes from and its size. Two do
 without Playwright needs `npm install --save-dev playwright-core` (8 MB), and the first `sh tools/audio.sh` fetches
 numpy and scipy through uv (about 60 MB) unless the doctor says they are cached.
 
+If the user said yes to a vertical cut, add `"formats": ["16x9", "9x16"]` to `film.config.json` now. Every check,
+contact sheet and render then covers both frames without being asked.
+
 *Gate: the doctor prints `Ready.`*
 
 ### 3. Research, then write `SCRIPT.md`
@@ -72,6 +80,10 @@ state, with where it comes from, in the `## Sources` section. A claim with no so
 Then follow `references/method.md` sections 1 to 4: the takeaway sentence, the question ladder, the anchor picture,
 the narration (one `## N. Title` paragraph per question, narration on `> ` lines exactly as spoken), and under each
 paragraph its beat sheet.
+
+If the user said yes to clips, follow `references/method.md` section 14: a clip is a paragraph with an `@clip`
+line and the clip's own words typed from the recording, it is listed under `## Sources`, and any download is
+asked for first. With no yes, there are none.
 
 Write the narration in words the voice can read as they stand ("ten bits", "zero point one"). Where the written form
 must differ from the spoken one (`FLT4` read as "F L T four"), add the pair to `SAY` at the top of
@@ -100,6 +112,8 @@ Whatever the subject, test each sentence against these: is it the worst case or 
 sentence say which ("at most four looks")? Is a number off by one at the boundary? Is "always", "never" or "must"
 literally true? Does a stated reason actually produce the result? Is the claim wider than what the film shows? Is a
 borrowed idea credited? The playbook's "Accuracy" section lists what five films' fact-checks caught in repos and papers.
+For each clip: is the voice the person named, are the typed words what the recording says, and does the cut keep
+the meaning the speaker gave it?
 
 *Gate: every finding fixed or answered; `script_check` still clean. The script is now locked: later changes go
 through this step again.*
@@ -107,7 +121,9 @@ through this step again.*
 ### 5. Design and build
 
 Fill in `DESIGN.md` (one page: the anchor picture's layout with coordinates, the look, what each colour means).
-Choose the look by `references/method.md` section 11.
+Choose the look by `references/method.md` section 11. For a film with a vertical cut, sketch both frames there
+first (`references/method.md` section 13) and place everything with `film.zones()` and `film.pick()`
+(`references/stage.md`, "Two frames"), never with a typed 1920 or 1080.
 
 Then build `video/film.html` one paragraph at a time, each beat of the beat sheet becoming one block of code:
 
@@ -146,6 +162,8 @@ is planned), and the whole-film sheet tells the story without sound.*
   personal and unmonetized posts only.
 - **ElevenLabs** (any machine, exact word timestamps, costs credits): set-up and commands in the playbook, "Voice".
 - **Monetized video, a new voice, pitch changes, alternate takes, a misread word:** the playbook, "Local voice".
+- **A clip paragraph is never recorded.** `sh tools/audio.sh` cuts the clip and uses its own sound; the voice
+  tools skip it. A real person's words are never spoken by the narrator's voice.
 - **No voice available here:** render on placeholder timing with music only and say so plainly; the user can record
   on their machine and rerun steps 6 to 8 without touching the film. With no voice the mix holds the music up so the
   draft is audible, and its loudness reads lower than the target: that is expected, do not normalize it.
@@ -172,6 +190,10 @@ For a feed, also `node tools/render.mjs --captions --out out/<name>-x-raw.mp4`, 
 `sh tools/master_x.sh out/<name>-x-raw.mp4 out/<name>-x.mp4` (loudness for feeds; playbook, "Last mile for X"). Pull two or three frames out of the MP4 and look at them. You cannot hear: report the measured
 loudness, then ask the user to listen for misread words (a voice can read "lead" as the metal) and for the music
 level. A misread word is respelled in `SAY` and that paragraph re-recorded.
+
+A film with a vertical cut renders both at once: `out/<name>.mp4` and `out/<name>-9x16.mp4` (`--format 9x16` for
+one). Pull frames from each. For a film with clips, list each clip and its source in what you tell the user: what
+gets published is their call.
 
 Tell the user plainly what was verified and what was not (for example: rendered on placeholder timing, voice not
 yet recorded, nobody has listened).
@@ -202,8 +224,8 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
   author approved, what the fact-checks caught, and the HyperFrames pipeline.
 - `scripts/new_film.mjs`: start a project, or refresh its engine with `--update`.
 - `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (three looks) and fonts; `tools/`
-  (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master); `narration/` (script
-  parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
+  (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master, clip cutter);
+  `narration/` (script parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
 - `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
 - `assets/voices/`: the narrator of films 2 to 5 (synthetic, non-commercial). `assets/bakeoff/`: how to compare a new

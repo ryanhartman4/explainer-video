@@ -21,7 +21,8 @@ animations: they would make a frame depend on something other than t.
 time. Before the voice exists the clock is a placeholder at normal speaking pace; after recording, rerun
 `node tools/clock.mjs` and every cue moves to the real word.
 
-Coordinates are pixels on the 1920 by 1080 frame, origin top-left.
+Coordinates are pixels on the 1920 by 1080 frame, origin top-left. A film with a vertical cut is also drawn on a
+1080 by 1920 frame: see "Two frames" below.
 
 ## A film file
 
@@ -94,6 +95,7 @@ you make in a loop), `z` (stacking), `overlap: true` (this is meant to sit on ot
 | `path("M..", o)` | `stroke`, `fill`, `lw`, `dash` | SVG path data in scene coordinates |
 | `group(o)` | `x`, `y`, `w`, `h` | children are placed relative to it and move, fade and scale with it |
 | `image(src, o)` | `w`, `h`, `radius` | a JPEG or PNG under `video/assets/`, about 1.5 times its display width |
+| `clip(p, o)` | `w`, `h`, `radius`, `focus`, `who`, `source` | the real recording paragraph `p` plays: see "Clips" below |
 | `code(src, o)` | `w` panel width, `size` font size in px (default 28), `start` first line number, `title`, `numbers: false` | `.focus(t, 6, 8)` lights lines 6 to 8 and dims the rest; `.unfocus(t)`. A line holding only `…` marks elided lines. Lines never wrap: one wider than the panel is cut off, and the checker reports it. A character is about 0.6 × size wide. |
 | `axes(o)` | `w`, `h`, `xr`, `yr`, `xticks`, `yticks`, `xlabel`, `ylabel`, `fmt` | `.plot(fn or [[x, y]..], o)`, `.dot(x, y, o)`, `.bar(x, v, o).grow(t)`, `.at(x, y)` gives scene coordinates |
 | `canvas((ctx, t) => .., o)` | `w`, `h` | for hundreds of parts; draw only from t and `film.value()` tracks |
@@ -167,8 +169,8 @@ Run all of them from the project folder.
 | `node tools/shots.mjs --film` | twelve frames of the whole film |
 | `node tools/shots.mjs --at 12.4,31` | full-size frames at those seconds; `--cue "3:fault lines"` for a phrase; `--look slate`; `--captions` |
 | `node tools/check.mjs [--captions]` | the mechanical review; exit 1 on an ERROR |
-| `sh tools/audio.sh` | voice post, clock, captions, hits, music, mix, loudness report, in the one safe order |
-| `node tools/render.mjs` | `out/<project folder's name>.mp4`, 1080p30 with the mix. `--out out/name.mp4`, `--fps 60`, `--captions`, `--from 10 --to 20`, `--look` |
+| `sh tools/audio.sh` | voice post, clips cut (when SCRIPT.md has `@clip` lines), clock, captions, hits, music, mix, loudness report, in the one safe order |
+| `node tools/render.mjs` | `out/<project folder's name>.mp4`, 1080p30 with the mix. `--out out/name.mp4`, `--fps 60`, `--captions`, `--from 10 --to 20`, `--look`, `--format 9x16` |
 | `node tools/captions.mjs` | `out/captions.srt` and the burned-in caption data (the clock runs it; run it alone after editing its `WRITE` list) |
 
 Settings for the clock live in `film.config.json`: `lead` and `tail` (silence around each paragraph, 0.6 and 0.5),
@@ -187,6 +189,72 @@ or be able to say why it is right.
 Rendering needs a Chrome that Playwright can drive. `tools/lib/browser.mjs` looks for `$STAGE_CHROME`, a Playwright
 install, HyperFrames' cached Chrome, then Google Chrome, Chromium or Edge. In a project without Playwright, run
 `npm install --save-dev playwright-core` (8 MB, no browser download; ask the user first).
+
+## Two frames (only for a film with a vertical cut)
+
+A film is drawn at 1920 by 1080 unless `film.config.json` lists a second frame:
+
+```json
+{ "end": 3.0, "formats": ["16x9", "9x16"] }
+```
+
+Add `"formats"` only when the user asked for a vertical cut. Then `check.mjs`, `shots.mjs` and `render.mjs` work on
+both cuts in turn; `--format 9x16` or `--format 16x9` picks one. The vertical cut's files end in `-9x16`
+(`out/<name>-9x16.mp4`, `shots/film-9x16.jpg`). In the browser, open `film.html?format=9x16`, or press V to switch.
+
+One `film.html` draws both. It reads the frame from the film and never from a typed 1920 or 1080:
+
+| | 16:9 | 9:16 |
+|---|---|---|
+| `film.W`, `film.H` | 1920, 1080 | 1080, 1920 |
+| `film.portrait`, `film.format` | `false`, `"16x9"` | `true`, `"9x16"` |
+| `film.area` (content area) | `{ x: 120, y: 96, w: 1680, h: 888 }` | `{ x: 72, y: 200, w: 936, h: 1300 }` |
+
+- `film.zones([3, 2], { gap, top, bottom })` splits the content area into parts with those weights: side by side in
+  16:9, stacked in 9:16. Each is `{ x, y, w, h, cx, cy }`. `top` and `bottom` keep room for a heading or a verdict.
+- `film.pick(wide, tall)` is the first value in the 16:9 cut and the second in the 9:16 cut: a coordinate, a wrap
+  width, a row count, a whole options object.
+- `Stage.cols(n, { x, w, gap })` defaults to the content area's width in either frame.
+
+```js
+const [rowZ, countZ] = film.zones([3, 2], { top: 120 });           // a heading sits in the top 120 px
+const cells = Stage.cols(8, { x: rowZ.x, w: rowZ.w, gap: 14 });
+A.hud.text("A row of bits", { x: film.area.x, y: film.area.y, size: "head" });
+A.number(0, { x: countZ.cx, y: countZ.cy, size: "display", align: "center" });
+```
+
+Text limits per frame are in `references/method.md` section 13; `check.mjs` enforces them for each cut.
+
+## Clips (only for a film that uses them)
+
+A paragraph can play a real recording in place of the narrator. In SCRIPT.md it carries an `@clip` line under its
+heading and the clip's own words on its `> ` lines:
+
+```
+## 4. Karpathy on compression
+
+@clip clips/karpathy.mp4 5.55 11.2
+> A trained network is, in some sense, a compressed file.
+```
+
+The file is named from the project folder; the two numbers are where the clip starts and ends in that file, in
+seconds or `m:ss.s`. `sh tools/audio.sh` cuts it (`tools/clips.py`): the sound becomes that paragraph's take at
+the narrator's level, the picture becomes JPEG frames in `video/assets/clips/sNN/`, and the typed words get
+estimated times, so captions and `p.at("phrase")` work. The paragraph is as long as the clip. The voice tools
+never record it.
+
+```js
+const p4 = film.para(4), C = film.scene(p4);
+C.clip(p4, { x: 120, y: 216, w: 984, who: "Andrej Karpathy", source: "Intro to Large Language Models, 2023" });
+```
+
+`clip(p, o)` puts the picture's top-left at `x`, `y`. `w` sets its width and `h` defaults to 16:9 of that; when
+the box is narrower than the recording (a vertical cut), `focus` from 0 to 1 says which part of the width to keep.
+`who` and `source` print under the picture, about 110 px tall: leave that room. Always give both. The picture
+keeps step with the film's clock, so the render is repeatable like any other frame.
+
+Word times in a clip are estimated from its pauses, good to about a third of a second. Cue on a phrase that starts
+a sentence, where the estimate is best. Until a clip is cut, the film reports `paragraph N has no clip yet`.
 
 ## Splitting a long film
 
@@ -209,3 +277,7 @@ Shared geometry and helpers go in one `video/shared.js` that one person owns.
 - **Do not edit `stage.js` for one film.** Put film-specific helpers at the top of `film.html`. `new_film.mjs --update`
   refreshes the engine and would overwrite your change.
 - **`video/data/` is generated.** Never edit `timing.js`, `captions.js` or `hits.json` by hand.
+- **A typed 1920 or 1080 breaks the vertical cut.** In a film with two frames, take sizes from `film.W`, `film.H`,
+  `film.area`, `film.zones()` and `film.pick()`.
+- **A clip paragraph is never voiced.** If a narrator take exists for it in `narration/audio/`, delete that take:
+  `voice_post.sh` would put it back in place of the clip.

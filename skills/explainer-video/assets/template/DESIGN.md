@@ -3,7 +3,8 @@
 Keep this to one page. It is the contract the film is checked against.
 
 ## Who and where
-Viewer, where it will be watched (blog, X, a meeting screen), length, and whether captions are burned in.
+Viewer, where it will be watched (blog, X, a meeting screen), length, whether captions are burned in, whether there
+is a vertical cut (default: no) and whether it uses real clips (default: no).
 
 ## The anchor picture
 The one picture the film builds and returns to, and the one example that runs through it. Sketch its layout with
@@ -17,6 +18,9 @@ heading (120, 96)                                   running head (1800, 56)
               verdict                y 840
 (caption strip, keep clear)          y 956+
 ```
+
+Only for a film with a vertical cut: sketch the same picture on the 1080 x 1920 frame too (content inside x 72 to
+1008, y 200 to 1500). Say which parts stack and what folds, such as a row of sixteen becoming two rows of eight.
 
 ## Look
 `paper` | `slate` | `chalk` (or a new block in `video/stage.css`), and why it suits this subject and viewer.

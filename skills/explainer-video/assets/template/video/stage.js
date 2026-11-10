@@ -10,7 +10,14 @@
 // API reference: the explainer-video skill's references/stage.md. No dependencies.
 (function () {
   "use strict";
-  const W = 1920, H = 1080;
+  // The frame is 1920 x 1080. A film that was planned with a vertical cut also draws at 1080 x 1920 when the page is
+  // opened with ?format=9x16 (the tools do this for "formats" in film.config.json): see film.pick() and film.zones().
+  const FORMATS = { "16x9": [1920, 1080], "9x16": [1080, 1920] };
+  const asked = new URLSearchParams(location.search).get("format");
+  const FORMAT = FORMATS[asked] ? asked : "16x9", [W, H] = FORMATS[FORMAT], PORT = H > W;
+  // content area (where the picture lives) and text limits, per frame. The vertical frame keeps clear of the strips a
+  // phone app covers: about 150 px at the top and 360 px at the bottom.
+  const AREA = PORT ? { x: 72, y: 200, w: 936, h: 1300 } : { x: 120, y: 96, w: 1680, h: 888 };
   const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
   const lerp = (a, b, u) => a + (b - a) * u;
 
@@ -342,6 +349,29 @@
       this.film.waits.push(el.decode ? el.decode().catch(() => this.film.problem("image did not load: " + src)) : Promise.resolve());
       return new Node(this, "image", el, { x: o.x || 0, y: o.y || 0, w: o.w ?? 400, h: o.h }, o);
     },
+    // clip(p, { x, y, w, h, radius, focus, who, source }): the real recording that paragraph p plays (its "@clip" line
+    // in SCRIPT.md; tools/clips.py cuts the frames). The picture keeps step with the film's clock, so any frame can be
+    // drawn in any order. x, y is the top-left of the picture. focus (0..1, default 0.5) is the part of the width kept
+    // when the box is narrower than the recording. who and source are printed under the picture: always credit a clip.
+    clip(p, o = {}) {
+      const film = this.film, c = p && p.clip, w = o.w ?? 960, h = o.h ?? Math.round(w * 9 / 16);
+      const g = make.group.call(this, { ...o, x: o.x || 0, y: o.y || 0, w, h, by: o.by || "fade" });
+      g.kind = "clip";
+      const img = document.createElement("img");
+      img.style.cssText = `display:block;width:${w}px;height:${h}px;object-fit:cover;object-position:${((o.focus ?? 0.5) * 100).toFixed(1)}% 50%;border-radius:${o.radius ?? 6}px;background:var(--panel)`;
+      const pic = new Node(g, "image", img, { x: 0, y: 0, w, h }, {});
+      if (!c) film.problem(`paragraph ${p ? p.n : "?"} has no clip yet: give it an "@clip file start end" line in SCRIPT.md, then run  sh tools/audio.sh`);
+      pic.paint = function (t) {
+        if (!c) return;
+        const i = Math.max(0, Math.min(c.frames - 1, Math.floor((t - p.voiceStart) * c.fps + 1e-6)));
+        this.w1("src", `${c.dir}/${String(i).padStart(5, "0")}.jpg`, v => { img.src = v;
+          film.pending.push(img.decode().catch(() => { if (this._w.src === v) film.problem("clip frame did not load: " + v); })); });   // a newer frame replacing this one is not a failure
+      };
+      g.frame = pic;
+      if (o.who) g.who = g.text(o.who, { x: 0, y: h + 14, size: "label" });
+      if (o.source) g.source = g.text(o.source, { x: 0, y: h + 14 + (o.who ? 48 : 0), size: "note" });
+      return g;
+    },
     // code(source, { x, y, w, size, start: first line number, title, lang }), then .focus(t, fromLine, toLine) / .unfocus(t)
     // Syntax stays nearly monochrome (keywords bold, comments and strings muted) so colour keeps its meaning.
     code(src, o = {}) {
@@ -427,6 +457,7 @@
       this.start = s.start; this.end = s.start + s.dur;
       this.voiceStart = s.vo ?? s.start + s.lead; this.voiceEnd = this.voiceStart + s.speech;
       this.keys = s.words.map(w => norm(w.w));
+      this.clip = s.clip || null;                      // { dir, fps, frames, w, h }: this paragraph is a real recording, not the narrator
     }
     _find(phrase, occ) {
       const want = String(phrase).split(/\s+/).map(norm).filter(Boolean);
@@ -496,9 +527,26 @@
       this.front = new Layer(this, stageEl, "front");
       this.capsEl = document.createElement("div"); this.capsEl.id = "caps"; stageEl.appendChild(this.capsEl);
       this.probEl = document.createElement("div"); this.probEl.id = "problems"; stageEl.appendChild(this.probEl);
-      this.safe = { left: 120, top: 96, right: W - 120, bottom: H - 96 };
+      this.format = FORMAT; this.portrait = PORT; this.area = { ...AREA };
+      this.safe = { left: AREA.x, top: AREA.y, right: AREA.x + AREA.w, bottom: AREA.y + AREA.h };
+      this.pending = [];
       this.t = 0;
     }
+    // one film, two frames: film.pick(wide, tall) is `wide` in the 16:9 cut and `tall` in the 9:16 cut.
+    //   A.text("Add a word", { x: film.pick(120, 72), y: film.pick(96, 210), size: "head" })
+    pick(wide, tall) { return PORT ? tall : wide; }
+    // split the content area into parts that sit side by side in 16:9 and stack top to bottom in 9:16.
+    //   const [left, right] = film.zones([3, 2]);   -> { x, y, w, h, cx, cy } each; weights set the share of the long side
+    //   { gap: 40, top: 0, bottom: 0 }: gap between zones, and room kept free above (a heading) or below
+    zones(weights = [1, 1], o = {}) {
+      const gap = o.gap ?? 40, top = o.top || 0, a = { x: AREA.x, y: AREA.y + top, w: AREA.w, h: AREA.h - top - (o.bottom || 0) };
+      const sum = weights.reduce((s, v) => s + v, 0), free = (PORT ? a.h : a.w) - gap * (weights.length - 1);
+      let at = PORT ? a.y : a.x;
+      return weights.map(v => { const len = free * v / sum, z = PORT ? { x: a.x, y: at, w: a.w, h: len } : { x: at, y: a.y, w: len, h: a.h };
+        at += len + gap; z.cx = z.x + z.w / 2; z.cy = z.y + z.h / 2; return z; });
+    }
+    // wait for anything a seek started loading (clip frames). The render tools call this before every capture.
+    settle() { const p = this.pending; this.pending = []; return Promise.all(p); }
     para(n) { const p = this.paras.find(q => q.n === n); if (!p) this.problem(`no paragraph ${n} in SCRIPT.md`); return p || this.paras[0]; }
     // scene(p): a layer that lives while paragraph p is spoken. scene(p2, p4): one picture across paragraphs 2 to 4.
     scene(a, b, o) { if (b && !(b instanceof Para)) { o = b; b = null; } const s = new Scene(this, a, b || a, o || {}); this.scenes.push(s); return s; }
@@ -509,6 +557,7 @@
     problem(msg) { if (!this.problems.includes(msg)) { this.problems.push(msg); console.error("[stage] " + msg); this.probEl.textContent = this.problems.join("\n"); } }
     seek(t) {
       t = clamp(t, 0, this.duration); this.t = t;
+      if (this.pending.length > 64) this.pending = this.pending.slice(-8);   // the preview player never calls settle()
       this.back.apply(t); for (const s of this.scenes) s.apply(t); this.front.apply(t);
       if (this.caps) { const c = this.caps.find(c => t >= c.a && t < c.b); const txt = c ? c.text : ""; if (this._cap !== txt) { this._cap = txt; this.capsEl.innerHTML = txt ? "<span></span>" : ""; if (txt) this.capsEl.firstChild.textContent = txt; } }
       return this;
@@ -557,7 +606,7 @@
       return out;
     }
     usage() {                                          // how much of the frame the scenes' content occupies, on a 20 px grid
-      const s = stageEl.getBoundingClientRect(), k = W / s.width, GW = 96, GH = 54, grid = new Uint8Array(GW * GH);
+      const s = stageEl.getBoundingClientRect(), k = W / s.width, GW = W / 20, GH = H / 20, grid = new Uint8Array(GW * GH);
       const mark = (x0, y0, x1, y1) => { for (let gy = Math.max(0, Math.floor(y0 / 20)); gy <= Math.min(GH - 1, Math.floor((y1 - 0.01) / 20)); gy++) for (let gx = Math.max(0, Math.floor(x0 / 20)); gx <= Math.min(GW - 1, Math.floor((x1 - 0.01) / 20)); gx++) grid[gy * GW + gx] = 1; };
       for (const n of this.nodes) {
         if (!this.sceneOf(n) || !this.visible(n) || n.op < 0.25 || n.kind === "group" || n.kind === "axes") continue;
@@ -605,11 +654,11 @@
   }
 
   // ---------------------------------------------------------------- start-up and the preview player
-  const Stage = (window.Stage = { M, EASE, SIZES, W, H, clamp, lerp });
+  const Stage = (window.Stage = { M, EASE, SIZES, W, H, FORMAT, PORT, AREA, clamp, lerp });
   // a seeded random source: const r = Stage.rng(7); r() -> 0..1. Math.random would make two renders differ.
   Stage.rng = seed => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   // n cells across a width: Stage.cols(4, { x: 120, w: 1680, gap: 40 }) -> [{ x, w, cx }, ...]
-  Stage.cols = (n, o = {}) => { const x = o.x ?? 120, w = o.w ?? W - 240, gap = o.gap ?? 40, cw = (w - gap * (n - 1)) / n; return Array.from({ length: n }, (_, i) => ({ x: x + i * (cw + gap), w: cw, cx: x + i * (cw + gap) + cw / 2 })); };
+  Stage.cols = (n, o = {}) => { const x = o.x ?? AREA.x, w = o.w ?? AREA.w, gap = o.gap ?? 40, cw = (w - gap * (n - 1)) / n; return Array.from({ length: n }, (_, i) => ({ x: x + i * (cw + gap), w: cw, cx: x + i * (cw + gap) + cw / 2 })); };
   // stagger a list: Stage.each(nodes, t, (node, t) => node.show(t)) starts each 0.08 s after the one before
   Stage.each = (list, t, fn, gap = M.stagger) => { list.forEach((n, i) => fn(n, t + i * gap, i)); return list; };
 
@@ -619,6 +668,7 @@
     const q = new URLSearchParams(location.search), render = q.has("render");
     stageEl = document.getElementById("stage") || document.body.appendChild(Object.assign(document.createElement("div"), { id: "stage" }));
     stageEl.dataset.look = q.get("look") || o.look || "paper";
+    stageEl.dataset.format = FORMAT; stageEl.style.setProperty("--W", W + "px"); stageEl.style.setProperty("--H", H + "px");
     probe = document.createElement("div"); probe.style.display = "none"; stageEl.appendChild(probe);
     const ready = (async () => {
       const fails = [];
@@ -658,7 +708,8 @@
     pp.onclick = toggle;
     const scrub = e => { const r = track.getBoundingClientRect(); go(clamp((e.clientX - r.left) / r.width) * film.duration); };
     track.onmousedown = e => { scrub(e); const mv = e2 => scrub(e2); addEventListener("mousemove", mv); addEventListener("mouseup", () => removeEventListener("mousemove", mv), { once: true }); };
-    addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); toggle(); } else if (e.code === "ArrowRight") go(film.t + (e.shiftKey ? 1 : 1 / film.fps)); else if (e.code === "ArrowLeft") go(film.t - (e.shiftKey ? 1 : 1 / film.fps)); });
+    addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); toggle(); } else if (e.code === "ArrowRight") go(film.t + (e.shiftKey ? 1 : 1 / film.fps)); else if (e.code === "ArrowLeft") go(film.t - (e.shiftKey ? 1 : 1 / film.fps));
+      else if (e.code === "KeyV") { q.set("format", PORT ? "16x9" : "9x16"); q.set("t", film.t.toFixed(2)); location.search = q.toString(); } });   // V: the other frame
     draw();
   }
 })();

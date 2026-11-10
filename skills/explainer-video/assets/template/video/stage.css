@@ -1,4 +1,5 @@
-/* stage.css: the film's look. One <div id="stage"> of 1920 x 1080 px; everything inside is positioned by stage.js.
+/* stage.css: the film's look. One <div id="stage"> of 1920 x 1080 px (1080 x 1920 for a vertical cut: stage.js sets
+   --W and --H); everything inside is positioned by stage.js.
    A LOOK is a block of tokens (ground, ink, hues, fonts). Pick one with Stage.film({ look: "paper" }) or add your own
    block below: copy a look, change the values, run `node tools/check.mjs` (it measures text contrast against the ground).
    Colours are named by hue here; DESIGN.md says what each hue MEANS in this film (one meaning per hue, kept all film). */
@@ -51,11 +52,11 @@
 
 /* ---- the stage ---- */
 html, body { margin: 0; padding: 0; background: #08090b; overflow: hidden; height: 100%; }
-#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0;
+#stage { position: absolute; left: 0; top: 0; width: var(--W, 1920px); height: var(--H, 1080px); overflow: hidden; transform-origin: 0 0;
          background: var(--bg); color: var(--ink); font-family: var(--text); font-weight: var(--text-weight);
          -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; font-kerning: normal; }
 #stage * { box-sizing: border-box; }
-.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.layer { position: absolute; left: 0; top: 0; width: var(--W, 1920px); height: var(--H, 1080px); }
 .world { transform-origin: 0 0; }
 .n { position: absolute; left: 0; top: 0; }
 .n svg.fx { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
@@ -95,6 +96,9 @@ html, body { margin: 0; padding: 0; background: #08090b; overflow: hidden; heigh
 #caps { position: absolute; left: 0; right: 0; top: 968px; height: 76px; display: flex; justify-content: center; align-items: center; z-index: 50; }
 #caps span { padding: 10px 22px 12px; border-radius: 8px; background: color-mix(in oklab, var(--bg) 88%, transparent); color: var(--ink);
              font-family: var(--text); font-size: 36px; line-height: 44px; white-space: nowrap; }
+/* the vertical cut: two lines of larger type, above the strip a phone app covers. Keep y 1400-1560 clear. */
+#stage[data-format="9x16"] #caps { top: 1410px; height: 140px; }
+#stage[data-format="9x16"] #caps span { font-size: 44px; line-height: 54px; white-space: normal; max-width: 900px; text-align: center; }
 
 /* ---- problems (missing cue words and the like) print on the frame, so a contact sheet shows them ---- */
 #problems { position: absolute; left: 24px; bottom: 24px; z-index: 99; font: 600 24px/1.4 ui-monospace, Menlo, monospace; color: #ff2d20; background: #000c; padding: 8px 14px; white-space: pre; }

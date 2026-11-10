@@ -51,21 +51,37 @@ export async function launch() {
   }
 }
 
-// open the film; returns { page, info, close }. opts: { captions, scale, query }
+// The frames a film can be drawn in. A film is 16x9 unless film.config.json lists more: { "formats": ["16x9", "9x16"] }.
+export const FORMATS = { "16x9": [1920, 1080], "9x16": [1080, 1920] };
+// which cuts a tool should work on: --format 9x16 (or 16x9, or 16x9,9x16) on the command line, else the film's own list
+export function formats(A = {}) {
+  const f = join(ROOT, "film.config.json"), cfg = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
+  const listed = Array.isArray(cfg.formats) && cfg.formats.length ? cfg.formats : ["16x9"];
+  const want = typeof A.format === "string" && A.format !== "all" ? A.format.split(",") : listed;
+  for (const x of want) if (!FORMATS[x]) throw new Error(`unknown format "${x}": use 16x9 or 9x16`);
+  return want;
+}
+// "-9x16" for the vertical cut's file names; nothing for the 16x9 cut, so a film with one cut keeps its old names
+export const suffix = format => (format && format !== "16x9" ? "-" + format : "");
+
+// open the film; returns { page, info, close }. opts: { captions, scale, look, format }
 export async function openFilm(browser, base, opts = {}) {
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: opts.scale || 1 });
+  const format = opts.format || "16x9", [vw, vh] = FORMATS[format];
+  const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: opts.scale || 1 });
   const errors = [];
   page.on("pageerror", e => errors.push(String(e.message || e)));
   page.on("console", m => { if (m.type() === "error" && !m.text().startsWith("[stage]") && !m.text().startsWith("Failed to load resource")) errors.push(m.text()); });
   page.on("response", r => { if (r.status() >= 400 && !r.url().endsWith("mix.wav")) errors.push(`could not load ${r.url().replace(base + "/", "video/")} (${r.status()})`); });
-  await page.goto(`${base}/film.html?render=1${opts.captions ? "&captions=1" : ""}${opts.look ? "&look=" + opts.look : ""}`);
+  await page.goto(`${base}/film.html?render=1&format=${format}${opts.captions ? "&captions=1" : ""}${opts.look ? "&look=" + opts.look : ""}`);
   await page.waitForFunction("window.__ready", null, { timeout: 30000 }).catch(() => {});
   const info = await page.evaluate(async () => {
     try { const f = await window.__ready; return { ok: true, duration: f.duration, fps: f.fps, problems: f.problems, hits: f.hits, look: document.getElementById("stage").dataset.look,
+      W: f.W, H: f.H, area: f.area || { x: 120, y: 96, w: 1680, h: 888 }, engineFormat: f.format || "16x9",
       placeholder: !!f.timing.placeholder, paras: f.paras.map(p => ({ n: p.n, title: p.title, start: p.start, end: p.end, voiceStart: p.voiceStart, voiceEnd: p.voiceEnd })) }; }
     catch (e) { return { ok: false, error: String(e && e.message || e) }; }
   });
-  info.errors = errors;
+  info.errors = errors; info.format = format;
+  if (info.ok && info.engineFormat !== format) info.problems = [...info.problems, `video/stage.js is too old to draw the ${format} cut: refresh it with the skill's  scripts/new_film.mjs <project> --update`];
   return { page, info };
 }
 
@@ -76,8 +92,9 @@ export async function openFilm(browser, base, opts = {}) {
 // paint the whole frame afresh, so the picture depends on t alone. STAGE_NO_REPAINT=1 turns this off, to compare.
 const REPAINT = !process.env.STAGE_NO_REPAINT;
 export async function seek(page, t) {
-  await page.evaluate(([t, repaint]) => {
+  await page.evaluate(async ([t, repaint]) => {
     window.__film.seek(t);
+    if (window.__film.settle) await window.__film.settle();          // clip frames the seek asked for have loaded
     if (repaint) { const st = document.getElementById("stage"); st.style.display = "none"; void st.offsetHeight; st.style.display = ""; }
     return new Promise(r => requestAnimationFrame(() => r()));
   }, [t, REPAINT]);

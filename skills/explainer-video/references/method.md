@@ -129,7 +129,8 @@ opening words. If a stretch has nothing to show, the narration there is not abou
 ## 5. Layout
 
 - **The frame** is 1920 by 1080. Keep content inside x 120 to 1800 and y 96 to 984. Text never leaves x 48 to 1872,
-  y 40 to 1040. If captions will be burned in, nothing sits below y 956.
+  y 40 to 1040. If captions will be burned in, nothing sits below y 956. A film whose user asked for a vertical cut
+  has a second frame as well: section 13.
 - **One focal point per beat.** The eye goes to what is largest, brightest, most saturated, or moving. Only one
   thing may be that at a time: the thing the narrator is naming.
 - **Left-align and top-anchor.** Headings top-left at one fixed position. Centre only a single hero element (a
@@ -290,3 +291,53 @@ The failures this method exists to prevent, so you can recognise them in your ow
 - **The stock look:** purple-to-blue gradients, glass cards, emoji icons, centred everything.
 - **The magic trick:** the picture changes a second before the narrator gets there, or a result appears from nowhere.
 - **The unverified claim:** a number on screen that nobody computed or cited.
+
+## 13. A vertical cut (only when the user asked for one)
+
+A film is one 16:9 cut unless the user said yes to a vertical cut in step 1. On a yes the same film is also drawn at
+1080 by 1920 for phone feeds. Never add a vertical cut to a film that was laid out for the wide frame, and never
+scale or letterbox the wide picture into the tall one: text shrinks to a third of its size and the frame is mostly
+empty. Plan both frames in DESIGN.md before any code.
+
+- **One film, two frames.** The script, the voice, the beats, the colours, the type sizes and the motion are the
+  same in both cuts. Only the geometry differs: where each part sits, how wide text wraps, how many rows a row
+  folds into.
+- **The tall frame.** Keep content inside x 72 to 1008 and y 200 to 1500. Text never leaves x 48 to 1032, y 150 to
+  1560: a phone app draws its own controls over the top 150 px and the bottom 360 px. With burned-in captions,
+  nothing sits below y 1400 (the captions take y 1410 to 1550). These limits are starting values: no film made
+  with this skill has been posted vertically yet, so check the first one on a phone and correct them here.
+- **Design the picture in parts that can stack.** Split the anchor picture into two or three parts (the example and
+  its result, the diagram and its count). They sit side by side in the wide frame and stack top to bottom in the
+  tall one: `film.zones([3, 2])` gives the rectangles for both. A direction that ran left to right in the wide
+  frame runs top to bottom in the tall one; keep it that way all film.
+- **Fold what is too wide.** The tall frame holds 936 px of content. A row of sixteen cells becomes two rows of
+  eight; a five-step pipeline becomes a column; a wide chart keeps its width and gives up some height. Decide each
+  fold in DESIGN.md. `film.pick(wide, tall)` chooses a number or a list per frame.
+- **Type sizes stay.** A 1080 px frame fills a phone held upright, so the six sizes read larger there than in the
+  wide cut on the same phone. Break headings by hand to fit 936 px; do not shrink them.
+- **Check both, look at both.** `check.mjs`, `shots.mjs` and `render.mjs` work on every cut the film lists. Open
+  both whole-film sheets and both frame 0s. A layout that passes in one frame can overlap in the other.
+
+## 14. Real clips (only when the user asked for them)
+
+A film uses no outside footage unless the user said yes to clips in step 1. On a yes a paragraph may play a short
+recording of a real person in place of the narrator.
+
+- **What a clip is for.** The person's own words, when who said it is the point: the author of an idea stating it,
+  a claim in the mouth of the one who made it. Five to fifteen seconds, one idea. A clip does not explain for you:
+  the paragraphs around it set it up and say what follows from it. One or two in a film.
+- **Getting it.** The user gives you the file, or agrees to a download of just the seconds needed (name the tool,
+  the source and the size first; the playbook's "Real clips" has the commands). Keep recordings in `clips/` in the
+  project.
+- **In the script.** A clip is a paragraph with an `@clip` line (`references/stage.md`, "Clips") and, on its `> `
+  lines, the words spoken in the clip, typed from the recording itself and not from memory or an article. Confirm
+  the voice is the person named and not a presenter quoting them. Start and end on sentence boundaries, and never
+  cut so that the meaning changes. List the clip under `## Sources` with its link and the time it starts.
+- **On screen.** `scene.clip(p, { who, source })` shows the picture with the speaker's name and the source under
+  it for as long as it plays. The clip is the focal point: at most one other change during it, such as the quoted
+  line appearing as it is said. In a vertical cut the picture is cropped to its box; `focus` keeps the speaker in.
+- **Never the narrator's voice.** A real person's words are heard only in their own recording. The voice tools skip
+  clip paragraphs. If a clip cannot be had, paraphrase in the narration and say who said it.
+- **The user decides what is published.** A short quoted clip with credit is common practice, and a platform can
+  still flag it. Say in the delivery note which clips the film uses and where each came from.
+

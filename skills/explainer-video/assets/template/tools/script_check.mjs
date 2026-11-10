@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, say } from "../narration/script.mjs";
 import { C, placeholder, layout } from "./lib/pace.mjs";
+import { clips } from "./lib/clips.mjs";
 
 const argv = process.argv.slice(2), target = argv.includes("--target") ? +argv[argv.indexOf("--target") + 1] : null;
 const VERBS = ["ADD", "MOVE", "CHANGE", "HIGHLIGHT", "DIM", "REMOVE", "ZOOM", "COUNT", "DRAW", "REPLACE", "HOLD"];
@@ -35,7 +36,8 @@ const spoken = paras.filter(p => p.text);
 if (!spoken.length) { console.log('ERROR  SCRIPT.md has no narration: paragraphs are "## 1. Title" headings followed by "> " lines'); process.exit(1); }
 
 // the same clock tools/clock.mjs will build (placeholder pace, silences from film.config.json), so this estimate is the film's length
-const timed = spoken.map(p => ({ n: p.n, words: placeholder(p.text) })), L = layout(timed);
+let CL = {}; try { CL = clips(); } catch (e) { add("ERROR", "clip", e.message); }   // a clip paragraph runs as long as its clip
+const timed = spoken.map(p => ({ n: p.n, words: placeholder(p.text, CL[p.n] && CL[p.n].dur) })), L = layout(timed);
 let words = 0;
 const clock = L.total;
 spoken.forEach((p, pi) => {
@@ -45,7 +47,7 @@ spoken.forEach((p, pi) => {
   for (const s of p.text.split(/(?<=[.?!])\s+/)) { const n = s.split(/\s+/).length; if (n > 26) add("WARN", where, `a ${n}-word sentence ("${s.slice(0, 44)}…"): the ear loses a sentence past about 25 words; split it`); }
   if (w.length > 75) add("WARN", where, `${w.length} words in one paragraph (${p.dur.toFixed(0)} s): one paragraph is one idea; split it at the turn`);
   const risky = [...new Set((p.text.match(/\b(?:[A-Z]{2,}[0-9]*|[A-Za-z]+[0-9]+[A-Za-z0-9]*|\d+(?:[.,]\d+)+|\d+[A-Za-z]+)\b/g) || []))].filter(x => say(x) === x);
-  if (risky.length) add("WARN", where, `a voice may misread ${risky.map(x => `"${x}"`).join(", ")}: add spoken spellings to SAY in narration/script.mjs (and the reverse to WRITE in tools/captions.mjs), or write them as words`);
+  if (risky.length && !CL[p.n]) add("WARN", where, `a voice may misread ${risky.map(x => `"${x}"`).join(", ")}: add spoken spellings to SAY in narration/script.mjs (and the reverse to WRITE in tools/captions.mjs), or write them as words`);
   if (!p.beats.length) { add("ERROR", where, p.rows ? "no valid beat rows" : "no beat sheet: add the table (on the words | change | then on screen) with a row for each change on screen"); return; }
   const times = [];
   for (const b of p.beats) {

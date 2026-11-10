@@ -17,14 +17,17 @@ export const C = { lead: 0.6, tail: 0.5, first: 0.8, end: 3.0, bpm: 72, pad: {},
 const COMMA = 0.25, STOP = 0.42;
 export const nextBeat = t => (C.bpm ? (Math.ceil((t * C.bpm) / 60 - 1e-6) * 60) / C.bpm : t);   // from absolute time, never summed
 
-// word times for a paragraph that has no recorded take yet
-export function placeholder(text) {
+// word times for a paragraph that has no recorded take yet. dur: fit them to this many seconds (a clip paragraph,
+// whose length is the clip's, known before it is cut)
+export function placeholder(text, dur) {
   let t = 0;
-  return say(text).split(/\s+/).filter(Boolean).map(w => {
+  const words = say(text).split(/\s+/).filter(Boolean).map(w => {
     const s = t; t += 1 / C.pace;
     const e = t; t += /[.?!:]["”]?$/.test(w) ? STOP : /[,;]$/.test(w) ? COMMA : 0;
     return { w, s: +s.toFixed(3), e: +e.toFixed(3) };
   });
+  if (dur && words.length) { const k = dur / words.at(-1).e; for (const w of words) { w.s = +(w.s * k).toFixed(3); w.e = +(w.e * k).toFixed(3); } }
+  return words;
 }
 
 // lay paragraphs end to end: [{ n, words }] -> [{ n, start, vo, speech, end }] and the film's total length

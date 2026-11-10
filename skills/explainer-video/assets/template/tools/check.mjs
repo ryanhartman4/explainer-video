@@ -4,14 +4,17 @@
 //   node tools/check.mjs            exit 1 when there is an ERROR
 //   node tools/check.mjs --captions also keep text out of the caption strip (for a cut with burned-in captions)
 //   node tools/check.mjs --json     the same as JSON
+//   node tools/check.mjs --format 9x16   one cut only. With no --format it checks every cut the film lists in
+//                                   film.config.json "formats" (16x9 alone unless a vertical cut was planned)
 // ERROR  missing cue words, script errors, fonts that did not load, text off the frame, text on top of text,
 //        text too small to read, text without contrast
 // WARN   nothing moving for too long, a blank frame, too many words on screen, a sentence on screen, text shown too
 //        briefly to read, many things entering in the same instant, characters the bundled fonts do not have
-import { ROOT, serve, launch, openFilm, seek, args } from "./lib/browser.mjs";
+import { ROOT, serve, launch, openFilm, seek, args, formats } from "./lib/browser.mjs";
 
 const A = args();
-const SAFE = { l: 48, t: 40, r: 1872, b: A.captions ? 956 : 1040 };        // text must stay inside this (the outer 2.5% is cropped by some players)
+// text must stay inside this: some players crop the outer 2.5%, and a phone app covers the top and bottom of a vertical cut
+const safeFor = f => (f === "9x16" ? { l: 48, t: 150, r: 1032, b: A.captions ? 1400 : 1560 } : { l: 48, t: 40, r: 1872, b: A.captions ? 956 : 1040 });
 const MIN_PX = 24, WARN_PX = 26;                         // 24 px at 1080p is the floor; under 28 is hard on a phone
 const STEP = 0.5;
 const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
@@ -19,12 +22,15 @@ const over = (fg, bg) => [0, 1, 2].map(i => fg[i] * fg[3] + bg[i] * (1 - fg[3]))
 const contrast = (fg, bg) => { const a = lum(over(fg, bg)), b = lum(bg); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
 const mm = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
 
-const srv = await serve(), browser = await launch();
-const found = new Map();                                // message -> { level, first, last, count }
-const add = (level, t, key, msg) => { const f = found.get(key); if (f) { f.last = t; f.count++; } else found.set(key, { level, first: t, last: t, count: 1, msg }); };
+const srv = await serve(), browser = await launch(), cuts = formats(A), reports = [];
 try {
-  const { page, info } = await openFilm(browser, srv.url, { look: A.look });
+ for (const format of cuts) {
+  const SAFE = safeFor(format);
+  const found = new Map();                                // message -> { level, first, last, count }
+  const add = (level, t, key, msg) => { const f = found.get(key); if (f) { f.last = t; f.count++; } else found.set(key, { level, first: t, last: t, count: 1, msg }); };
+  const { page, info } = await openFilm(browser, srv.url, { look: A.look, format });
   if (!info.ok) { console.log("ERROR  the film did not build: " + info.error); process.exit(1); }
+  const FW = info.W || 1920, FH = info.H || 1080, AR = info.area;
   for (const p of info.problems) add("ERROR", 0, "p:" + p, p);
   for (const e of info.errors) add("ERROR", 0, "e:" + e, "script error: " + e);
   const paraAt = t => info.paras.find(p => t >= p.start && t < p.end) || info.paras.at(-1);
@@ -32,7 +38,7 @@ try {
 
   let lastSig = null, stillFrom = 0, blankFrom = null;
   let thin = null;                                      // a stretch where the picture is small or confined to one band of the frame
-  const thinMsg = (r, t1) => add("WARN", r.from, "thin:" + r.from, `for ${(t1 - r.from).toFixed(0)} s (${mm(r.from)} to ${mm(t1)}) the picture uses about ${Math.round(100 * r.used / r.n)}% of the frame, between y ${Math.round(r.top / r.n)} and y ${Math.round(r.bottom / r.n)}: small content in a big frame reads as a slide. Enlarge the picture to span the content area (x 120..1800, y 96..984; a box that holds a label is 96 px tall or more), or raise the text one size`);
+  const thinMsg = (r, t1) => add("WARN", r.from, "thin:" + r.from, `for ${(t1 - r.from).toFixed(0)} s (${mm(r.from)} to ${mm(t1)}) the picture uses about ${Math.round(100 * r.used / r.n)}% of the frame, between y ${Math.round(r.top / r.n)} and y ${Math.round(r.bottom / r.n)}: small content in a big frame reads as a slide. Enlarge the picture to span the content area (x ${AR.x}..${AR.x + AR.w}, y ${AR.y}..${AR.y + AR.h}; a box that holds a label is 96 px tall or more), or raise the text one size`);
   for (let t = 0; t <= info.duration - 0.2; t += STEP) {
     await seek(page, t);
     const { items, sig, shown, strokes, use } = await page.evaluate(() => ({ items: window.__film.inspect(), sig: window.__film.signature(), strokes: window.__film.strokes(), use: window.__film.usage(), shown: window.__film.nodes.filter(n => window.__film.visible(n)).length }));
@@ -43,16 +49,16 @@ try {
     if (t === 0 && shown === 0) add("WARN", 0, "poster", "frame 0 is empty: the first frame is the thumbnail, so open on the title or the key picture already in place");
 
     // is the frame being used? (small content adrift in a big frame reads as a slide)
-    if (speaking(t) && shown > 0 && (use.used < 0.11 || use.bottom - use.top < 420)) { thin = thin || { from: t, n: 0, used: 0, top: 0, bottom: 0 }; thin.n++; thin.used += use.used; thin.top += use.top; thin.bottom += use.bottom; }
+    if (speaking(t) && shown > 0 && (use.used < 0.11 || use.bottom - use.top < FH * 0.39)) { thin = thin || { from: t, n: 0, used: 0, top: 0, bottom: 0 }; thin.n++; thin.used += use.used; thin.top += use.top; thin.bottom += use.bottom; }
     else { if (thin && t - thin.from >= 6) thinMsg(thin, t); thin = null; }
     const solid = items.filter(i => i.opacity > 0.9 && i.settled);
     for (const i of items) {
       if (i.opacity < 0.5) continue;
       if (i.x < SAFE.l - 1 || i.y < SAFE.t - 1 || i.x + i.w > SAFE.r + 1 || i.y + i.h > SAFE.b + 1) {
         const zoomed = await page.evaluate(() => window.__film.scenes.some(s => s.op > 0.5 && s.world.el.style.transform));
-        const partly = i.x < 1920 && i.y < 1080 && i.x + i.w > 0 && i.y + i.h > 0 && (i.x < -2 || i.y < -2 || i.x + i.w > 1922 || i.y + i.h > 1082);
+        const partly = i.x < FW && i.y < FH && i.x + i.w > 0 && i.y + i.h > 0 && (i.x < -2 || i.y < -2 || i.x + i.w > FW + 2 || i.y + i.h > FH + 2);
         if (zoomed && partly) add("WARN", t, "cut:" + i.id, `${where} text ${i.id} is cut by the edge of the frame while the camera is zoomed: put headings and counters on scene.hud (the camera does not move it), or zoom less`);
-        if (!zoomed) add("ERROR", t, "off:" + i.id, `${where} text ${i.id} runs off the frame (x ${Math.round(i.x)} to ${Math.round(i.x + i.w)}, y ${Math.round(i.y)} to ${Math.round(i.y + i.h)}; keep text inside 48..1872 by 40..${SAFE.b}${A.captions ? ", the strip below is for captions" : ""})`);
+        if (!zoomed) add("ERROR", t, "off:" + i.id, `${where} text ${i.id} runs off the frame (x ${Math.round(i.x)} to ${Math.round(i.x + i.w)}, y ${Math.round(i.y)} to ${Math.round(i.y + i.h)}; keep text inside ${SAFE.l}..${SAFE.r} by ${SAFE.t}..${SAFE.b}${A.captions ? ", the strip below is for captions" : ""}${format === "9x16" ? "; a phone app covers the rest" : ""})`);
       }
       if (i.chars) add("WARN", t, "chars:" + i.id, `${where} text ${i.id} uses ${[...i.chars].map(c => `"${c}"`).join(" ")}, which the bundled fonts do not have (it falls back to a system font that differs per machine): draw arrows with arrow(), spell out symbols, or use tex()`);
     }
@@ -98,11 +104,15 @@ try {
   for (const g of merged.values()) if (g.ids.length > 1) g.msg = g.msg.split(g.id).join(g.ids.slice(0, 3).join(", ") + (g.ids.length > 3 ? ` and ${g.ids.length - 3} more like it` : ""));
   const rows = [...merged.values()].sort((a, b) => (a.level < b.level ? -1 : a.level > b.level ? 1 : a.first - b.first));
   const errors = rows.filter(r => r.level === "ERROR").length, warns = rows.length - errors;
-  if (A.json) console.log(JSON.stringify({ duration: info.duration, placeholder: info.placeholder, errors, warnings: warns, findings: rows }, null, 1));
-  else {
+  reports.push({ format, duration: info.duration, placeholder: info.placeholder, errors, warnings: warns, findings: rows });
+  if (!A.json) {
+    if (cuts.length > 1) console.log(`${reports.length > 1 ? "\n" : ""}---- the ${format} cut (${FW} x ${FH}) ----`);
     for (const r of rows) console.log(`${r.level.padEnd(5)}  ${mm(r.first)}${r.last > r.first ? " to " + mm(r.last) : ""}  ${r.msg}`);
     console.log(`\n${errors} errors, ${warns} warnings over ${mm(info.duration)}${info.placeholder ? " (placeholder timing: check again after the voice is recorded)" : ""}.` +
       (errors ? " Fix every ERROR, then run this again." : warns ? " Read each WARN: fix it or be able to say why it is right." : " Clean."));
   }
-  process.exitCode = errors ? 1 : 0;
+  await page.close();
+ }
+  if (A.json) console.log(JSON.stringify(reports.length === 1 ? reports[0] : reports, null, 1));
+  process.exitCode = reports.some(r => r.errors) ? 1 : 0;
 } finally { await browser.close(); srv.close(); }

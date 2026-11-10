@@ -39,7 +39,8 @@ FADE = 0.02                                     # fade out the last 20 ms, so a 
 
 def script():
     """scene texts as spoken (spellings applied), from SCRIPT.md through narration/script.mjs"""
-    js = "import {scenes, say} from './narration/script.mjs'; console.log(JSON.stringify(scenes().map(s => ({n: s.n, say: say(s.text)}))))"
+    js = ("import {scenes, say} from './narration/script.mjs'; import {clips} from './tools/lib/clips.mjs'; const C = clips();"
+          "console.log(JSON.stringify(scenes().map(s => ({n: s.n, say: say(s.text), clip: !!C[s.n]}))))")
     return json.loads(subprocess.run(["node", "--input-type=module", "-e", js], cwd=ROOT, capture_output=True, text=True, check=True).stdout)
 
 
@@ -106,6 +107,8 @@ def scenes(args):
     model, sr = None, None
     for sc in todo:
         base = f"{args.out}/s{sc['n']:02d}"
+        if sc.get("clip"):                                   # a real person's words: the clip itself plays, the narrator never speaks them
+            print(f"s{sc['n']:02d} is a clip paragraph (@clip in SCRIPT.md): not recorded"); continue
         if os.path.exists(base + ".mp3") and not args.force:
             print(f"{base}.mp3 exists, skipping (--force to redo)"); continue
         model = model or load(); sr = model.sample_rate

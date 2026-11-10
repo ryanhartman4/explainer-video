@@ -9,12 +9,14 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ROOT, scenes, say } from "./script.mjs";
+import { clips } from "../tools/lib/clips.mjs";
 
 const MODEL = "eleven_v4";
 const SETTINGS = { stability: 0.7, similarityBoost: 0.5 };   // the TTS skill's narration preset
 const FORMAT = "mp3_44100_128";
 // voice samples read the script's first two sentences, so the pick is made on real material
-const SAMPLE = say(scenes()[0].text.split(/(?<=[.?!])\s+/).slice(0, 2).join(" "));
+const CL = clips();                                               // paragraphs that play a real recording: never sent to a voice
+const SAMPLE = say((scenes().find(s => !CL[s.n]) || scenes()[0]).text.split(/(?<=[.?!])\s+/).slice(0, 2).join(" "));
 
 const client = new ElevenLabsClient();
 
@@ -59,7 +61,7 @@ if (cmd === "quota") {
 } else if (cmd === "scenes") {
   const [voiceId, ...rest] = args;
   const force = rest.includes("--force");
-  const all = scenes();
+  const all = scenes().filter(s => !CL[s.n]);
   const want = rest.includes("all") || !rest.some(a => /^\d+$/.test(a)) ? all.map(s => s.n) : rest.filter(a => /^\d+$/.test(a)).map(Number);
   for (const s of all.filter(s => want.includes(s.n))) {
     const file = join(ROOT, "narration/audio", `s${String(s.n).padStart(2, "0")}`);

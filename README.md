@@ -27,6 +27,11 @@ its pacing before anything is built. `shots` makes contact sheets with the spoke
 steps through the film and reports text off the frame, text on text, arrows through labels, unreadable sizes, weak
 contrast, dead stretches and missing cues. `render` draws the frames in headless Chrome and encodes with ffmpeg.
 
+**Two options, both off unless you ask for them.** Claude asks at the start of a film and takes no for an answer.
+A *vertical cut* draws the same film at 1080 by 1920 for phone feeds, from the same file, with its own layout and
+its own checks. *Real clips* let a paragraph play a short recording of a real person, credited on screen, in place
+of the narrator; the narrator's voice never speaks a real person's words.
+
 **A record of five films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness
 setting judged by ear, what each fact-check caught, and the original HyperFrames pipeline, which stays as the
 back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising those films.
