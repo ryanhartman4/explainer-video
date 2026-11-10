@@ -53,6 +53,6 @@ try {
     }
   }));
   await flush(); enc.stdin.end(); await done;
-  console.log(`${out}: ${n} frames at ${fps} fps, ${(n / fps).toFixed(1)} s${withAudio ? ", with audio" : ", silent (no video/assets/audio/mix.wav yet: sh tools/audio.sh)"}, rendered in ${((Date.now() - t00) / 1000).toFixed(0)} s`);
+  console.log(`${out}: ${n} frames at ${fps} fps, ${(n / fps).toFixed(1)} s${withAudio ? ", with audio" : A.silent ? ", silent (--silent)" : ", silent (no video/assets/audio/mix.wav yet: sh tools/audio.sh)"}, rendered in ${((Date.now() - t00) / 1000).toFixed(0)} s`);
   if (info.placeholder) console.log("note: placeholder timing was used for at least one paragraph (no recorded voice yet)");
 } finally { await browser.close(); srv.close(); }
