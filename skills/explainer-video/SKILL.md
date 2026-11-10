@@ -198,8 +198,8 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
 ## Bundled files
 
 - `references/method.md`: the design method. `references/stage.md`: the engine's API, tools and traps.
-- `references/playbook.md`: the record of films 1 to 5: every voice, music and loudness setting the author approved,
-  what the fact-checks caught, and the HyperFrames pipeline.
+- `references/playbook.md`: the record of films 1 to 5 and the Bloom demo: every voice, music and loudness setting the
+  author approved, what the fact-checks caught, and the HyperFrames pipeline.
 - `scripts/new_film.mjs`: start a project, or refresh its engine with `--update`.
 - `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (three looks) and fonts; `tools/`
   (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master); `narration/` (script
