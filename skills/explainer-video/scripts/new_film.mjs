@@ -47,7 +47,7 @@ if (hf) {                                             // the back-up engine's fi
 if (!hf && existsSync(join(DEST, "video/stage3d.js"))) threeD = true;     // a project that has the 3D layer keeps it up to date
 if (threeD && !hf) {                                  // the 3D layer first, so its film.html is the one a new project starts from
   const D3 = join(SKILL, "assets/stage3d");
-  copyTree(D3, rel => join(DEST, "video", rel), rel => rel === "README.md" || (rel === "film.html" && existsSync(join(DEST, "video/film.html"))));   // film.html is yours once it exists
+  copyTree(D3, rel => join(DEST, "video", rel), rel => rel === "README.md" || rel.startsWith("vertical/") || (rel === "film.html" && existsSync(join(DEST, "video/film.html"))));   // film.html is yours once it exists
   for (const [from, to] of [["three.min.js", "video/three.min.js"], ["LICENSE", "video/three.LICENSE"]]) {
     const dst = join(DEST, to); if (!existsSync(dst) || update) { mkdirSync(dirname(dst), { recursive: true }); copyFileSync(join(SKILL, "assets/hyperframes/vendor", from), dst); copied++; } else kept++;
   }
@@ -55,9 +55,9 @@ if (threeD && !hf) {                                  // the 3D layer first, so 
 copyTree(join(SKILL, "assets/template"), rel => join(DEST, rel), rel => hf && (STAGE_ONLY.test(rel) || rel === "tools/hits.mjs"));
 for (const d of ["narration/audio", "narration/voices", "video/data", "video/assets/audio", "out"].concat(hf ? [] : ["shots"])) mkdirSync(join(DEST, d), { recursive: true });
 for (const f of ["w_mid.wav", "w_mid.txt"]) if (!existsSync(join(DEST, "narration/voices", f))) copyFileSync(join(SKILL, "assets/voices", f), join(DEST, "narration/voices", f));
-if (vertical && !hf) {                               // a second film file for the tall frame, and the film's list of cuts
+if (vertical && !hf) {                               // a second film file for the tall frame (with the 3D layer when the film has it), and the film's list of cuts
   const tall = join(DEST, "video/film-9x16.html");
-  if (existsSync(tall)) kept++; else { copyFileSync(join(SKILL, "assets/vertical/film-9x16.html"), tall); copied++; }
+  if (existsSync(tall)) kept++; else { copyFileSync(join(SKILL, threeD ? "assets/stage3d/vertical/film-9x16.html" : "assets/vertical/film-9x16.html"), tall); copied++; }
   const cf = join(DEST, "film.config.json"), cfg = existsSync(cf) ? JSON.parse(readFileSync(cf, "utf8")) : {};
   if (!Array.isArray(cfg.formats) || !cfg.formats.includes("9x16")) { cfg.formats = ["16x9", "9x16"]; writeFileSync(cf, JSON.stringify(cfg) + "\n"); }
 }

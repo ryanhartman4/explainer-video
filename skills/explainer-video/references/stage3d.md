@@ -8,7 +8,7 @@ scenes) and `assets/demo/forms3d/` (a gallery of the ready-made forms).
 
 Contents: when to use it · set-up · the idea · the API · forms · the camera · labels on 3D points · text beside the
 points · the ready-made forms · the handoff between scenes · a long film, built in parallel · the captioned cut ·
-design notes · rendering · traps
+the vertical cut · design notes · rendering · traps
 
 ## When to use it
 
@@ -216,6 +216,20 @@ notes and credits often sit lower than that. `G3.init(film, { captionLift: 45 })
 anything by hand: when the film is opened with `?captions=1` (which `render.mjs --captions`, `shots.mjs --captions`
 and `check.mjs --captions` all do), the 3D camera and the 2D scenes rise together by that many pixels, so labels
 stay on their points. The main cut is untouched. Make sure nothing in the main cut sits above y 40 + the lift.
+
+## The vertical cut
+
+A film with a vertical cut has a second file, `video/film-9x16.html`, composed for the 1080 by 1920 frame
+(`references/stage.md` and `references/method.md` section 13). The 3D layer draws in whichever frame its file
+declares. `new_film.mjs <project> --3d --vertical` starts the tall file with the layer already loaded; in a project
+that has a 2D tall file, add the `three.min.js` and `stage3d.js` script tags after `stage.js` and call `G3.init`.
+
+- The rest camera stands further back in the tall frame (`dist` 76): it shows 31 by 55 world units, 34.9 px a unit,
+  so a form 30 units wide still fills the width. Forms, morphs and clocks are the same as in `film.html`.
+- Compose it afresh, as the method says. The points usually take the upper two thirds (`at: [0, 10, 0]`), with text
+  under them inside x 72 to 1008, y 200 to 1400.
+- Leave `captionLift` out of the tall file: its captions sit below where its text may go.
+- Shoot and check it with `--format 9x16`.
 
 ## Design notes
 

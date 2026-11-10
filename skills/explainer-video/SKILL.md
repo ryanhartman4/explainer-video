@@ -244,7 +244,8 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
   `narration/` (script parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
 - `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
-- `assets/stage3d/`: what `--3d` adds to a project: `stage3d.js`, the forms in `forms3d/`, and a 3D `film.html`.
+- `assets/stage3d/`: what `--3d` adds to a project: `stage3d.js`, the forms in `forms3d/`, a 3D `film.html`, and
+  the tall starter that `--3d --vertical` uses.
 - `assets/demo/one-sitting/`: a finished 3:52 3D film in nine scene files, with the brief its eight parallel
   builders worked from, its own score script, and the notes of what the reviews caught.
 - `assets/demo/forms3d/`: a gallery film that shows every ready-made form, one a paragraph. It is also their test.

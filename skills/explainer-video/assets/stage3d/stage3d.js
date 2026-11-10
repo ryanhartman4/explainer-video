@@ -21,6 +21,7 @@
 //   G3.cam.to(t, {az, el, dist, look:[x,y,z], fov}, {dur, ease})   orbit camera: az and el are angles in radians
 //                                   around `look`, dist the distance. Rest pose: az 0, el 0, dist 34, look 0,0,0,
 //                                   fov 40: the frame then shows 44 x 24.7 world units at the origin, 43.6 px a unit.
+//                                   In a vertical cut (1080 x 1920) the rest dist is 76: 31 x 55 units, 34.9 px a unit.
 //   G3.level.to(t, v, {dur})        brightness of all points (1 = full, 0.3 = behind a panel)
 //   G3.grain.to(t, v, {dur})        size of all points (1 = normal)
 //   G3.project([x,y,z], t)          -> { x, y, z, ok }: where a world point is on the 1920 x 1080 frame at time t
@@ -43,7 +44,8 @@
 //   Built-in forms: "globe" (a turning ringed globe, the resting state; also registered as "sphere"),
 //   "scatter" (a wide drifting cloud), "core" (all points in one small ball).
 (function () {
-  const W = 1920, H = 1080, T3 = window.THREE;
+  // the frame is the film's own: 1920 x 1080, or 1080 x 1920 in a vertical cut (film-9x16.html sets STAGE_FORMAT before stage.js)
+  const W = (window.Stage && Stage.W) || 1920, H = (window.Stage && Stage.H) || 1080, PORT = H > W, T3 = window.THREE;
   const G3 = (window.G3 = { N: 30000, W, H, lift: 0, on: false, lib: {} });
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), lerp = (a, b, u) => a + (b - a) * u;
   const ease = u => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
@@ -124,7 +126,8 @@
   }
 
   // ---- camera
-  const camDefaults = { az: 0, el: 0, dist: 34, lx: 0, ly: 0, lz: 0, fov: 40 };
+  // the rest pose shows a form 30 units wide in either frame: 44 x 24.7 world units at dist 34 (wide), 31 x 55 at dist 76 (tall)
+  const camDefaults = { az: 0, el: 0, dist: PORT ? 76 : 34, lx: 0, ly: 0, lz: 0, fov: 40 };
   function camState(t) { const s = {}; for (const k in camDefaults) s[k] = G3.camTracks[k].at(t); return s; }
   function setCam(cam, s) {
     const ce = Math.cos(s.el);
@@ -211,12 +214,12 @@
     scene = new T3.Scene(); camera = new T3.PerspectiveCamera(40, W / H, 0.1, 600); probeCam = new T3.PerspectiveCamera(40, W / H, 0.1, 600);
     // the ground: the look's background with a soft lift behind the picture (drawn once; seeded noise keeps the ramp
     // from banding in H.264)
-    const bgc = document.createElement("canvas"); bgc.width = 960; bgc.height = 540; const bx = bgc.getContext("2d");
-    const [br, bg, bb] = bgc0.map(v => Math.round(v * 255)); bx.fillStyle = `rgb(${br},${bg},${bb})`; bx.fillRect(0, 0, 960, 540);
+    const bw = Math.round(W / 2), bh = Math.round(H / 2), bgc = document.createElement("canvas"); bgc.width = bw; bgc.height = bh; const bx = bgc.getContext("2d");
+    const [br, bg, bb] = bgc0.map(v => Math.round(v * 255)); bx.fillStyle = `rgb(${br},${bg},${bb})`; bx.fillRect(0, 0, bw, bh);
     const bl = G3.rgb("blue"), pu = G3.rgb("purple"), gl = bgc0.map((v, i) => Math.round(lerp(v, (bl[i] + pu[i]) / 2, i === 2 ? 0.3 : 0.2) * 255));
-    const gr = bx.createRadialGradient(480, 250, 0, 480, 250, 560); gr.addColorStop(0, `rgba(${gl[0]},${gl[1]},${gl[2]},0.55)`); gr.addColorStop(0.55, `rgba(${gl[0]},${gl[1]},${gl[2]},0.2)`); gr.addColorStop(1, `rgba(${gl[0]},${gl[1]},${gl[2]},0)`);
-    bx.fillStyle = gr; bx.fillRect(0, 0, 960, 540);
-    const img = bx.getImageData(0, 0, 960, 540), dd = img.data;
+    const gr = bx.createRadialGradient(bw / 2, bh * 0.46, 0, bw / 2, bh * 0.46, Math.max(bw, bh) * 0.58); gr.addColorStop(0, `rgba(${gl[0]},${gl[1]},${gl[2]},0.55)`); gr.addColorStop(0.55, `rgba(${gl[0]},${gl[1]},${gl[2]},0.2)`); gr.addColorStop(1, `rgba(${gl[0]},${gl[1]},${gl[2]},0)`);
+    bx.fillStyle = gr; bx.fillRect(0, 0, bw, bh);
+    const img = bx.getImageData(0, 0, bw, bh), dd = img.data;
     for (let i = 0; i < dd.length; i += 4) { const nz = (hash(i >> 2, 31) - 0.5) * 3; dd[i] += nz; dd[i + 1] += nz; dd[i + 2] += nz; }
     bx.putImageData(img, 0, 0);
     const bgt = new T3.CanvasTexture(bgc); bgt.colorSpace = T3.SRGBColorSpace; scene.background = bgt;

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>film, the vertical cut</title>
+<link rel="stylesheet" href="stage.css">
+<script>window.STAGE_FORMAT = "9x16";</script>   <!-- this file is composed for the 1080 x 1920 frame -->
+<script src="data/timing.js"></script>     <!-- word times: node tools/clock.mjs (the same clock as film.html) -->
+<script src="data/captions.js"></script>   <!-- captions for the burned-in cut: node tools/captions.mjs -->
+<script src="three.min.js"></script>
+<script src="stage.js"></script>
+<script src="stage3d.js"></script>         <!-- the 3D point layer draws in this file's own frame: references/stage3d.md -->
+</head><body>
+<script>
+// The vertical cut of a film with the 3D point layer: the same script, voice, beats, look, forms and colours as
+// film.html, composed for the tall frame. Design this frame from a blank page (references/method.md section 13).
+// The rest camera is further back here (dist 76), so a form 30 units wide still fills the width: the frame shows
+// 31 x 55 world units. The points take the upper two thirds; text goes under them, inside x 72 to 1008, y 200 to
+// 1500 (film.area). Captions sit lower than any text here, so this file needs no captionLift.
+Stage.film({ look: "night" }, film => {
+  G3.init(film);
+  const [p1, p2] = film.paras;
+  G3.form("title", G3.textForm("The\nquestion?", { width: 24 }));
+
+  // ---- 1.
+  G3.morph(0, "title", { at: [0, 13, 0] });                                    // frame 0: the question, high in the tall frame
+  G3.cam.to(0, { dist: 72 }, { dur: 0 }).to(0.01, { dist: 76 }, { dur: p1.end, ease: "linear" });
+  const A = film.scene(p1, { fadeOut: 1.2 });
+  A.text("Short sentences,\nfor the ear.", { x: 72, y: 1180, size: "head", color: "muted", id: "line" }).show(p1.at("written for the ear"));
+  const tThing = p1.at("something the viewer can picture");
+  G3.morph(tThing, "globe", { dur: 2.0, swirl: 1.0, at: [0, 9, 0], scale: 1.15 });
+
+  // ---- 2.
+  const t0 = p2.start - 0.8;
+  G3.morph(t0, "globe", { dur: 1.4, at: [0, 11, 0], scale: 1.15, clock: t => t - tThing });
+  G3.cam.to(t0, { az: -0.2, el: 0.1, dist: 76, look: [0, 0, 0], fov: 40 }, { dur: 1.6 });
+  const B = film.scene(p2);
+  B.hud.text("The heading", { x: 72, y: 200, size: "head", id: "heading" }).show(p2.start + 0.3);
+  B.number(10, { x: 540, y: 1040, size: 240, align: "center", suffix: " s", id: "count" }).show(p2.at("twenty-five seconds", -0.4))
+    .to(p2.at("twenty-five seconds"), { value: 25 }, { dur: 0.8, ease: "out" });
+  film.hit("pluck", p2.at("exactly"), { pitch: 4 });
+});
+</script>
+</body></html>
