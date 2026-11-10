@@ -62,6 +62,22 @@ The setup skill runs a read-only check, then installs only what is missing, aski
 ffmpeg and uv through Homebrew, a locked Python environment for the voice at `~/Developer/mlx-audio`, and the 4.6 GB
 voice model. HyperFrames is optional now; it is needed only for the back-up engine.
 
+## Update
+
+In a shell:
+
+```
+claude plugin marketplace update explainer-video
+claude plugin update explainer-video@explainer-video
+```
+
+Then restart Claude Code, or run `/reload-plugins` in an open session. The plugin sets no version number, so Claude
+Code tracks this repository's commits and every push to `main` counts as an update.
+
+To bring a film project up to the new engine and tools, run
+`node <skill>/scripts/new_film.mjs <project-folder> --update`. It leaves your `SCRIPT.md`, `DESIGN.md` and
+`video/film.html` alone.
+
 Then ask for a film:
 
 > Make a two-minute explainer video about how this repo's cache works.

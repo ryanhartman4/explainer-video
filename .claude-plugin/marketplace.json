@@ -11,7 +11,6 @@
       "name": "explainer-video",
       "description": "Narrated, animated explainer videos: a design method, a film engine synced to the spoken words, and checks a smaller model can follow, plus a setup skill that gets a Mac ready.",
       "source": "./",
-      "version": "2.0.0",
       "category": "productivity"
     }
   ]
