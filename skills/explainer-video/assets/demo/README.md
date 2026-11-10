@@ -20,7 +20,18 @@ cp -R <skill>/assets/demo/bloom/. /path/to/bloom-demo/
 ```
 
 ```bash
-cd /path/to/bloom-demo && node tools/clock.mjs && node tools/check.mjs --captions && node tools/shots.mjs --film
+cd /path/to/bloom-demo && node tools/doctor.mjs
+```
+
+If the doctor says Playwright is missing, install it in the project (8 MB, no browser download; ask the user first)
+and run the doctor again until it prints `Ready.`:
+
+```bash
+npm install --save-dev playwright-core
+```
+
+```bash
+node tools/clock.mjs && node tools/check.mjs --captions && node tools/shots.mjs --film
 ```
 
 Then open `video/film.html` in a browser, or `sh tools/audio.sh && node tools/render.mjs` for an MP4 (music and

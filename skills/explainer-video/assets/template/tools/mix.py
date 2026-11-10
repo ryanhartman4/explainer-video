@@ -22,8 +22,13 @@ N = int(round(T["total"] * SR))
 mix = np.zeros((N, 2))
 
 def load(path):
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
-    return np.frombuffer(raw, "<f4").reshape(-1, 2).astype(np.float64)
+    """decode to 48 kHz stereo. A mono file (every voice take) goes to both channels at full level, as a player does:
+    ffmpeg's own mono-to-stereo conversion (-ac 2) would take 3 dB off it, and the voice would sit 3 dB lower against
+    the music and hits than in films 1 to 5."""
+    ch = int(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=channels", "-of", "csv=p=0", path], capture_output=True, text=True, check=True).stdout.strip().split(",")[0])
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "1" if ch == 1 else "2", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, "<f4").astype(np.float64)
+    return np.repeat(x[:, None], 2, axis=1) if ch == 1 else x.reshape(-1, 2)
 
 def put(sig, t0, gain=1.0):
     i = int(round(t0 * SR))

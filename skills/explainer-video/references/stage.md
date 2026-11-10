@@ -100,7 +100,7 @@ you make in a loop), `z` (stacking), `overlap: true` (this is meant to sit on ot
 Colours are look tokens (`ink`, `muted`, `faint`, `panel`, `bg`, `accent`, `blue`, `green`, `red`, `yellow`,
 `purple`) or any CSS colour. Use tokens: the film then works in every look.
 
-`node.box()` gives a node's resting `{ x, y, w, h }` and `node.center()` its centre, for placing things relative
+`node.bounds()` gives a node's resting `{ x, y, w, h }` and `node.center()` its centre, for placing things relative
 to others. `Stage.cols(n, { x, w, gap })` gives n evenly spaced `{ x, w, cx }` cells.
 
 ## Animating
@@ -197,7 +197,7 @@ Shared geometry and helpers go in one `video/shared.js` that one person owns.
 
 - **Fonts cover Latin only.** No `→ ← ≈ ≤ ≥`, no Greek. Draw arrows with `arrow()`, write "about", or use `tex()`.
   `×`, `÷`, `±`, `·`, `−`, `↑`, `↓`, curly quotes and dashes are fine. The checker warns on anything else.
-- **Create things at their resting place.** `arrow(a, b)` between nodes reads their resting boxes when it is made;
+- **Create things at their resting place.** `arrow(a, b)` between nodes reads their resting bounds when it is made;
   it does not follow a node that moves later. Animate the arrow's own ends (`x2`, `y2`) for that.
 - **A scene's things die with the scene.** To keep a picture across paragraphs, span them: `film.scene(p2, p4)`.
   To bring a picture back later (the close), build it again in its final state with a small function, as the demo's

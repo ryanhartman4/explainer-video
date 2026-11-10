@@ -129,13 +129,13 @@
     name() { return this.id || (this.kind === "text" ? JSON.stringify(this.el.textContent.slice(0, 28)) : this.kind); }
     val(k, t) { const tr = this.tracks[k]; return tr ? tr.at(t) : this.base[k]; }
     size() { return [this.base.w ?? this.el.offsetWidth, this.base.h ?? this.el.offsetHeight]; }
-    // the resting box in the scene's coordinates (before any tween): { x, y, w, h }
-    box() {
+    // the resting rectangle in the scene's coordinates (before any tween): { x, y, w, h }
+    bounds() {
       const [w, h] = this.size(); let x = this.base.x - this.ax * w, y = this.base.y - this.ay * h;
       for (let p = this.parent; p && p instanceof Node; p = p.parent) { x += p.base.x; y += p.base.y; }
       return { x, y, w, h };
     }
-    center() { const b = this.box(); return [b.x + b.w / 2, b.y + b.h / 2]; }
+    center() { const b = this.bounds(); return [b.x + b.w / 2, b.y + b.h / 2]; }
     w1(key, value, write) { if (this._w[key] !== value) { this._w[key] = value; write(value); } }
     apply(t) {
       const pin = this._in.at(t), pout = this._out.at(t), by = this.by;
@@ -278,7 +278,7 @@
       const p = el.querySelector("path"), head = el.querySelector(".head");
       n.pathEl = p;
       n.size = () => { const b = p.getBBox(); return [b.width, b.height]; };
-      n.box = function () { const b = p.getBBox(); let x = b.x + this.base.x, y = b.y + this.base.y; for (let q = this.parent; q && q instanceof Node; q = q.parent) { x += q.base.x; y += q.base.y; } return { x, y, w: b.width, h: b.height }; };
+      n.bounds = function () { const b = p.getBBox(); let x = b.x + this.base.x, y = b.y + this.base.y; for (let q = this.parent; q && q instanceof Node; q = q.parent) { x += q.base.x; y += q.base.y; } return { x, y, w: b.width, h: b.height }; };
       n.paint = function (t, pin) {
         const dd = o.shape ? o.shape(this.val("x1", t), this.val("y1", t), this.val("x2", t), this.val("y2", t)) : this.val("d", t);
         this.w1("d", dd, v => { p.setAttribute("d", v); this._len = p.getTotalLength(); });
@@ -309,7 +309,7 @@
     // arrow(a, b, { bend, stroke, lw, gap, dash }): a and b are [x, y] points or nodes (the arrow runs edge to edge).
     // bend curves it: 0.2 bows to the left of travel, -0.2 to the right. Enters by drawing itself, head first.
     arrow(a, b, o = {}) {
-      const gap = o.gap ?? 14, pa = a.box ? a.box() : null, pb = b.box ? b.box() : null;
+      const gap = o.gap ?? 14, pa = a.bounds ? a.bounds() : null, pb = b.bounds ? b.bounds() : null;
       const ca = pa ? [pa.x + pa.w / 2, pa.y + pa.h / 2] : a, cb = pb ? [pb.x + pb.w / 2, pb.y + pb.h / 2] : b;
       const edge = (bx, toward, side, node) => {       // the point where the node's edge faces `toward`
         if (!bx) return null;
@@ -461,7 +461,7 @@
       const scene = this;
       this.camera = {
         to(t, p, co = {}) { for (const k of ["x", "y", "zoom"]) if (p[k] != null) scene.cam[k].to(t, p[k], co.dur ?? M.camera, co.ease || "inOut"); return this; },
-        frame(t, target, co = {}) { const b = target.box ? target.box() : target, pad = co.pad ?? 120, z = Math.min(W / (b.w + 2 * pad), H / (b.h + 2 * pad), co.max ?? 3);
+        frame(t, target, co = {}) { const b = target.bounds ? target.bounds() : target, pad = co.pad ?? 120, z = Math.min(W / (b.w + 2 * pad), H / (b.h + 2 * pad), co.max ?? 3);
           return this.to(t, { x: b.x + b.w / 2, y: b.y + b.h / 2, zoom: z }, co); },
         reset(t, co = {}) { return this.to(t, { x: W / 2, y: H / 2, zoom: 1 }, co); },
       };
