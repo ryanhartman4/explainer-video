@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>film</title>
+<link rel="stylesheet" href="stage.css">
+<script src="data/timing.js"></script>     <!-- word times: node tools/clock.mjs -->
+<script src="data/captions.js"></script>   <!-- captions for the burned-in cut: node tools/captions.mjs -->
+<script src="three.min.js"></script>
+<script src="stage.js"></script>
+<script src="stage3d.js"></script>         <!-- the 3D point layer, G3: the skill's references/stage3d.md -->
+<!-- ready-made forms: load the ones the film uses, e.g. <script src="forms3d/lorenz.js"></script> (list: references/stage3d.md) -->
+</head><body>
+<script>
+// A film with the 3D point layer. The points (G3) are the picture; stage.js scenes carry the labels on top.
+// Paragraphs say WHEN: p1.at("some words") is the moment the narrator says them. Never type a clock time.
+// For a film over about three minutes, put each paragraph in video/scenes/sNN.js (references/stage3d.md, "A long film").
+Stage.film({ look: "night" }, film => {
+  G3.init(film, { captionLift: 45 });                                          // captionLift: the captioned cut raises the picture clear of the captions
+  const [p1, p2] = film.paras;
+
+  // ---- 1. the forms this film's points take
+  G3.form("title", G3.textForm("The question?", { width: 26 }));                // the points spell the opening question
+
+  // ---- 2. paragraph 1: the points, the camera, then the 2D layer
+  G3.morph(0, "title", { at: [0, 2.4, 0] });                                   // frame 0 is the thumbnail: the question, already in place
+  G3.cam.to(0, { dist: 31.5 }, { dur: 0 }).to(0.01, { dist: 34 }, { dur: p1.end, ease: "linear" });   // never a frozen frame: a slow drift
+  const A = film.scene(p1, { fadeOut: 1.2 });                                  // 2D text fades with the points that leave under it
+  A.text("Short sentences, for the ear.", { x: 960, y: 700, size: "body", align: "center", color: "muted", id: "line" }).show(p1.at("written for the ear"));
+  const tThing = p1.at("something the viewer can picture");
+  G3.morph(tThing, "globe", { dur: 2.0, swirl: 1.0, at: [0, 1.2, 0] });        // "something the viewer can picture": the title flies apart into a globe
+  G3.cam.to(tThing, { az: 0.35, el: 0.14, dist: 32 }, { dur: p1.end - tThing + 1 });
+
+  // ---- 3. paragraph 2: this scene takes the points 0.8 s before its paragraph starts
+  const t0 = p2.start - 0.8;
+  G3.morph(t0, "globe", { dur: 1.4, at: [7, 0, 0], scale: 0.85, clock: t => t - tThing });   // the same globe, moved aside for the text
+  G3.cam.to(t0, { az: -0.2, el: 0.1, dist: 34, look: [0, 0, 0], fov: 40 }, { dur: 1.6 });
+  const B = film.scene(p2);
+  B.hud.text("The heading", { x: 120, y: 96, size: "head", id: "heading" }).show(p2.start + 0.3);
+  B.number(10, { x: 120, y: 420, size: "display", suffix: " s", id: "count" }).show(p2.at("twenty-five seconds", -0.4))
+    .to(p2.at("twenty-five seconds"), { value: 25 }, { dur: 0.8, ease: "out" });
+  // a label that follows a point of the globe as the camera moves
+  G3.overlay(B, (ctx, t) => G3.text3(ctx, t, "the thing", [7, 6.4, 0], { size: 34, color: "accent", alpha: G3.fade(t, p2.at("exactly"), p2.end, 0.4) }), { id: "labels" });
+  film.hit("pluck", p2.at("exactly"), { pitch: 4 });
+});
+</script>
+</body></html>

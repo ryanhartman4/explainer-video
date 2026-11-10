@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>One Sitting</title>
+<link rel="stylesheet" href="stage.css">
+<script src="data/timing.js"></script>     <!-- word times: node tools/clock.mjs -->
+<script src="data/captions.js"></script>   <!-- captions: node tools/captions.mjs -->
+<script src="data/session.js"></script>    <!-- the session's real record: node tools/session.mjs -->
+<script src="data/wave.js"></script>       <!-- the soundtrack's envelope: node tools/wave.mjs -->
+<script src="three.min.js"></script>
+<script src="stage.js"></script>
+<script src="stage3d.js"></script>         <!-- the 3D point layer, G3: the skill's references/stage3d.md -->
+<script src="scenes/s01.js"></script>
+<script src="scenes/s02.js"></script>
+<script src="scenes/s03.js"></script>
+<script src="scenes/s04.js"></script>
+<script src="scenes/s05.js"></script>
+<script src="scenes/s06.js"></script>
+<script src="scenes/s07.js"></script>
+<script src="scenes/s08.js"></script>
+<script src="scenes/s09.js"></script>
+</head><body>
+<script>
+// One Sitting. SCRIPT.md has the narration and the beat sheets; each paragraph is one file in scenes/.
+// A scene file pushes { n, build(film, p, G3) } onto window.SCENES; p is its paragraph. One scene failing does not stop the rest.
+Stage.film({ look: "night" }, film => {
+  G3.init(film, { captionLift: 45 });                                          // the captioned cut raises the picture 45 px, clear of the caption strip
+  film.front.text("one sitting", { x: 1800, y: 56, size: "note", font: "mono", align: "right", color: "muted", id: "running-head" });
+  (window.SCENES || []).sort((a, b) => a.n - b.n).forEach(s => {
+    try { s.build(film, film.para(s.n), G3); } catch (e) { film.problem(`scene ${s.n} threw: ${e && e.message}`); console.error(e); }
+  });
+});
+</script>
+</body></html>

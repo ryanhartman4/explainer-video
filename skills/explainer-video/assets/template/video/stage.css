@@ -47,6 +47,14 @@
   --display: "CM Serif", Georgia, serif; --text: "CM Serif", Georgia, serif; --mono: "Plex Mono", Menlo, monospace;
   --display-weight: 400; --display-track: -0.01em; --text-weight: 400; --stroke: 3px; --radius: 8px;
 }
+/* night: near-black blue ground, warm white ink, a serif display face, one coral accent. Made for the 3D point layer
+   (video/stage3d.js, whose points are additive light), and good for any film that should feel like a night sky. */
+#stage[data-look="night"] {
+  --bg: #05070c; --panel: #111826; --ink: #f3eee4; --muted: #9aa4b4; --faint: #3c4658;
+  --accent: #ff8f66; --red: #ff6b5e; --blue: #74c2ff; --green: #6fe3a2; --yellow: #ffd27a; --purple: #bba6ff;
+  --display: "Newsreader", Georgia, serif; --text: "Instrument Sans", Helvetica, Arial, sans-serif; --mono: "JetBrains Mono", Menlo, monospace;
+  --display-weight: 400; --display-track: -0.022em; --text-weight: 500; --stroke: 3px; --radius: 10px;
+}
 /* a soft local lift behind the picture; never a full-screen linear gradient (those band in H.264) */
 #stage[data-look="chalk"] { background: radial-gradient(ellipse 70% 60% at 50% 45%, #13151c 0%, var(--bg) 70%); }
 

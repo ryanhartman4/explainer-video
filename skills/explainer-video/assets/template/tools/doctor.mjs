@@ -25,6 +25,13 @@ try {
   await p.setContent("<body style='background:#123'>"); const shot = await p.screenshot();
   ok("headless Chrome", `${b.version()}, drew a ${shot.length}-byte test frame`); await b.close();
 } catch (e) { miss("headless Chrome", String(e.message || e).split("\n")[0]); }
+if (existsSync(join(ROOT, "video/stage3d.js"))) {                              // a film with the 3D point layer
+  existsSync(join(ROOT, "video/three.min.js")) ? 0 : miss("three.js", "video/three.min.js is missing: rerun the skill's scripts/new_film.mjs with --3d");
+  try { const b = await launch(), p = await b.newPage(); await p.setContent("<canvas></canvas>");
+    const gl = await p.evaluate(() => { const c = document.querySelector("canvas"), g = c.getContext("webgl2") || c.getContext("webgl"); if (!g) return null; const e = g.getExtension("WEBGL_debug_renderer_info"); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : "WebGL"; });
+    gl ? ok("3D layer", `stage3d.js, three.js, ${String(gl).slice(0, 60)}`) : miss("3D layer", "this headless Chrome has no WebGL: set STAGE_CHROME to a full Google Chrome"); await b.close();
+  } catch (e) { miss("3D layer", String(e.message || e).split("\n")[0]); }
+}
 existsSync(join(ROOT, "video/stage.js")) && existsSync(join(ROOT, "video/assets/fonts")) ? ok("engine", "video/stage.js and fonts") : miss("engine", "video/stage.js or video/assets/fonts is missing: rerun the skill's scripts/new_film.mjs with --update");
 if (platform() === "darwin" && arch() === "arm64") {
   const tts = process.env.EXPLAINER_TTS_PROJECT || join(homedir(), "Developer/mlx-audio");

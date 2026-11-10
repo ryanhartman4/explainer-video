@@ -19,8 +19,14 @@ them, and five tests for reviewing your own frames.
 
 **An engine** (`skills/explainer-video/assets/template/video/stage.js`, about 600 lines, no dependencies). A film is
 a pure function of time: one HTML file that opens in any browser with a scrubber, renders repeatably, and
-takes all its timing from the narration's word timestamps. Three looks ship with it (a warm paper look, a dark
-technical look, and the 3Blue1Brown-lineage look of the first five films) with bundled open-licence fonts.
+takes all its timing from the narration's word timestamps. Four looks ship with it (a warm paper look, a dark
+technical look, the 3Blue1Brown-lineage look of the first five films, and a night look for the 3D layer) with
+bundled open-licence fonts.
+
+**A 3D layer** (`skills/explainer-video/assets/stage3d/`, optional, three.js). 30,000 points of light drawn under
+the stage, an orbit camera, and ready-made forms: word clusters, the layers of a network, the Lorenz attractor, a
+grid of ten thousand cells, colliding galaxies, a sunflower that opens as a flower, a waveform. The same points
+become each subject in turn, and labels drawn in 2D follow them. `new_film.mjs --3d` adds it to a project.
 
 **Tools that check the work** (`skills/explainer-video/assets/template/tools/`). `script_check` lints the script and
 its pacing before anything is built. `shots` makes contact sheets with the spoken words under each frame. `check`
@@ -32,12 +38,13 @@ A *vertical cut* is a second film composed for the 1080 by 1920 frame of a phone
 and visual ideas; neither cut is the other rearranged. *Real clips* let a paragraph play a short recording of a real person, credited on screen, in place
 of the narrator; the narrator's voice never speaks a real person's words.
 
-**A record of five films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness
+**A record of seven films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness
 setting judged by ear, what each fact-check caught, and the original HyperFrames pipeline, which stays as the
-back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising those films.
+back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising the first five.
 
-**A worked example** (`skills/explainer-video/assets/demo/bloom/`): "How a Bloom filter works", 93 seconds, with its
-script, one-page design and film source.
+**Worked examples** (`skills/explainer-video/assets/demo/`): "How a Bloom filter works" (93 seconds, 2D, one file);
+"One Sitting" (3:52, 3D, nine scene files built by eight parallel agents, with the brief they worked from); and a
+gallery film of the ready-made 3D forms.
 
 The method and the checks are written so that a smaller model can follow them: each step ends in a gate that a tool
 decides, and the taste lives in the engine's defaults and the checker's rules more than in prose.

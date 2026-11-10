@@ -1,6 +1,6 @@
 ---
 name: explainer-video
-description: Make a narrated, animated explainer video about a code repo, paper, system, algorithm, argument or idea, end to end - design the explanation, write and fact-check the script, animate it in sync with the spoken words, add voice, music and captions, and render the MP4. Use this whenever the user asks for an explainer video, a video walkthrough of a repo or README, "explain X in a short video", a narrated animation or animated diagram, a narrated chart or argument for a blog or X, a 3Blue1Brown-style video, or wants an existing explainer improved, even if they never say "explainer". Also use it to design or critique the storyboard, script or look of such a video. For a silent chart animation, a music video, or an HTML page that explains something, use other tools.
+description: Make a narrated, animated explainer video about a code repo, paper, system, algorithm, argument or idea, end to end - design the explanation, write and fact-check the script, animate it in sync with the spoken words, add voice, music and captions, and render the MP4. Use this whenever the user asks for an explainer video, a video walkthrough of a repo or README, "explain X in a short video", a narrated animation or animated diagram, a narrated chart or argument for a blog or X, a 3Blue1Brown-style video, a narrated 3D or particle film (a simulation, a showcase), or wants an existing explainer improved, even if they never say "explainer". Also use it to design or critique the storyboard, script or look of such a video. For a silent chart animation, a music video, or an HTML page that explains something, use other tools.
 ---
 
 # Explainer video
@@ -12,9 +12,13 @@ and an MP4. It has two layers.
   picture saying the same thing at the same moment, one change at a time, and looking at your own frames.
 - **The engine** (`references/stage.md`): a small dependency-free film engine, `stage.js`, with tools that time the
   film from the narration, take contact sheets, check frames mechanically and render.
+- **The 3D layer, when the subject calls for it** (`references/stage3d.md`): 30,000 points of light drawn under the
+  stage with three.js, an orbit camera, and ready-made forms (an attractor, colliding galaxies, word clusters, a grid
+  of tests, a flower, a waveform). The same points become each subject in turn.
 
-Read both before the first film. A complete film made this way is in `assets/demo/bloom/` (script, design, film):
-read its `SCRIPT.md` and `video/film.html` and work in the same shape.
+Read the first two before the first film, and the third before a 3D one. A complete film made this way is in
+`assets/demo/bloom/` (script, design, film): read its `SCRIPT.md` and `video/film.html` and work in the same shape.
+A complete 3D film, built by parallel scene builders, is in `assets/demo/one-sitting/`.
 
 The two rules everything else follows:
 1. **Design the picture before the words are final.** Find the one picture the whole film can be told on.
@@ -62,7 +66,9 @@ cd <project-folder> && node tools/doctor.mjs
 ```
 
 The first copies the engine, fonts, tools and narration scripts and downloads nothing. The doctor lists anything
-missing. On a machine that has never made a film, run the `explainer-video-setup` skill. Ask the user before any
+missing. Add `--3d` to the first command when the film's picture is a shape, a space, a simulation or a crowd of
+things, or when the user asks for 3D or a showcase (`references/stage3d.md`, "When to use it"): it adds the point
+layer, three.js and the ready-made forms, and the film then starts from a 3D `film.html` in the `night` look. On a machine that has never made a film, run the `explainer-video-setup` skill. Ask the user before any
 install or download, naming what it is, where it comes from and its size. Two downloads are easy to miss: a project
 without Playwright needs `npm install --save-dev playwright-core` (8 MB), and the first `sh tools/audio.sh` fetches
 numpy and scipy through uv (about 60 MB) unless the doctor says they are cached.
@@ -126,6 +132,11 @@ Choose the look by `references/method.md` section 11. For a film with a vertical
 first, each as its own composition (`references/method.md` section 13), then build `video/film.html` for the wide
 frame and `video/film-9x16.html` for the tall one (`references/stage.md`, "A vertical cut"). Build each for its own
 frame; never produce one by rearranging the other.
+
+A film over about three minutes, or any film you will build with parallel subagents, puts each paragraph in its
+own file under `video/scenes/` (`references/stage.md`, "Splitting a long film"; for a 3D film,
+`references/stage3d.md`, "A long film, built in parallel"). Build and shoot the first scene yourself before anyone
+else starts.
 
 Then build `video/film.html` one paragraph at a time, each beat of the beat sheet becoming one block of code:
 
@@ -212,7 +223,8 @@ back into this skill.
 Films 1 to 5 were made on HyperFrames (HTML and GSAP rendered by HeyGen's CLI). That pipeline is kept whole in
 `assets/hyperframes/` with its record in `references/playbook.md`. Use it instead of `stage.js` when:
 
-- the film needs a **3D character** or other WebGL (the Claw'd rig, `assets/hyperframes/lib/clawd.js`);
+- the film needs a **3D character** (the Claw'd rig, `assets/hyperframes/lib/clawd.js`). Points, simulations and
+  other three.js pictures run on `stage.js` through the 3D layer (`references/stage3d.md`);
 - you are **revising a film that was made on it**;
 - the user asks for HyperFrames, or needs its registry components.
 
@@ -222,14 +234,20 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
 ## Bundled files
 
 - `references/method.md`: the design method. `references/stage.md`: the engine's API, tools and traps.
-- `references/playbook.md`: the record of films 1 to 5 and the Bloom demo: every voice, music and loudness setting the
-  author approved, what the fact-checks caught, and the HyperFrames pipeline.
-- `scripts/new_film.mjs`: start a project, or refresh its engine with `--update`.
-- `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (three looks) and fonts; `tools/`
+- `references/stage3d.md`: the 3D point layer: its API, writing a form, the ready-made forms, the handoff between
+  scenes, building a long film in parallel, the captioned cut.
+- `references/playbook.md`: the record of films 1 to 5, the Bloom demo and "One Sitting": every voice, music and
+  loudness setting the author approved, what the fact-checks and reviews caught, and the HyperFrames pipeline.
+- `scripts/new_film.mjs`: start a project (`--3d` adds the point layer), or refresh its engine with `--update`.
+- `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (four looks) and fonts; `tools/`
   (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master, clip cutter);
   `narration/` (script parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
 - `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
+- `assets/stage3d/`: what `--3d` adds to a project: `stage3d.js`, the forms in `forms3d/`, and a 3D `film.html`.
+- `assets/demo/one-sitting/`: a finished 3:52 3D film in nine scene files, with the brief its eight parallel
+  builders worked from, its own score script, and the notes of what the reviews caught.
+- `assets/demo/forms3d/`: a gallery film that shows every ready-made form, one a paragraph. It is also their test.
 - `assets/voices/`: the narrator of films 2 to 5 (synthetic, non-commercial). `assets/bakeoff/`: how to compare a new
   voice model by ear.
 - `assets/hyperframes/`: the back-up engine's helpers, tools, examples and reference scenes.

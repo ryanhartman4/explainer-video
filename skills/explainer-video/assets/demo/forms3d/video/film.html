@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>The 3D forms: a gallery</title>
+<link rel="stylesheet" href="stage.css">
+<script src="data/timing.js"></script>
+<script src="data/captions.js"></script>
+<script src="three.min.js"></script>
+<script src="stage.js"></script>
+<script src="stage3d.js"></script>
+<script src="forms3d/clusters.js"></script>
+<script src="forms3d/sheets.js"></script>
+<script src="forms3d/lorenz.js"></script>
+<script src="forms3d/grid.js"></script>
+<script src="forms3d/galaxies.js"></script>
+<script src="forms3d/phyllotaxis.js"></script>
+<script src="forms3d/waveform.js"></script>
+<script src="scenes/s01-builtins.js"></script>
+<script src="scenes/s02-clusters.js"></script>
+<script src="scenes/s03-sheets.js"></script>
+<script src="scenes/s04-lorenz.js"></script>
+<script src="scenes/s05-grid.js"></script>
+<script src="scenes/s06-galaxies.js"></script>
+<script src="scenes/s07-phyllotaxis.js"></script>
+<script src="scenes/s08-waveform.js"></script>
+</head><body>
+<script>
+// The gallery of ready-made 3D forms: one paragraph, one scene file, one form. It is also the forms' test: if a form
+// breaks, this film shows it. Each scene file pushes { n, build(film, p, G3) } onto window.SCENES.
+Stage.film({ look: "night" }, film => {
+  G3.init(film, { captionLift: 45 });
+  film.front.text("forms3d", { x: 1800, y: 56, size: "note", font: "mono", align: "right", color: "muted", id: "running-head" });
+  (window.SCENES || []).sort((a, b) => a.n - b.n).forEach(s => {
+    try { s.build(film, film.para(s.n), G3); } catch (e) { film.problem(`scene ${s.n} threw: ${e && e.message}`); console.error(e); }
+  });
+});
+</script>
+</body></html>

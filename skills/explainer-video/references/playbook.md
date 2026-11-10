@@ -1,6 +1,6 @@
 # Explainer video playbook
 
-**How to read this now.** This is the record of films 1 to 5 and of the Bloom demo, the first film on the new engine: what was made, every setting the author approved by ear
+**How to read this now.** This is the record of films 1 to 5, of the Bloom demo (the first film on the new engine) and of "One Sitting" (the first with the 3D layer): what was made, every setting the author approved by ear
 or eye, and what went wrong. Since then the skill's default has moved to its own engine (`stage.js`,
 `references/stage.md`) and a design method (`references/method.md`). This playbook stays as the reference for
 everything those two do not replace:
@@ -29,6 +29,8 @@ A fourth, the dopplergeo explainer (2026-11-03, 5:26), ran the subject's own scr
 A fifth, the permanent underclass explainer (2026-11-04, 1:46, 1080p60, a blog cut and an X cut), redid the author's silent chart animation with a meta-prompt's ideas: a directed prompt (GOAL, FORMAT, SHOTS, TECHNICAL, BAN LIST, MATERIALS, SOUND), motion numbers in frames, a beat grid, frame-exact sound hits, frame 0 as a poster, review rounds pointed at frames, and a 3D character (Claw'd, Three.js) inside HyperFrames. It is one continuous composition, not scenes. Its lessons are marked *(film 5)*; its `DESIGN.md` is `assets/hyperframes/references/design-example-film5.md`.
 
 A sixth, the Bloom filter demo (2026-11-10, 1:27.5, 1080p30, a blog cut and an X cut), was the first film on `stage.js`. It was built in a cloud session on Linux, then voiced with Breeze, rendered and listened to on an Apple Silicon Mac. Its lessons are marked *(Bloom demo, v2)*; the film is `assets/demo/bloom/`.
+
+A seventh, "One Sitting" (2026-11-10, 3:52.5, 1080p30, a main cut and an X cut), was the first `stage.js` film with a three.js layer and the first built by parallel agents on this engine: 30,000 points of light that become word clusters, a network, the Lorenz attractor, 10,000 real tests, colliding galaxies, a sunflower and the film's own waveform. One session made it in about 95 minutes: the lead wrote the script, the 3D layer and scene 1; eight builders made scenes 2 to 9 at once; fifteen reviewers checked the script, each scene and the assembled film. Its source is `assets/demo/one-sitting/`, its 3D layer became `assets/stage3d/`, and its lessons are marked *(film 7)*.
 
 ## The stack
 
@@ -209,6 +211,21 @@ faultline-explainer/
 - *(film 3)* Two exemplars, one per kind of scene (a stack-and-cards scene and a code-and-equation scene), and a shared lib holding the film's motifs (`K.card`, `K.code`, `K.term`, `K.row`) let three builders pass review on their first report. The builder check's per-scene notes carried the traps: which occurrence of a repeated cue word, cues on spelled-out acronyms ("MPS" is spoken "M P S", so it can't be a cue), and code widths (a panel needs about 36 + size × (3.2 + 0.6 × characters) px, and nothing wraps).
 - *(film 3)* Builders found shared-file bugs and worked around them locally; collect them from their reports into the project's PLAYBOOK before the next film.
 
+### A 3D film on `stage.js`, built by parallel agents *(film 7)*
+- **three.js under `stage.js` needs no engine change.** The WebGL canvas renders offscreen (`preserveDrawingBuffer: true`) and a `film.back.canvas()` node copies it in with `drawImage`, so `shots`, `check` and `render` work unchanged. Headless Chrome's software WebGL drew 30,000 additive points at about 20 frames a second across six pages (6,975 frames in 209 s). This is now `assets/stage3d/stage3d.js`; its reference is `references/stage3d.md`.
+- **One particle system for the whole film.** A sorted list of morphs; frame t blends the form before and the form after, per point, with a staggered ease and a curved flight. Forms build lazily, so a heavy simulation costs nothing while other scenes are shot. Camera, level and grain are `film.value()` tracks, so camera moves show as beats on the contact sheets.
+- **The order that worked.** Script, then three checkers at once (science, the film's claims about itself, the ear and the builder). While they ran: the 3D layer and scene 1 as the exemplar, proved with a shot. Then the brief (`assets/demo/one-sitting/video/BRIEF.md`) and eight builders, each followed by a fresh critic and a fixer (24 agents, 30 minutes). Voice recording ran alongside (9 paragraphs, 520 words, about 8 minutes). Then four whole-film reviewers on the real voice, one lens each.
+- **What the per-scene critics caught** (about eight findings a scene): a payoff frame that never held because the next scene took the points 0.7 s after the cue; a morph that landed a second after its word (lead it by 0.5 s); twenty-five labels at one weight during the beat about four of them (dim the bystanders); an opening held lopsided and still for 5 s; a "one bright point" that was a 45 px sparkle.
+- **What the whole-film reviewers caught that stills could not show.** Transitions: text left at full strength over points that were dissolving, at six of eight joins (`film.scene(p, { fadeOut: 1.2 })` fixed all six). Motion, from clips tiled at 30 frames a second: one teleport, where scene 2 took the points while scene 1's last flight was 54% done (the engine now blends from mid-flight; still end a scene's last morph by `p.end - 0.8`); a one-frame brightness drop where two code paths sized points differently; a strobing marker during sped-up time; 3.6 s of frozen frame under narration. Sync: a tail named three seconds before it existed (the simulation clock was linear; ease it). Words on screen: a count that would go stale with the next edit, and credits punctuated two ways.
+- **`tail: 1.2`.** Every scene takes the points at `p.start - 0.8`. With the default tail of 0.5 that is 0.3 s before the last narrator stops. One config value fixed every join.
+- **A script change after the builders start costs a round.** The fact-check changed nine sentences ten minutes into the build; three cue phrases broke and the fixers had to chase them. Lock the script before the builders start when time allows.
+- **Builders share one scratchpad**, and files there get overwritten. Give each its own folder, or have them write only inside the project.
+- **The film's numbers about itself.** Builder and reviewer counts, lines written and frames are written to `video/data/session.js` by a script as the last step before the render, and the film refuses to build when the frame count disagrees with its length. A stat typed in by hand was stale within ten minutes.
+- **A score for the film.** `tools/make_score.py` (in the demo) keeps `make_music.py`'s piano, pad, bass, room and levels and replaces the arrangement: one section per paragraph, read from `timing.js`, each with its own four-bar progression, density and weight. It measured −16.4 LUFS alone (the stock bed is about −15.7) and the mix −17.5. Nobody has listened to it yet.
+- **The captioned cut.** Ten notes and credits sat in the caption strip. Instead of moving each, the film raises the whole picture 45 px when opened with `?captions=1`: a view offset on the 3D camera and the same `translateY` on the 2D scenes, so labels stay on their points (`captionLift` in `G3.init`). `check.mjs --captions` had been opening the film without `captions=1` and could not see it; it now opens the captioned page.
+- **Size.** Points are noise to x264: 283 MB at `--crf 16`, 231 MB at `--crf 18` for 3:52. A 720p copy at 880 kb/s (28 MB) was needed to send it anywhere.
+- **Scene 1 on real timing** needed two things the placeholder hid: a slow camera drift under every hold, and the last morph shortened to end when the next scene begins.
+
 ### Accuracy
 - Credit borrowed ideas on screen and in narration (here: QTIP for the trellis, hash and rotation; LiquidAI and z-lab for the drafters).
 - Use the metric that does not flatter: top-1 agreement beside KL divergence instead of a near-identical perplexity.
@@ -224,6 +241,11 @@ faultline-explainer/
 - *(film 5)* A brace or span must measure the honest interval (time in the band runs from the first line's entry to the last line's exit, twice what the blue line alone gave).
 - *(film 5)* Verify citations carried in from earlier AI answers: two in the author's April notes did not exist under those titles.
 - *(film 5)* A mascot that is someone's brand gets an on-screen fan-art notice (Claw'd: "not made or endorsed by Anthropic").
+- *(film 7)* A film about its own making has to be checked against the session. "Every frame is a program, and I wrote it today" claimed the engine and three.js; it became "drawn by code, and I wrote these scenes today", with the engine, three.js and the speech model credited on screen. "Handed each one to a copy of myself" became "most of them", because the lead built scene 1.
+- *(film 7)* A sentence true of the formula can be false of the world. "No seed knows where its neighbours are" is true of Vogel's rule and backwards for a living sunflower, where each seed forms where its neighbours inhibit least. It became "The rule never mentions a seed's neighbours."
+- *(film 7)* The king and queen analogy holds loosely (the two offsets have a cosine near 0.44 in the GoogleNews vectors, and the famous result excludes the input words). The narration says "in one early word model ... points much the same way", the second arrow is drawn 12 degrees off the first, and the picture is marked as an illustration.
+- *(film 7)* "Ten thousand random tests disagree" would be heard as all of them failing. The film ran the tests (4,728 of 10,000 fail), the narration says "nearly half failed", and the film refuses to build if the count leaves 4,000 to 5,000.
+- *(film 7)* A picked outcome is said as picked: the two Lorenz markers "here end on opposite wings", and the film checks that they do.
 
 ## HyperFrames gotchas we hit
 

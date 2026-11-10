@@ -2,7 +2,8 @@
 
 `video/stage.js` draws the film; `tools/` time it, look at it, check it and render it. No dependencies beyond a
 Chrome and ffmpeg. The worked example is `assets/demo/bloom/video/film.html` in this skill: read it before writing
-a film, and copy from it.
+a film, and copy from it. For a film whose picture is 3D (points, simulations, a space), `references/stage3d.md`
+adds a three.js point layer under the stage; everything here still applies.
 
 Contents: the idea · a film file · when (paragraphs) · where (scenes) · things · animating · camera · text helpers ·
 numbers, code, charts, canvas · sound hits · the tools · splitting a long film · traps
@@ -172,8 +173,10 @@ Run all of them from the project folder.
 | `sh tools/audio.sh` | voice post, clips cut (when SCRIPT.md has `@clip` lines), clock, captions, hits, music, mix, loudness report, in the one safe order |
 | `node tools/render.mjs` | `out/<project folder's name>.mp4`, 1080p30 with the mix. `--out out/name.mp4`, `--fps 60`, `--captions`, `--from 10 --to 20`, `--look`, `--format 9x16` |
 | `node tools/captions.mjs` | `out/captions.srt` and the burned-in caption data (the clock runs it; run it alone after editing its `WRITE` list) |
+| `node tools/wave.mjs` | `video/data/wave.js`: the mix's loudness envelope, for a film that draws its own soundtrack (run after `audio.sh`) |
 
-Settings for the clock live in `film.config.json`: `lead` and `tail` (silence around each paragraph, 0.6 and 0.5),
+Settings for the clock live in `film.config.json`: `lead` and `tail` (silence around each paragraph, 0.6 and 0.5;
+use a `tail` of 1.2 when a scene's picture is taken over before the next paragraph starts, as with the 3D layer),
 `first` (opening frame before the first word, 0.8), `end` (after the last word, 3.0), `pad` (extra seconds before a
 paragraph, `{ "3": 1.5 }`), `bpm` (voices start on the music's beats; `null` turns it off). `script_check` uses the
 same settings, so its length estimate is the clock's. To hit a target length, change the words first; trim `end`
@@ -255,10 +258,34 @@ a sentence, where the estimate is best. Until a clip is cut, the film reports `p
 
 ## Splitting a long film
 
-One `film.html` is right up to about three minutes. Past that, put each scene in its own file so several builders
-can work at once: `video/scenes/a.js` holds `window.SCENES = window.SCENES || []; window.SCENES.push(film => { ... });`
-and `film.html` loads the files in order, then calls `Stage.film({ look }, film => window.SCENES.forEach(f => f(film)))`.
-Shared geometry and helpers go in one `video/shared.js` that one person owns.
+One `film.html` is right up to about three minutes. Past that, or whenever several builders will work at once, put
+each paragraph in its own file. `video/scenes/s03.js` holds
+
+```js
+(window.SCENES = window.SCENES || []).push({ n: 3, build(film, p) { /* p is paragraph 3 */ } });
+```
+
+and `film.html` loads the files, then builds each scene inside its own try block, so one broken scene shows as a
+problem on the frame and does not stop the others:
+
+```js
+Stage.film({ look }, film => (window.SCENES || []).sort((a, b) => a.n - b.n).forEach(s => {
+  try { s.build(film, film.para(s.n)); } catch (e) { film.problem(`scene ${s.n} threw: ${e && e.message}`); }
+}));
+```
+
+Until a scene is written, its file is a stub that pushes an empty `build`, so the film loads with no 404.
+Shared geometry and helpers go in one `video/shared.js` that one person owns. Give every node an id that starts
+with its scene (`s3-`), so checker messages name the scene.
+
+**Building in parallel.** The lead locks the script, builds one scene as the worked example and writes a brief:
+which file each builder owns, what to read, the craft bar, the check loop (`shots.mjs N`, look, `check.mjs`), and
+notes for each scene. `assets/demo/one-sitting/video/BRIEF.md` is one that worked. Then, per scene, three
+different contexts: a builder; a reviewer who looks at the frames only and lists findings with times and concrete
+fixes; a fixer who applies them. When the voice is recorded, review the whole film once more through separate
+lenses: the joins between scenes, every word on screen, sync against the beat sheets, and motion (short silent
+renders tiled at 10 to 30 frames a second: `ffmpeg -i clip.mp4 -vf "fps=10,scale=640:-1,tile=6x5" -frames:v 1 sheet.jpg`).
+A script change after the builders start costs a round, because cue phrases break: lock the script first.
 
 ## Traps
 
@@ -278,3 +305,8 @@ Shared geometry and helpers go in one `video/shared.js` that one person owns.
   for its own frame. Copying `film.html` and shifting coordinates gives a frame that looks rearranged.
 - **A clip paragraph is never voiced.** If a narrator take exists for it in `narration/audio/`, delete that take:
   `voice_post.sh` would put it back in place of the clip.
+- **The captioned cut is its own page.** `check.mjs --captions`, `shots.mjs --captions` and `render.mjs --captions`
+  open the film with `?captions=1`. A film may lay itself out differently there (the 3D layer's `captionLift` raises
+  the whole picture clear of the caption strip), so check and shoot the captioned cut with the flag.
+- **A number shown on screen about the film itself** (lines of code, frames) goes stale with the next edit. Write
+  it from a script as the last step before the render, and have the film call `film.problem` when it disagrees.

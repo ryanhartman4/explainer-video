@@ -28,7 +28,8 @@ try {
   const SAFE = safeFor(format);
   const found = new Map();                                // message -> { level, first, last, count }
   const add = (level, t, key, msg) => { const f = found.get(key); if (f) { f.last = t; f.count++; } else found.set(key, { level, first: t, last: t, count: 1, msg }); };
-  const { page, info } = await openFilm(browser, srv.url, { look: A.look, format });
+  const { page, info } = await openFilm(browser, srv.url, { look: A.look, format, captions: !!A.captions });   // check the page the captioned render will draw: a film may lay itself out differently with captions on
+  const has3d = await page.evaluate(() => !!(window.G3 && window.G3.on));                // with a 3D point layer (stage3d.js) the points are the picture; usage() measures 2D nodes only
   if (!info.ok) { console.log("ERROR  the film did not build: " + info.error); process.exit(1); }
   const FW = info.W || 1920, FH = info.H || 1080, AR = info.area;
   for (const p of info.problems) add("ERROR", 0, "p:" + p, p);
@@ -49,7 +50,7 @@ try {
     if (t === 0 && shown === 0) add("WARN", 0, "poster", "frame 0 is empty: the first frame is the thumbnail, so open on the title or the key picture already in place");
 
     // is the frame being used? (small content adrift in a big frame reads as a slide)
-    if (speaking(t) && shown > 0 && (use.used < 0.11 || use.bottom - use.top < FH * 0.39)) { thin = thin || { from: t, n: 0, used: 0, top: 0, bottom: 0 }; thin.n++; thin.used += use.used; thin.top += use.top; thin.bottom += use.bottom; }
+    if (!has3d && speaking(t) && shown > 0 && (use.used < 0.11 || use.bottom - use.top < FH * 0.39)) { thin = thin || { from: t, n: 0, used: 0, top: 0, bottom: 0 }; thin.n++; thin.used += use.used; thin.top += use.top; thin.bottom += use.bottom; }
     else { if (thin && t - thin.from >= 6) thinMsg(thin, t); thin = null; }
     const solid = items.filter(i => i.opacity > 0.9 && i.settled);
     for (const i of items) {

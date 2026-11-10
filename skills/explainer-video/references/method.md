@@ -266,7 +266,7 @@ by the zoom"), fix those, re-shoot only those moments. Stop when a round finds n
 
 ## 11. Choosing a look
 
-Three looks ship with the engine (`video/stage.css`). Choose by subject and viewer, state the choice in DESIGN.md,
+Four looks ship with the engine (`video/stage.css`). Choose by subject and viewer, state the choice in DESIGN.md,
 and do not mix looks in one film.
 
 | Look | It is | Use it for |
@@ -274,6 +274,7 @@ and do not mix looks in one film.
 | `paper` | warm off-white, near-black serif headings, one vermilion accent | ideas, arguments, economics, history, product explainers, anything for a general audience. The default. |
 | `slate` | deep blue-black, cool white grotesque, amber accent | code, systems, infrastructure, protocols, data pipelines |
 | `chalk` | near-black, cream Computer Modern, the 3Blue1Brown palette | mathematics, machine learning, anything with equations; the house look of films 1 to 5 |
+| `night` | near-black blue, warm white, a serif display face, one coral accent | films with the 3D point layer (`references/stage3d.md`), whose points are additive light; a showcase; anything that should feel like a night sky |
 
 To make a new look, copy a block in `stage.css` and change the tokens: a ground, an ink at 12:1 or better against
 it, a muted grey at 4.5:1, a faint grey for outlines, a panel one step off the ground, one accent, four hues each at
