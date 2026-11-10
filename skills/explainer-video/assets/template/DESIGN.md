@@ -19,8 +19,9 @@ heading (120, 96)                                   running head (1800, 56)
 (caption strip, keep clear)          y 956+
 ```
 
-Only for a film with a vertical cut: sketch the same picture on the 1080 x 1920 frame too (content inside x 72 to
-1008, y 200 to 1500). Say which parts stack and what folds, such as a row of sixteen becoming two rows of eight.
+Only for a film with a vertical cut: a second sketch, for the 1080 x 1920 frame (content inside x 72 to 1008, y 200
+to 1500). Compose it for that frame from the same idea; do not rearrange the sketch above. Say what the anchor
+picture is in each frame and which motifs the two share.
 
 ## Look
 `paper` | `slate` | `chalk` (or a new block in `video/stage.css`), and why it suits this subject and viewer.

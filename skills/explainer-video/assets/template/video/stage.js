@@ -10,11 +10,11 @@
 // API reference: the explainer-video skill's references/stage.md. No dependencies.
 (function () {
   "use strict";
-  // The frame is 1920 x 1080. A film that was planned with a vertical cut also draws at 1080 x 1920 when the page is
-  // opened with ?format=9x16 (the tools do this for "formats" in film.config.json): see film.pick() and film.zones().
+  // The frame. video/film.html is composed for 1920 x 1080. A film that also has a vertical cut has a second file,
+  // video/film-9x16.html, composed for 1080 x 1920: it sets window.STAGE_FORMAT = "9x16" before loading this script.
+  // Each file is laid out for its own frame; nothing here turns one layout into the other.
   const FORMATS = { "16x9": [1920, 1080], "9x16": [1080, 1920] };
-  const asked = new URLSearchParams(location.search).get("format");
-  const FORMAT = FORMATS[asked] ? asked : "16x9", [W, H] = FORMATS[FORMAT], PORT = H > W;
+  const FORMAT = FORMATS[window.STAGE_FORMAT] ? window.STAGE_FORMAT : "16x9", [W, H] = FORMATS[FORMAT], PORT = H > W;
   // content area (where the picture lives) and text limits, per frame. The vertical frame keeps clear of the strips a
   // phone app covers: about 150 px at the top and 360 px at the bottom.
   const AREA = PORT ? { x: 72, y: 200, w: 936, h: 1300 } : { x: 120, y: 96, w: 1680, h: 888 };
@@ -532,19 +532,6 @@
       this.pending = [];
       this.t = 0;
     }
-    // one film, two frames: film.pick(wide, tall) is `wide` in the 16:9 cut and `tall` in the 9:16 cut.
-    //   A.text("Add a word", { x: film.pick(120, 72), y: film.pick(96, 210), size: "head" })
-    pick(wide, tall) { return PORT ? tall : wide; }
-    // split the content area into parts that sit side by side in 16:9 and stack top to bottom in 9:16.
-    //   const [left, right] = film.zones([3, 2]);   -> { x, y, w, h, cx, cy } each; weights set the share of the long side
-    //   { gap: 40, top: 0, bottom: 0 }: gap between zones, and room kept free above (a heading) or below
-    zones(weights = [1, 1], o = {}) {
-      const gap = o.gap ?? 40, top = o.top || 0, a = { x: AREA.x, y: AREA.y + top, w: AREA.w, h: AREA.h - top - (o.bottom || 0) };
-      const sum = weights.reduce((s, v) => s + v, 0), free = (PORT ? a.h : a.w) - gap * (weights.length - 1);
-      let at = PORT ? a.y : a.x;
-      return weights.map(v => { const len = free * v / sum, z = PORT ? { x: a.x, y: at, w: a.w, h: len } : { x: at, y: a.y, w: len, h: a.h };
-        at += len + gap; z.cx = z.x + z.w / 2; z.cy = z.y + z.h / 2; return z; });
-    }
     // wait for anything a seek started loading (clip frames). The render tools call this before every capture.
     settle() { const p = this.pending; this.pending = []; return Promise.all(p); }
     para(n) { const p = this.paras.find(q => q.n === n); if (!p) this.problem(`no paragraph ${n} in SCRIPT.md`); return p || this.paras[0]; }
@@ -708,8 +695,7 @@
     pp.onclick = toggle;
     const scrub = e => { const r = track.getBoundingClientRect(); go(clamp((e.clientX - r.left) / r.width) * film.duration); };
     track.onmousedown = e => { scrub(e); const mv = e2 => scrub(e2); addEventListener("mousemove", mv); addEventListener("mouseup", () => removeEventListener("mousemove", mv), { once: true }); };
-    addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); toggle(); } else if (e.code === "ArrowRight") go(film.t + (e.shiftKey ? 1 : 1 / film.fps)); else if (e.code === "ArrowLeft") go(film.t - (e.shiftKey ? 1 : 1 / film.fps));
-      else if (e.code === "KeyV") { q.set("format", PORT ? "16x9" : "9x16"); q.set("t", film.t.toFixed(2)); location.search = q.toString(); } });   // V: the other frame
+    addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); toggle(); } else if (e.code === "ArrowRight") go(film.t + (e.shiftKey ? 1 : 1 / film.fps)); else if (e.code === "ArrowLeft") go(film.t - (e.shiftKey ? 1 : 1 / film.fps)); });
     draw();
   }
 })();

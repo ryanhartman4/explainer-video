@@ -51,8 +51,10 @@ export async function launch() {
   }
 }
 
-// The frames a film can be drawn in. A film is 16x9 unless film.config.json lists more: { "formats": ["16x9", "9x16"] }.
+// The cuts a film can have. A film is 16x9 unless film.config.json lists more: { "formats": ["16x9", "9x16"] }.
+// Each cut is its own film file, composed for its own frame.
 export const FORMATS = { "16x9": [1920, 1080], "9x16": [1080, 1920] };
+export const FILM = { "16x9": "film.html", "9x16": "film-9x16.html" };
 // which cuts a tool should work on: --format 9x16 (or 16x9, or 16x9,9x16) on the command line, else the film's own list
 export function formats(A = {}) {
   const f = join(ROOT, "film.config.json"), cfg = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
@@ -66,13 +68,14 @@ export const suffix = format => (format && format !== "16x9" ? "-" + format : ""
 
 // open the film; returns { page, info, close }. opts: { captions, scale, look, format }
 export async function openFilm(browser, base, opts = {}) {
-  const format = opts.format || "16x9", [vw, vh] = FORMATS[format];
+  const format = opts.format || "16x9", [vw, vh] = FORMATS[format], file = FILM[format];
+  if (!existsSync(join(VIDEO, file))) throw new Error(`video/${file} is missing: the ${format} cut is its own film file. Start it with the skill's  scripts/new_film.mjs <project> --vertical`);
   const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: opts.scale || 1 });
   const errors = [];
   page.on("pageerror", e => errors.push(String(e.message || e)));
   page.on("console", m => { if (m.type() === "error" && !m.text().startsWith("[stage]") && !m.text().startsWith("Failed to load resource")) errors.push(m.text()); });
   page.on("response", r => { if (r.status() >= 400 && !r.url().endsWith("mix.wav")) errors.push(`could not load ${r.url().replace(base + "/", "video/")} (${r.status()})`); });
-  await page.goto(`${base}/film.html?render=1&format=${format}${opts.captions ? "&captions=1" : ""}${opts.look ? "&look=" + opts.look : ""}`);
+  await page.goto(`${base}/${file}?render=1${opts.captions ? "&captions=1" : ""}${opts.look ? "&look=" + opts.look : ""}`);
   await page.waitForFunction("window.__ready", null, { timeout: 30000 }).catch(() => {});
   const info = await page.evaluate(async () => {
     try { const f = await window.__ready; return { ok: true, duration: f.duration, fps: f.fps, problems: f.problems, hits: f.hits, look: document.getElementById("stage").dataset.look,
@@ -81,7 +84,7 @@ export async function openFilm(browser, base, opts = {}) {
     catch (e) { return { ok: false, error: String(e && e.message || e) }; }
   });
   info.errors = errors; info.format = format;
-  if (info.ok && info.engineFormat !== format) info.problems = [...info.problems, `video/stage.js is too old to draw the ${format} cut: refresh it with the skill's  scripts/new_film.mjs <project> --update`];
+  if (info.ok && info.engineFormat !== format) info.problems = [...info.problems, `video/${file} draws a ${info.engineFormat} frame: the ${format} film must set  window.STAGE_FORMAT = "${format}"  in a script tag before stage.js (and stage.js must be current: scripts/new_film.mjs <project> --update)`];
   return { page, info };
 }
 

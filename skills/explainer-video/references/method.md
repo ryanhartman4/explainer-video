@@ -130,7 +130,7 @@ opening words. If a stretch has nothing to show, the narration there is not abou
 
 - **The frame** is 1920 by 1080. Keep content inside x 120 to 1800 and y 96 to 984. Text never leaves x 48 to 1872,
   y 40 to 1040. If captions will be burned in, nothing sits below y 956. A film whose user asked for a vertical cut
-  has a second frame as well: section 13.
+  is composed a second time for the tall frame: section 13.
 - **One focal point per beat.** The eye goes to what is largest, brightest, most saturated, or moving. Only one
   thing may be that at a time: the thing the narrator is naming.
 - **Left-align and top-anchor.** Headings top-left at one fixed position. Centre only a single hero element (a
@@ -294,29 +294,34 @@ The failures this method exists to prevent, so you can recognise them in your ow
 
 ## 13. A vertical cut (only when the user asked for one)
 
-A film is one 16:9 cut unless the user said yes to a vertical cut in step 1. On a yes the same film is also drawn at
-1080 by 1920 for phone feeds. Never add a vertical cut to a film that was laid out for the wide frame, and never
-scale or letterbox the wide picture into the tall one: text shrinks to a third of its size and the frame is mostly
-empty. Plan both frames in DESIGN.md before any code.
+A film is one 16:9 cut unless the user said yes to a vertical cut in step 1. On a yes the project holds two films:
+`video/film.html`, composed for the 1920 by 1080 frame, and `video/film-9x16.html`, composed for the 1080 by 1920
+frame of a phone feed.
 
-- **One film, two frames.** The script, the voice, the beats, the colours, the type sizes and the motion are the
-  same in both cuts. Only the geometry differs: where each part sits, how wide text wraps, how many rows a row
-  folds into.
+- **Each cut is native to its frame.** Compose each one from a blank page for the frame it will be watched in, the
+  way a poster and a banner for the same event are two designs. Never make one cut out of the other: not by moving
+  its parts, not by stacking what sat side by side, not by scaling or letterboxing. A rearranged frame looks
+  rearranged. This holds in both directions: the wide cut is no more the "real" film than the tall one.
+- **What the two cuts share.** The script and its beat sheet, the voice, the clock, the music and sound, the look,
+  what each colour means, the data, and the visual ideas: the same example, the same motifs, the same metaphor.
+  Every row of the beat sheet happens in both, on the same words.
+- **What each cut decides for itself.** The anchor picture's shape and where everything sits. Ask the section 2
+  question again for each frame: what one picture can this idea be told on, here? A timeline that runs left to
+  right in the wide frame may be a ladder in the tall one. A row of sixteen cells may be a four by four grid. A
+  comparison side by side may become the same spot changing from before to after.
 - **The tall frame.** Keep content inside x 72 to 1008 and y 200 to 1500. Text never leaves x 48 to 1032, y 150 to
   1560: a phone app draws its own controls over the top 150 px and the bottom 360 px. With burned-in captions,
   nothing sits below y 1400 (the captions take y 1410 to 1550). These limits are starting values: no film made
   with this skill has been posted vertically yet, so check the first one on a phone and correct them here.
-- **Design the picture in parts that can stack.** Split the anchor picture into two or three parts (the example and
-  its result, the diagram and its count). They sit side by side in the wide frame and stack top to bottom in the
-  tall one: `film.zones([3, 2])` gives the rectangles for both. A direction that ran left to right in the wide
-  frame runs top to bottom in the tall one; keep it that way all film.
-- **Fold what is too wide.** The tall frame holds 936 px of content. A row of sixteen cells becomes two rows of
-  eight; a five-step pipeline becomes a column; a wide chart keeps its width and gives up some height. Decide each
-  fold in DESIGN.md. `film.pick(wide, tall)` chooses a number or a list per frame.
-- **Type sizes stay.** A 1080 px frame fills a phone held upright, so the six sizes read larger there than in the
-  wide cut on the same phone. Break headings by hand to fit 936 px; do not shrink them.
-- **Check both, look at both.** `check.mjs`, `shots.mjs` and `render.mjs` work on every cut the film lists. Open
-  both whole-film sheets and both frame 0s. A layout that passes in one frame can overlap in the other.
+- **Sizes for the tall frame.** A 1080 px frame fills a phone held upright, so the six type sizes read larger there
+  than in the wide cut on the same phone. Use the width: one large thing per beat, headings broken by hand to fit
+  936 px, pictures that span the frame.
+- **Keep the facts in one place.** Put the film's data and computed numbers in `video/shared.js`, loaded by both
+  films, so the two cuts cannot disagree. A drawing helper for a motif may live there too if every position and
+  size is passed in by the film that calls it.
+- **Plan both in DESIGN.md, then build both.** Two sketches, one per frame, before any code. Build paragraph by
+  paragraph in both films, or finish one cut and then the other; either way each paragraph's contact sheet is
+  looked at in both frames. `check.mjs`, `shots.mjs` and `render.mjs` work on every cut the film lists.
 
 ## 14. Real clips (only when the user asked for them)
 

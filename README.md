@@ -28,8 +28,8 @@ steps through the film and reports text off the frame, text on text, arrows thro
 contrast, dead stretches and missing cues. `render` draws the frames in headless Chrome and encodes with ffmpeg.
 
 **Two options, both off unless you ask for them.** Claude asks at the start of a film and takes no for an answer.
-A *vertical cut* draws the same film at 1080 by 1920 for phone feeds, from the same file, with its own layout and
-its own checks. *Real clips* let a paragraph play a short recording of a real person, credited on screen, in place
+A *vertical cut* is a second film composed for the 1080 by 1920 frame of a phone feed, from the same script, voice
+and visual ideas; neither cut is the other rearranged. *Real clips* let a paragraph play a short recording of a real person, credited on screen, in place
 of the narrator; the narrator's voice never speaks a real person's words.
 
 **A record of five films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness

@@ -21,8 +21,8 @@ animations: they would make a frame depend on something other than t.
 time. Before the voice exists the clock is a placeholder at normal speaking pace; after recording, rerun
 `node tools/clock.mjs` and every cue moves to the real word.
 
-Coordinates are pixels on the 1920 by 1080 frame, origin top-left. A film with a vertical cut is also drawn on a
-1080 by 1920 frame: see "Two frames" below.
+Coordinates are pixels on the 1920 by 1080 frame, origin top-left. A film with a vertical cut has a second film
+file composed for a 1080 by 1920 frame: see "A vertical cut" below.
 
 ## A film file
 
@@ -190,40 +190,37 @@ Rendering needs a Chrome that Playwright can drive. `tools/lib/browser.mjs` look
 install, HyperFrames' cached Chrome, then Google Chrome, Chromium or Edge. In a project without Playwright, run
 `npm install --save-dev playwright-core` (8 MB, no browser download; ask the user first).
 
-## Two frames (only for a film with a vertical cut)
+## A vertical cut (only for a film whose user asked for one)
 
-A film is drawn at 1920 by 1080 unless `film.config.json` lists a second frame:
+A film with a vertical cut is two film files that share one script, one clock and one soundtrack:
 
-```json
-{ "end": 3.0, "formats": ["16x9", "9x16"] }
-```
-
-Add `"formats"` only when the user asked for a vertical cut. Then `check.mjs`, `shots.mjs` and `render.mjs` work on
-both cuts in turn; `--format 9x16` or `--format 16x9` picks one. The vertical cut's files end in `-9x16`
-(`out/<name>-9x16.mp4`, `shots/film-9x16.jpg`). In the browser, open `film.html?format=9x16`, or press V to switch.
-
-One `film.html` draws both. It reads the frame from the film and never from a typed 1920 or 1080:
-
-| | 16:9 | 9:16 |
+| | wide cut | vertical cut |
 |---|---|---|
-| `film.W`, `film.H` | 1920, 1080 | 1080, 1920 |
+| film file | `video/film.html` | `video/film-9x16.html` |
+| frame (`film.W`, `film.H`) | 1920 by 1080 | 1080 by 1920 |
+| content area (`film.area`) | `{ x: 120, y: 96, w: 1680, h: 888 }` | `{ x: 72, y: 200, w: 936, h: 1300 }` |
 | `film.portrait`, `film.format` | `false`, `"16x9"` | `true`, `"9x16"` |
-| `film.area` (content area) | `{ x: 120, y: 96, w: 1680, h: 888 }` | `{ x: 72, y: 200, w: 936, h: 1300 }` |
+| output | `out/<name>.mp4` | `out/<name>-9x16.mp4` |
 
-- `film.zones([3, 2], { gap, top, bottom })` splits the content area into parts with those weights: side by side in
-  16:9, stacked in 9:16. Each is `{ x, y, w, h, cx, cy }`. `top` and `bottom` keep room for a heading or a verdict.
-- `film.pick(wide, tall)` is the first value in the 16:9 cut and the second in the 9:16 cut: a coordinate, a wrap
-  width, a row count, a whole options object.
-- `Stage.cols(n, { x, w, gap })` defaults to the content area's width in either frame.
+Start it with `node <skill>/scripts/new_film.mjs <project> --vertical`. That adds `video/film-9x16.html` and lists
+both cuts in `film.config.json` (`"formats": ["16x9", "9x16"]`). The vertical file differs from `film.html` in one
+line of its head, which must come before `stage.js`:
 
-```js
-const [rowZ, countZ] = film.zones([3, 2], { top: 120 });           // a heading sits in the top 120 px
-const cells = Stage.cols(8, { x: rowZ.x, w: rowZ.w, gap: 14 });
-A.hud.text("A row of bits", { x: film.area.x, y: film.area.y, size: "head" });
-A.number(0, { x: countZ.cx, y: countZ.cy, size: "display", align: "center" });
+```html
+<script>window.STAGE_FORMAT = "9x16";</script>
 ```
 
-Text limits per frame are in `references/method.md` section 13; `check.mjs` enforces them for each cut.
+Each file is composed for its own frame: `references/method.md` section 13. The engine has nothing that turns one
+layout into the other, on purpose. Both files read the same `data/timing.js`, so `p.at("phrase")` is the same
+moment in both, and both should make every change in the beat sheet. Put shared data and computed numbers in
+`video/shared.js` and load it from both files.
+
+`check.mjs`, `shots.mjs` and `render.mjs` work on every cut the film lists, one after the other; `--format 9x16` or
+`--format 16x9` picks one. The vertical cut's sheets end in `-9x16` (`shots/film-9x16.jpg`). To preview, open the
+file itself in a browser. `check.mjs` applies each frame's own text limits.
+
+Sound hits (`film.hit`) are read from `film.html`, because one mix serves both cuts. Give the vertical film the
+same `film.hit` calls, so its preview matches, and change a hit in both.
 
 ## Clips (only for a film that uses them)
 
@@ -277,7 +274,7 @@ Shared geometry and helpers go in one `video/shared.js` that one person owns.
 - **Do not edit `stage.js` for one film.** Put film-specific helpers at the top of `film.html`. `new_film.mjs --update`
   refreshes the engine and would overwrite your change.
 - **`video/data/` is generated.** Never edit `timing.js`, `captions.js` or `hits.json` by hand.
-- **A typed 1920 or 1080 breaks the vertical cut.** In a film with two frames, take sizes from `film.W`, `film.H`,
-  `film.area`, `film.zones()` and `film.pick()`.
+- **Never build the vertical cut by rearranging the wide one** (or the other way round). Each film file is composed
+  for its own frame. Copying `film.html` and shifting coordinates gives a frame that looks rearranged.
 - **A clip paragraph is never voiced.** If a narrator take exists for it in `narration/audio/`, delete that take:
   `voice_post.sh` would put it back in place of the clip.

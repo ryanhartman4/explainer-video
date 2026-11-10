@@ -2,17 +2,20 @@
 // new_film.mjs: start a film project from this skill's template.
 //   node <skill>/scripts/new_film.mjs <project-folder>            create (never overwrites your SCRIPT.md, DESIGN.md or film.html)
 //   node <skill>/scripts/new_film.mjs <project-folder> --update   also refresh the engine and tools from the skill
+//   node <skill>/scripts/new_film.mjs <project-folder> --vertical  add a vertical cut (only when the user asked for one):
+//        video/film-9x16.html, a second film composed for the 1080 x 1920 frame, and "formats" in film.config.json
 //   node <skill>/scripts/new_film.mjs <project-folder> --hyperframes   set up the back-up engine instead (after
 //        `npx hyperframes@0.9.13 init video` in that folder; see assets/hyperframes/README.md)
 // It copies assets/template/ (the stage engine, fonts, tools, narration scripts), the narrator's reference clip, and
 // writes package.json. It downloads nothing.
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync, copyFileSync, readFileSync } from "node:fs";
 import { join, dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SKILL = join(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2), update = argv.includes("--update"), hf = argv.includes("--hyperframes"), target = argv.find(a => !a.startsWith("--"));
-if (!target) { console.error("usage: node new_film.mjs <project-folder> [--update] [--hyperframes]"); process.exit(1); }
+const vertical = argv.includes("--vertical");
+if (!target) { console.error("usage: node new_film.mjs <project-folder> [--update] [--vertical] [--hyperframes]"); process.exit(1); }
 const DEST = resolve(target);
 // yours once they exist: the script, the design, the film, and the two spelling lists
 const YOURS = new Set(["SCRIPT.md", "DESIGN.md", "film.config.json", "video/film.html", "narration/script.mjs", "tools/captions.mjs"]);
@@ -41,7 +44,13 @@ if (hf) {                                             // the back-up engine's fi
 copyTree(join(SKILL, "assets/template"), rel => join(DEST, rel), rel => hf && (STAGE_ONLY.test(rel) || rel === "tools/hits.mjs"));
 for (const d of ["narration/audio", "narration/voices", "video/data", "video/assets/audio", "out"].concat(hf ? [] : ["shots"])) mkdirSync(join(DEST, d), { recursive: true });
 for (const f of ["w_mid.wav", "w_mid.txt"]) if (!existsSync(join(DEST, "narration/voices", f))) copyFileSync(join(SKILL, "assets/voices", f), join(DEST, "narration/voices", f));
+if (vertical && !hf) {                               // a second film file for the tall frame, and the film's list of cuts
+  const tall = join(DEST, "video/film-9x16.html");
+  if (existsSync(tall)) kept++; else { copyFileSync(join(SKILL, "assets/vertical/film-9x16.html"), tall); copied++; }
+  const cf = join(DEST, "film.config.json"), cfg = existsSync(cf) ? JSON.parse(readFileSync(cf, "utf8")) : {};
+  if (!Array.isArray(cfg.formats) || !cfg.formats.includes("9x16")) { cfg.formats = ["16x9", "9x16"]; writeFileSync(cf, JSON.stringify(cfg) + "\n"); }
+}
 if (!existsSync(join(DEST, "package.json"))) writeFileSync(join(DEST, "package.json"), JSON.stringify({ name: DEST.split(/[\\/]/).pop().toLowerCase().replace(/[^a-z0-9-]+/g, "-"), private: true, type: "module" }, null, 2) + "\n");
 if (!existsSync(join(DEST, ".gitignore"))) writeFileSync(join(DEST, ".gitignore"), "node_modules/\n.env.local\nshots/\nout/frames/\n__pycache__/\n.DS_Store\n");
-console.log(`${DEST}: ${copied} files copied, ${kept} kept as they were${hf ? " (HyperFrames back-up engine)" : ""}`);
+console.log(`${DEST}: ${copied} files copied, ${kept} kept as they were${hf ? " (HyperFrames back-up engine)" : vertical ? " (with a vertical cut: video/film-9x16.html)" : ""}`);
 console.log(hf ? `next: follow assets/hyperframes/README.md from step 4 (node tools/build.mjs builds the clock and index.html)` : `next:  cd "${DEST}"  &&  node tools/doctor.mjs`);

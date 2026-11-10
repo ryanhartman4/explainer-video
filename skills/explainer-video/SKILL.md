@@ -38,9 +38,9 @@ the user said to just make it, do not ask: state your choices in one short list 
   (90 seconds is about 200 words); `tools/script_check.mjs` gives the real figure.
 - **Where will it be watched?** A blog or a shared screen: one cut. X or another feed: add a cut with captions
   burned in (feeds autoplay muted).
-- **A vertical cut as well?** Default: no. Only on a yes does the film also get a 1080 by 1920 cut for phone
-  feeds. A yes shapes the design from the first sketch, so settle it now: a film laid out for the wide frame is not
-  given a vertical cut afterwards.
+- **A vertical cut as well?** Default: no. Only on a yes is the film also made for the 1080 by 1920 frame of a
+  phone feed. That cut is its own composition, built for the tall frame from the same script, voice and visual
+  ideas; it is never the wide cut rearranged. It is roughly a second build of step 5, so settle it now.
 - **Real clips?** Default: no. Only on a yes may a paragraph play a short recording of a real person (a talk, an
   interview) in place of the narrator. Without a yes the film uses no outside footage.
 - **Voice.** Options are in step 6; default to the local voice on an Apple Silicon Mac, otherwise build on
@@ -67,8 +67,9 @@ install or download, naming what it is, where it comes from and its size. Two do
 without Playwright needs `npm install --save-dev playwright-core` (8 MB), and the first `sh tools/audio.sh` fetches
 numpy and scipy through uv (about 60 MB) unless the doctor says they are cached.
 
-If the user said yes to a vertical cut, add `"formats": ["16x9", "9x16"]` to `film.config.json` now. Every check,
-contact sheet and render then covers both frames without being asked.
+If the user said yes to a vertical cut, run `node <skill>/scripts/new_film.mjs <project-folder> --vertical` now. It
+adds `video/film-9x16.html`, the second film file, and lists both cuts in `film.config.json`; every check, contact
+sheet and render then covers both without being asked.
 
 *Gate: the doctor prints `Ready.`*
 
@@ -122,8 +123,9 @@ through this step again.*
 
 Fill in `DESIGN.md` (one page: the anchor picture's layout with coordinates, the look, what each colour means).
 Choose the look by `references/method.md` section 11. For a film with a vertical cut, sketch both frames there
-first (`references/method.md` section 13) and place everything with `film.zones()` and `film.pick()`
-(`references/stage.md`, "Two frames"), never with a typed 1920 or 1080.
+first, each as its own composition (`references/method.md` section 13), then build `video/film.html` for the wide
+frame and `video/film-9x16.html` for the tall one (`references/stage.md`, "A vertical cut"). Build each for its own
+frame; never produce one by rearranging the other.
 
 Then build `video/film.html` one paragraph at a time, each beat of the beat sheet becoming one block of code:
 
