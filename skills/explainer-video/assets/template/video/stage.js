@@ -550,6 +550,28 @@
       }
       return out;
     }
+    clipped() {                                        // code lines wider than their panel (the panel cuts them off)
+      const out = [];
+      for (const n of this.nodes) if (n.kind === "code") [...n.el.querySelectorAll(".ln")].forEach((r, i) => { const src = r.querySelector(".src"), over = Math.ceil(src.getBoundingClientRect().right - n.el.getBoundingClientRect().right + 20);
+        if (over > 0) out.push({ id: n.name(), line: i + 1, over, text: src.textContent.trim().slice(0, 40) }); });
+      return out;
+    }
+    usage() {                                          // how much of the frame the scenes' content occupies, on a 20 px grid
+      const s = stageEl.getBoundingClientRect(), k = W / s.width, GW = 96, GH = 54, grid = new Uint8Array(GW * GH);
+      const mark = (x0, y0, x1, y1) => { for (let gy = Math.max(0, Math.floor(y0 / 20)); gy <= Math.min(GH - 1, Math.floor((y1 - 0.01) / 20)); gy++) for (let gx = Math.max(0, Math.floor(x0 / 20)); gx <= Math.min(GW - 1, Math.floor((x1 - 0.01) / 20)); gx++) grid[gy * GW + gx] = 1; };
+      for (const n of this.nodes) {
+        if (!this.sceneOf(n) || !this.visible(n) || n.op < 0.25 || n.kind === "group" || n.kind === "axes") continue;
+        if (n.pathEl) { if (!n._len) continue; const m = n.pathEl.getScreenCTM(), steps = Math.max(2, Math.ceil(n._len * (n.by === "draw" ? n.p : 1) / 10));
+          for (let i = 0; i <= steps; i++) { const q = n.pathEl.getPointAtLength(n._len * (n.by === "draw" ? n.p : 1) * i / steps), x = (m.a * q.x + m.c * q.y + m.e - s.left) * k, y = (m.b * q.x + m.d * q.y + m.f - s.top) * k; mark(x - 2, y - 2, x + 2, y + 2); } continue; }
+        let r;
+        if (n.kind === "text" || n.kind === "number" || n.kind === "tex") { const range = document.createRange(); range.selectNodeContents(n.el); r = range.getBoundingClientRect(); }
+        else r = n.el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) mark((r.left - s.left) * k, (r.top - s.top) * k, (r.right - s.left) * k, (r.bottom - s.top) * k);
+      }
+      let used = 0, top = GH, bottom = -1;
+      for (let i = 0; i < grid.length; i++) if (grid[i]) { used++; const gy = Math.floor(i / GW); if (gy < top) top = gy; if (gy > bottom) bottom = gy; }
+      return { used: used / grid.length, top: top * 20, bottom: (bottom + 1) * 20 };
+    }
     signature() {
       let s = "";
       for (const n of this.nodes) if (this.visible(n)) s += n.kind === "canvas" ? n.el.toDataURL().length + ":" + n.el.toDataURL().slice(-64) : Object.values(n._w).join("|");

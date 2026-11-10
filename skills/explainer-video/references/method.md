@@ -86,9 +86,10 @@ The narration is heard once, at the speaker's pace, with no way to re-read. Writ
 - No sentence the picture cannot show. "This is really important" has no picture; cut it.
 - The close is short and returns to the takeaway in the film's own words. No "thanks for watching".
 
-**Budget.** Narration runs about 155 words a minute, so words ≈ seconds × 2.5. A 90-second film is about 210 words;
-3 minutes about 430. A paragraph is one idea and 10 to 25 seconds (25 to 60 words). When the film runs long, cut a
-question from the ladder; do not speed up.
+**Budget.** A voice reads about 155 words a minute, and a film adds silence around each paragraph, so a finished
+film runs about 2.2 words a second: 90 seconds is about 200 words, 3 minutes about 400. `tools/script_check.mjs`
+prints the length the film will really have; trust it over arithmetic. A paragraph is one idea and 10 to 25 seconds
+(25 to 55 words). When the film runs long, cut a question from the ladder; do not speed up.
 
 ## 4. The beat sheet
 
@@ -100,7 +101,8 @@ Under each paragraph, list its **beats**: every change on screen, tied to the wo
 | a position in the row | DRAW an arrow from each hash to its bit | heading, cat, hashes, arrows, bit row |
 ```
 
-- **On the words:** a phrase copied exactly from the narration. Use two or three words so it names one moment.
+- **On the words:** a phrase copied exactly from the narration as it is spoken. Use two or three words so it names
+  one moment. `(start)` marks the opening frame, before anyone speaks.
 - **Change:** one verb, one change. The verbs are the whole vocabulary of an explainer:
 
 | Verb | Means | Motion (section 8) |
@@ -115,7 +117,7 @@ Under each paragraph, list its **beats**: every change on screen, tied to the wo
 | REMOVE | this is finished | it fades out, quicker than it came in |
 | COUNT | a number runs to its value | the digits count up as it is said |
 | ZOOM | change of scale | the camera moves; nothing is redrawn |
-| HOLD | nothing changes, on purpose | for the opening frame and for a line that needs silence |
+| HOLD | nothing changes, on purpose | for the opening frame and for a line that needs stillness; 4 seconds at most |
 
 - **Then on screen:** everything visible after the beat. Seven things at most. If the list keeps growing, something
   should have been removed or dimmed when the narrator finished with it.
@@ -133,7 +135,9 @@ opening words. If a stretch has nothing to show, the narration there is not abou
 - **Left-align and top-anchor.** Headings top-left at one fixed position. Centre only a single hero element (a
   verdict, a title card). A frame where everything is centred has no structure.
 - **Use the whole frame, leave a third of it empty.** Small content floating in the middle reads as a slide; content
-  edge to edge reads as a wall. Size the anchor picture to span the content width.
+  edge to edge reads as a wall. Size the anchor picture to span the content width, and spread the composition over
+  the frame's height: something in the upper third, the picture across the middle, the result or verdict in the
+  lower third. A box that holds a label is at least 96 px tall; a node in a diagram at least 120 px across.
 - **Direction means something.** Time and cause run left to right or top to bottom. More is up. Before is left of
   after. Never reverse a direction mid-film.
 - **Label directly.** A name sits on or beside its thing, in the thing's colour. No legends, no keys to look up.
@@ -156,6 +160,8 @@ Six sizes exist and no others, so hierarchy stays consistent:
 
 - At most three sizes in one frame. Skip a step between neighbours (head with label, not head with body) so the
   difference reads.
+- A heading is the largest text in its frame, with one exception: a single hero (the number, the verdict, the
+  closing lines). If the body outweighs the heading and is not a hero, drop the heading or shrink the body.
 - 26 px is the floor for anything a viewer should read; the checker rejects under 24.
 - **Eight words or fewer** in any text on screen while the voice is speaking. A viewer cannot read one sentence
   while hearing another. On-screen words are labels, key terms the narrator is saying right now, and numbers.
@@ -166,8 +172,9 @@ Six sizes exist and no others, so hierarchy stays consistent:
 
 ## 7. Colour
 
-- A look has a ground, an ink, two greys (muted for secondary text, faint for grids and empty outlines), one accent
-  and four hues. That is the whole palette.
+- A look has a ground, an ink, two greys, one accent and four hues. That is the whole palette. `muted` is for
+  secondary text and for outlines the viewer should notice; `faint` is for grids, rules and empty slots that only
+  need to be sensed. If an empty cell matters to the explanation, outline it in `muted`.
 - **Assign each hue one meaning** in DESIGN.md and keep it all film: blue is "cat", green is "dog", accent is the
   false positive. A viewer learns the code in one beat and then reads the screen by colour alone.
 - **The accent is for the one idea the film is about.** Used three times it points; used thirty times it decorates.
@@ -216,7 +223,7 @@ These are the engine's defaults; leave them alone unless a beat needs otherwise.
 - Voice first. The music bed sits far under it and lifts only in gaps of two seconds or more.
 - A few **hits** on picture events (a tick as each bit switches, a low thump on the turn, a chord on the close) make
   motion feel physical. Schedule each with `film.hit()` on the same line as its picture event. Fewer than one every
-  three seconds; the turn of the film gets the only loud one.
+  three seconds. `thump` is the only loud one: use it once, on the turn of the film.
 - You cannot hear. Measure loudness with the tools, and ask the user to listen for misread words.
 
 ## 10. Review: look at your own frames
@@ -245,7 +252,9 @@ small for that.
 | nothing is clearly the focal point | dim everything but the thing being named; use the accent once |
 | text on text, an arrow through a label | move the label to a reserved place; bend the arrow (`bend`) |
 | a thing appears in a new place after a scene change | keep one scene across those paragraphs (`film.scene(p2, p4)`) |
-| small content in a big empty frame | scale the picture up to the content width; raise sizes one step |
+| small content in a big empty frame, or everything in the top half | scale the picture up to the content width; raise sizes one step; put the result in the lower third |
+| a code line cut off at the panel's edge | widen the panel, lower the size, or break the line |
+| the body text is bigger than the heading | drop the heading or shrink the body, unless the body is the one hero |
 | the picture changes before or after its word | cue on the exact phrase; use a longer phrase if the word repeats |
 | a paragraph of text on screen | cut it to the two words that matter and let the voice say the rest |
 | many colours, none meaning anything | back to ink and grey; give each remaining hue one meaning |

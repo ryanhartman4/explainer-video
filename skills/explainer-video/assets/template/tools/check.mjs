@@ -31,15 +31,20 @@ try {
   const speaking = t => info.paras.some(p => t >= p.voiceStart && t <= p.voiceEnd);
 
   let lastSig = null, stillFrom = 0, blankFrom = null;
+  let thin = null;                                      // a stretch where the picture is small or confined to one band of the frame
+  const thinMsg = (r, t1) => add("WARN", r.from, "thin:" + r.from, `for ${(t1 - r.from).toFixed(0)} s (${mm(r.from)} to ${mm(t1)}) the picture uses about ${Math.round(100 * r.used / r.n)}% of the frame, between y ${Math.round(r.top / r.n)} and y ${Math.round(r.bottom / r.n)}: small content in a big frame reads as a slide. Enlarge the picture to span the content area (x 120..1800, y 96..984; a box that holds a label is 96 px tall or more), or raise the text one size`);
   for (let t = 0; t <= info.duration - 0.2; t += STEP) {
     await seek(page, t);
-    const { items, sig, shown, strokes } = await page.evaluate(() => ({ items: window.__film.inspect(), sig: window.__film.signature(), strokes: window.__film.strokes(), shown: window.__film.nodes.filter(n => window.__film.visible(n)).length }));
+    const { items, sig, shown, strokes, use } = await page.evaluate(() => ({ items: window.__film.inspect(), sig: window.__film.signature(), strokes: window.__film.strokes(), use: window.__film.usage(), shown: window.__film.nodes.filter(n => window.__film.visible(n)).length }));
     const p = paraAt(t), where = `p${p.n}`;
     // stillness and blank frames
-    if (sig !== lastSig) { if (lastSig !== null && t - stillFrom >= 4.5 && speaking(stillFrom + 1)) add("WARN", stillFrom, "still:" + stillFrom, `nothing changes for ${(t - stillFrom).toFixed(1)} s while the narrator talks (${mm(stillFrom)} to ${mm(t)}): cue a change on a word in that stretch`); stillFrom = t; lastSig = sig; }
+    if (sig !== lastSig) { const from = Math.max(stillFrom, paraAt(stillFrom).voiceStart); if (lastSig !== null && t - from >= 4.5 && speaking(from + 0.5)) add("WARN", from, "still:" + from, `nothing changes for ${(t - from).toFixed(1)} s while the narrator talks (${mm(from)} to ${mm(t)}): cue a change on a word in that stretch (a HOLD is fine for about 4 s, not longer)`); stillFrom = t; lastSig = sig; }
     if (shown === 0 && t > 0.3 && t < info.duration - 1.2) { if (blankFrom == null) blankFrom = t; } else { if (blankFrom != null && t - blankFrom >= 1.5) add("WARN", blankFrom, "blank:" + blankFrom, `the frame is empty for ${(t - blankFrom).toFixed(1)} s`); blankFrom = null; }
     if (t === 0 && shown === 0) add("WARN", 0, "poster", "frame 0 is empty: the first frame is the thumbnail, so open on the title or the key picture already in place");
 
+    // is the frame being used? (small content adrift in a big frame reads as a slide)
+    if (speaking(t) && shown > 0 && (use.used < 0.11 || use.bottom - use.top < 420)) { thin = thin || { from: t, n: 0, used: 0, top: 0, bottom: 0 }; thin.n++; thin.used += use.used; thin.top += use.top; thin.bottom += use.bottom; }
+    else { if (thin && t - thin.from >= 6) thinMsg(thin, t); thin = null; }
     const solid = items.filter(i => i.opacity > 0.9 && i.settled);
     for (const i of items) {
       if (i.opacity < 0.5) continue;
@@ -75,6 +80,8 @@ try {
     if (words > 45) add("WARN", t, "words:" + p.n, `${where} has ${words} words on screen at once: remove what the narrator is no longer talking about, or dim it`);
   }
 
+  if (thin && info.duration - thin.from >= 6) thinMsg(thin, info.duration);
+  for (const c of await page.evaluate(() => window.__film.clipped())) add("ERROR", 0, "clip:" + c.id + c.line, `code ${c.id}: line ${c.line} is ${c.over} px wider than its panel and is cut off ("${c.text}"): give code() a larger w, a smaller size, or break the line`);
   // from the timeline itself
   const ev = await page.evaluate(() => window.__film.events());
   for (const e of ev) if (e.words >= 2 && e.kind === "text") { const need = 0.5 + 0.3 * e.words, has = e.off - e.t - e.dur; if (has < need * 0.8) add("WARN", e.t, "brief:" + e.id + e.t, `text ${e.id} is readable for ${Math.max(0, has).toFixed(1)} s; ${e.words} words need about ${need.toFixed(1)} s`); }

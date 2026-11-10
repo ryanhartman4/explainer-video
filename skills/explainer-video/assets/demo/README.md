@@ -1,7 +1,7 @@
 # The worked example
 
-`bloom/` is a finished film made with this skill's method and engine: "How a Bloom filter works", 99 seconds,
-6 paragraphs, 34 beats, the `paper` look. Read it in this order:
+`bloom/` is a finished film made with this skill's method and engine: "How a Bloom filter works", 93 seconds,
+6 paragraphs, 33 beats, the `paper` look. Read it in this order:
 
 1. `bloom/SCRIPT.md`: the takeaway, the viewer, the question ladder, then each paragraph's narration with its beat
    sheet, and the sources.

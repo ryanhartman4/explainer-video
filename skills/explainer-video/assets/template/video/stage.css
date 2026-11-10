@@ -32,7 +32,7 @@
 
 /* slate: deep blue-black, cool white ink, amber accent. For code, systems, infrastructure, protocols, data pipelines. */
 #stage[data-look="slate"] {
-  --bg: #0e1319; --panel: #18202a; --ink: #e9edf2; --muted: #8e9aa8; --faint: #2b3643;
+  --bg: #0e1319; --panel: #18202a; --ink: #e9edf2; --muted: #8e9aa8; --faint: #3f4c5c;
   --accent: #ffb547; --yellow: #ffb547; --blue: #62b6ff; --green: #5fd38d; --red: #ff6b5e; --purple: #b79cff;
   --display: "Space Grotesk", Helvetica, Arial, sans-serif; --text: "Space Grotesk", Helvetica, Arial, sans-serif; --mono: "JetBrains Mono", Menlo, monospace;
   --display-weight: 500; --display-track: -0.03em; --text-weight: 400; --stroke: 3px; --radius: 8px;

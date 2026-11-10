@@ -2,7 +2,7 @@
 
 ## Who and where
 A programmer who has heard the name and knows what a hash function is. A blog post and X, so a second cut has
-burned-in captions and nothing sits below y 956. About 95 seconds.
+burned-in captions and nothing sits below y 956. About 93 seconds.
 
 ## The anchor picture
 A row of 16 bits. One example runs through it: add "cat" and "dog", then ask about "owl" and "emu". The row arrives

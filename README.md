@@ -31,7 +31,7 @@ contrast, dead stretches and missing cues. `render` draws the frames in headless
 setting judged by ear, what each fact-check caught, and the original HyperFrames pipeline, which stays as the
 back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising those films.
 
-**A worked example** (`skills/explainer-video/assets/demo/bloom/`): "How a Bloom filter works", 99 seconds, with its
+**A worked example** (`skills/explainer-video/assets/demo/bloom/`): "How a Bloom filter works", 93 seconds, with its
 script, one-page design and film source.
 
 The method and the checks are written so that a smaller model can follow them: each step ends in a gate that a tool
@@ -86,6 +86,10 @@ and has not been tested:
 
 - The engine, the tools and the demo film were built and rendered on Linux (Node 22, ffmpeg 6.1, Chromium), with the
   music bed, sound hits and mix. The demo passes its own checker.
+- Two smaller Claude models each made a short film with the skill from a one-line request (the prompts are kept as
+  test cases in `skills/explainer-video/evals/`). Both finished with a clean checker and a rendered MP4, and each
+  listed where the instructions or tools tripped it; those places were then fixed. The two films were not made again
+  after the fixes.
 - The voice path (voice post, clock on recorded takes, captions, mix) was exercised with stand-in audio. **No real
   narration has been recorded with version 2 yet**, and nobody has listened to a version 2 mix. The voice scripts
   themselves are unchanged from films 2 to 5.

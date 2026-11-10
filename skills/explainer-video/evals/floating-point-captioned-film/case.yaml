@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: floating-point-captioned-film
+expected_outcome: |
+  A film project in ./float-film made with the skill's process, with two cuts: a plain MP4 and one with burned-in
+  captions for X. Every number on screen is computed in the film's own code from real IEEE 754 doubles and the
+  script's Sources section says so. The picture stays clear of the caption strip. The final message says plainly
+  that the film is on placeholder timing with no narration.

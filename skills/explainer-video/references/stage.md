@@ -50,16 +50,16 @@ The player uses `video/assets/audio/mix.wav` when it exists, so the user can jud
 |---|---|
 | `film.paras` | the paragraphs in order; `film.para(3)` by number |
 | `p.at("some words")` | when the phrase is spoken, 0.12 s early so the picture lands on the word |
-| `p.at("words", -0.3)` | shifted by seconds |
+| `p.at("words", -0.3)`, `p.at("words", 0.5)` | shifted earlier or later by seconds |
 | `p.at("the", { occ: 2, shift: 0.1 })` | the second time it is said |
 | `p.after("some words")` | when the phrase has just been said |
 | `p.start`, `p.end` | the paragraph's whole window |
 | `p.voiceStart`, `p.voiceEnd` | first and last word |
 
-A phrase must match the narration as spoken (case and punctuation ignored). Prefer two or three words: a phrase
-names one moment where a single word may repeat. A phrase that is not found prints `missing cue` in red on the
-frame, fails `check.mjs` and blocks `render.mjs`. Where SAY respells a term for the voice (`FLT4` spoken as
-"F L T four"), cue on the words around it.
+A phrase must match the narration **as spoken** (case and punctuation ignored): where `SAY` in
+`narration/script.mjs` respells something for the voice ("52 bits" spoken as "fifty-two bits"), the cue is
+`p.at("fifty-two bits")`. Prefer two or three words: a phrase names one moment where a single word may repeat. A
+phrase that is not found prints `missing cue` in red on the frame, fails `check.mjs` and blocks `render.mjs`.
 
 ## Where: scenes and layers
 
@@ -70,7 +70,9 @@ frame, fails `check.mjs` and blocks `render.mjs`. Where SAY respells a term for 
 | `scene.hud` | a layer on top that the scene's camera does not move: headings, counters |
 | `film.front`, `film.back` | layers above and below every scene, for the whole film: a running head, a backdrop |
 
-Things made on a scene exist only in that scene. A thing with no `show()` is there from the scene's first frame.
+Things made on a scene exist only in that scene, and for all of it: a thing with no `show()` is there from the
+scene's first frame, and nothing leaves until you `hide()` it. That includes `hud` text: when a scene spans several
+paragraphs, hide each heading as the next one arrives.
 The first scene does not fade in: frame 0 is the thumbnail, so compose it as a poster. The last scene fades out.
 
 ## Things
@@ -90,7 +92,7 @@ you make in a loop), `z` (stacking), `overlap: true` (this is meant to sit on ot
 | `path("M..", o)` | `stroke`, `fill`, `lw`, `dash` | SVG path data in scene coordinates |
 | `group(o)` | `x`, `y`, `w`, `h` | children are placed relative to it and move, fade and scale with it |
 | `image(src, o)` | `w`, `h`, `radius` | a JPEG or PNG under `video/assets/`, about 1.5 times its display width |
-| `code(src, o)` | `w`, `size`, `start` first line number, `title`, `numbers: false` | `.focus(t, 6, 8)` lights lines 6 to 8 and dims the rest; `.unfocus(t)`. A line holding only `…` marks elided lines. |
+| `code(src, o)` | `w` panel width, `size` font size in px (default 28), `start` first line number, `title`, `numbers: false` | `.focus(t, 6, 8)` lights lines 6 to 8 and dims the rest; `.unfocus(t)`. A line holding only `…` marks elided lines. Lines never wrap: one wider than the panel is cut off, and the checker reports it. A character is about 0.6 × size wide. |
 | `axes(o)` | `w`, `h`, `xr`, `yr`, `xticks`, `yticks`, `xlabel`, `ylabel`, `fmt` | `.plot(fn or [[x, y]..], o)`, `.dot(x, y, o)`, `.bar(x, v, o).grow(t)`, `.at(x, y)` gives scene coordinates |
 | `canvas((ctx, t) => .., o)` | `w`, `h` | for hundreds of parts; draw only from t and `film.value()` tracks |
 | `tex("\\frac{a}{b}", o)` | text options | needs `sh tools/add_katex.sh` (a download: ask first) |
@@ -109,7 +111,7 @@ Every method takes the start time first and returns the node, so calls chain.
 |---|---|
 | `node.show(t, { by, dur, from })` | enter. `by`: `rise` (text default), `pop` (boxes, circles), `draw` (lines, arrows, paths; also boxes and circles), `fade`, `wipe` (left to right), `words` (text, word by word). `from: node` flies it in from that node. |
 | `node.hide(t)` | leave, in 0.25 s. `show()` again later brings it back. |
-| `node.to(t, { x: 600, fill: "blue" }, { dur, ease })` | go to these values from wherever they are. Any option the thing was created with: `x y scale rotate opacity w h r fill stroke color lw x1 y1 x2 y2 value label text`. Strings (a label, a text) switch at t. |
+| `node.to(t, { x: 600, fill: "blue" }, { dur, ease })` | go to these values from wherever they are: `x y scale rotate opacity` on anything; `w h r fill stroke` on shapes; `color` (a text's colour, or a box's or circle's label colour); `label` (a box's or circle's label) and `text`, which switch at t; `x1 y1 x2 y2 lw` on lines and arrows; `value` on a number. `fill: "none"` or `stroke: "none"` switches one off. |
 | `node.set(t, { .. })` | the same, instantly |
 | `node.pulse(t)` | a short swell: look here |
 | `node.dim(t)`, `node.undim(t)` | drop to 30% and back |
@@ -135,9 +137,20 @@ Zoom modestly (1.1 to 1.6) and come back out before the next beat.
 
 ## Sound hits
 
-`film.hit("tick", t, { pitch: 3 })` on the line that schedules the picture event. Kinds: `tick`, `pluck` (both take
-`pitch` 0 to 8), `pop`, `thock`, `thump`, `rise`, `chord`, `scratch`, `bell`. `tools/audio.sh` reads them from the
-film and synthesizes each on its exact sample.
+`film.hit("tick", t, { pitch: 3 })` on the line that schedules the picture event. `tools/audio.sh` reads them from
+the film and synthesizes each on its exact sample. From quietest to loudest:
+
+| Kind | Sound | For |
+|---|---|---|
+| `bell` | a high soft bell | the end card |
+| `tick` (`pitch` 0 to 8) | a glassy tick | small things arriving one after another |
+| `chord` | a resolving chord | things coming together, the answer, the close |
+| `rise` | two rising notes | a split, a question opening |
+| `pop` | a small round "bup" | a small object appearing |
+| `pluck` (`pitch` 0 to 8) | a soft string | a value landing, a point reached |
+| `scratch` | a dry pencil stroke | a strike-through |
+| `thock` | a soft wooden knock | a big part settling into place |
+| `thump` | a low felt drum, the loud one | the turn of the film, once |
 
 ## The tools
 
@@ -153,17 +166,20 @@ Run all of them from the project folder.
 | `node tools/shots.mjs --at 12.4,31` | full-size frames at those seconds; `--cue "3:fault lines"` for a phrase; `--look slate`; `--captions` |
 | `node tools/check.mjs [--captions]` | the mechanical review; exit 1 on an ERROR |
 | `sh tools/audio.sh` | voice post, clock, captions, hits, music, mix, loudness report, in the one safe order |
-| `node tools/render.mjs` | `out/<project>.mp4`, 1080p30 with the mix. `--fps 60`, `--captions`, `--from 10 --to 20`, `--out`, `--look` |
+| `node tools/render.mjs` | `out/<project folder's name>.mp4`, 1080p30 with the mix. `--out out/name.mp4`, `--fps 60`, `--captions`, `--from 10 --to 20`, `--look` |
 | `node tools/captions.mjs` | `out/captions.srt` and the burned-in caption data (the clock runs it; run it alone after editing its `WRITE` list) |
 
 Settings for the clock live in `film.config.json`: `lead` and `tail` (silence around each paragraph, 0.6 and 0.5),
 `first` (opening frame before the first word, 0.8), `end` (after the last word, 3.0), `pad` (extra seconds before a
-paragraph, `{ "3": 1.5 }`), `bpm` (voices start on the music's beats; `null` turns it off).
+paragraph, `{ "3": 1.5 }`), `bpm` (voices start on the music's beats; `null` turns it off). `script_check` uses the
+same settings, so its length estimate is the clock's. To hit a target length, change the words first; trim `end`
+or the silences only for the last second or two.
 
 `check.mjs` reports ERROR for missing cues, script errors, fonts that failed, text off the frame, text on text, a
-line through text, text under 24 px and text without contrast; WARN for stillness over 4.5 s under narration, blank
-frames, an empty frame 0, sentences on screen, too many words, text shown too briefly to read, pile-ups of
-entrances, text cut by a camera move and characters the bundled fonts lack. Fix every ERROR. For each WARN, fix it
+line through text, a code line cut off by its panel, text under 24 px and text without contrast; WARN for stillness
+over 4.5 s under narration, a picture that stays small or in one band of the frame, blank frames, an empty frame 0,
+sentences on screen, too many words, text shown too briefly to read, pile-ups of entrances, text cut by a camera
+move and characters the bundled fonts lack. Fix every ERROR. For each WARN, fix it
 or be able to say why it is right.
 
 Rendering needs a Chrome that Playwright can drive. `tools/lib/browser.mjs` looks for `$STAGE_CHROME`, a Playwright

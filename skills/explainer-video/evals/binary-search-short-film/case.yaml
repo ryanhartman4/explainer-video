@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: binary-search-short-film
+expected_outcome: |
+  A film project in ./binary-search made with the skill's process: a SCRIPT.md with a takeaway, narration and a
+  beat sheet under each paragraph; a one-page DESIGN.md; a video/film.html whose animation is cued by spoken phrases;
+  a rendered MP4 of roughly 35 to 60 seconds. One picture (the sorted row) builds through the film instead of a
+  series of slides. The model looked at its contact sheets and the checker is clean. The final message says plainly
+  that the film is on placeholder timing with no narration.

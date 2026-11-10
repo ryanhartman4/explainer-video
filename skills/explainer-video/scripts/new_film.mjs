@@ -17,7 +17,7 @@ const DEST = resolve(target);
 // yours once they exist: the script, the design, the film, and the two spelling lists
 const YOURS = new Set(["SCRIPT.md", "DESIGN.md", "film.config.json", "video/film.html", "narration/script.mjs", "tools/captions.mjs"]);
 // with the back-up engine, the stage engine's own files stay out of the project
-const STAGE_ONLY = /^(video\/(film\.html|stage\.(js|css))|film\.config\.json|tools\/(clock|render|check|shots|doctor)\.mjs|tools\/(audio\.sh|mix\.py)|tools\/lib\/)/;
+const STAGE_ONLY = /^(video\/(film\.html|stage\.(js|css))|film\.config\.json|tools\/(clock|render|check|shots|doctor)\.mjs|tools\/(audio\.sh|mix\.py)|tools\/lib\/browser\.mjs)/;
 
 let copied = 0, kept = 0;
 function copyTree(src, destOf, skip = () => false, force = false) {

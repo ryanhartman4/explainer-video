@@ -4,7 +4,8 @@ The voice clips sit at full level at their start times from video/data/timing.js
 each at -20 LUFS). The music bed is ducked under them by a volume lane: 0.5 on the opening frame, 0.13 under the
 narration, lifted to 0.3 only in gaps of 2 s or more, a swell after the last word. Those are the levels the author
 approved by ear on film 5; change them here, then measure (tools/audio.sh prints the loudness).
-Missing parts are skipped: no voice yet gives a music-only preview on the same lane.
+Missing parts are skipped. With no voice yet the bed is held at its opening level, so a draft render is audible; it
+drops under the narration as soon as takes exist.
 
 Run: uv run -q --python 3.12 --with numpy python -I tools/mix.py
 """
@@ -46,6 +47,8 @@ if os.path.exists(music):
     pts += [(v_end + 0.15, UNDER), (min(total - 0.5, v_end + 1.2), CLOSE), (total - 0.4, 0.3), (total, 0.0)]
     pts.sort()
     lane = np.interp(np.arange(N) / SR, [p[0] for p in pts], [p[1] for p in pts])
+    if not voices:                                              # nothing to duck under yet: hold the bed up so a draft is audible
+        lane = np.interp(np.arange(N) / SR, [0, total - 0.4, total], [OPEN, OPEN, 0.0])
     m = load(music)[:N]
     mix[: len(m)] += m * lane[: len(m), None]
 
@@ -57,4 +60,4 @@ if peak > 0.98: mix *= 0.98 / peak
 with wave.open(os.path.join(A, "mix.wav"), "wb") as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((mix * 32767).astype("<i2").tobytes())
 print(f"video/assets/audio/mix.wav: {N / SR:.1f} s, voice {len(voices)}/{len(T['scenes'])} paragraphs, music {'yes' if os.path.exists(music) else 'no'}, "
-      f"hits {'yes' if os.path.exists(hits) else 'no'}, peak {20 * np.log10(max(peak, 1e-9)):.1f} dBFS{' (scaled down to -0.2)' if peak > 0.98 else ''}")
+      f"hits {'yes' if os.path.exists(hits) else 'no'}{'' if voices else ' (no voice yet: music held at its opening level for the draft)'}, peak {20 * np.log10(max(peak, 1e-9)):.1f} dBFS{' (scaled down to -0.2)' if peak > 0.98 else ''}")

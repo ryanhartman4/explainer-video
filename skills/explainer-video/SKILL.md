@@ -34,13 +34,15 @@ Ask these together, each with its default, and proceed on the defaults for anyth
 the user said to just make it, do not ask: state your choices in one short list and go.
 
 - **Who is it for, and what should they be able to explain afterwards?** This sets what to skip.
-- **Length.** Default 90 seconds to 3 minutes; about 2.5 words a second.
+- **Length.** Default 90 seconds to 3 minutes. A finished film runs about 2.2 words a second once pauses are counted
+  (90 seconds is about 200 words); `tools/script_check.mjs` gives the real figure.
 - **Where will it be watched?** A blog or a shared screen: one cut. X or another feed: add a cut with captions
   burned in (feeds autoplay muted).
 - **Voice.** Options are in step 6; default to the local voice on an Apple Silicon Mac, otherwise build on
   placeholder timing and ask when the picture is done.
-- **Where the project lives.** Default `~/Movies/<name>` on a Mac (off the iCloud Desktop); in a cloud session, a
-  folder in the working directory. Never the session scratchpad: it gets cleared.
+- **Where the project lives.** Wherever the user says. Otherwise `~/Movies/<name>` on a Mac (off the iCloud
+  Desktop) or, in a cloud session, a folder in the working directory. Do not pick the session scratchpad yourself:
+  it gets cleared.
 
 If the subject is someone's private repo and the film will be public, check the owner agrees.
 
@@ -56,7 +58,9 @@ cd <project-folder> && node tools/doctor.mjs
 
 The first copies the engine, fonts, tools and narration scripts and downloads nothing. The doctor lists anything
 missing. On a machine that has never made a film, run the `explainer-video-setup` skill. Ask the user before any
-install or download, naming what it is, where it comes from and its size.
+install or download, naming what it is, where it comes from and its size. Two downloads are easy to miss: a project
+without Playwright needs `npm install --save-dev playwright-core` (8 MB), and the first `sh tools/audio.sh` fetches
+numpy and scipy through uv (about 60 MB) unless the doctor says they are cached.
 
 *Gate: the doctor prints `Ready.`*
 
@@ -67,15 +71,22 @@ state, with where it comes from, in the `## Sources` section. A claim with no so
 
 Then follow `references/method.md` sections 1 to 4: the takeaway sentence, the question ladder, the anchor picture,
 the narration (one `## N. Title` paragraph per question, narration on `> ` lines exactly as spoken), and under each
-paragraph its beat sheet. Acronyms and numbers a voice would mangle go in `SAY` in `narration/script.mjs`, with the
-reverse in `WRITE` in `tools/captions.mjs`.
+paragraph its beat sheet.
+
+Write the narration in words the voice can read as they stand ("ten bits", "zero point one"). Where the written form
+must differ from the spoken one (`FLT4` read as "F L T four"), add the pair to `SAY` at the top of
+`narration/script.mjs` and its reverse to `WRITE` at the top of `tools/captions.mjs`. Cue phrases, in the beat sheet
+and in the film, always match the text **as spoken**, after `SAY`.
 
 ```bash
 node tools/script_check.mjs --target 90
 ```
 
-*Gate: no ERROR; every WARN fixed or justified. Then show the user the takeaway, the anchor picture and the script,
-unless they asked not to be consulted.*
+Its length estimate is the clock the film will run on, silences included: cut or add words until it is within a
+tenth of the length you promised.
+
+*Gate: no ERROR; every WARN fixed or justified; the length is on target. Then show the user the takeaway, the anchor
+picture and the script and wait for their answer, unless they told you to just make it.*
 
 ### 4. Fact-check, then lock the script
 
@@ -84,7 +95,11 @@ ones at once: a **fact-checker** (every claim and every stated reason against th
 true-but-misleading claims, missing credit for borrowed ideas, and results presented as new that the subject's own
 notes already have) and a **builder check** (what would someone animating this still have to guess?). Without
 subagents, do both passes yourself with the script in one window and the source in the other. Fix what they find.
-The playbook's "Accuracy" section lists what five films' fact-checks caught.
+
+Whatever the subject, test each sentence against these: is it the worst case or the typical case, and does the
+sentence say which ("at most four looks")? Is a number off by one at the boundary? Is "always", "never" or "must"
+literally true? Does a stated reason actually produce the result? Is the claim wider than what the film shows? Is a
+borrowed idea credited? The playbook's "Accuracy" section lists what five films' fact-checks caught in repos and papers.
 
 *Gate: every finding fixed or answered; `script_check` still clean. The script is now locked: later changes go
 through this step again.*
@@ -108,14 +123,16 @@ node tools/shots.mjs 2
 node tools/check.mjs
 ```
 
-`clock` writes the word timings (placeholders until the voice exists). After each paragraph, take its contact sheet,
-**open the image and look at it**, and run the checker. Fix what you see before starting the next paragraph: a
+`clock` writes the word timings (placeholders until the voice exists). `shots.mjs 2` makes the contact sheet for
+paragraph 2 (no number: every paragraph). After each paragraph, take its contact sheet, **open the image and look at
+it**, and run the checker. Fix what you see before starting the next paragraph: a
 layout mistake copied into five paragraphs is five times the work. Put real data on screen: compute it in the film
 or in a script from the real source, and make the film call `film.problem(...)` if the data stops matching what the
 narration says (the demo does this).
 
 When all paragraphs are built, review the whole film with the five tests in `references/method.md` section 10,
-starting with `node tools/shots.mjs --film`. Review in rounds: name the two or three worst things as times and
+starting with `node tools/shots.mjs --film` and with frame 0 (`node tools/shots.mjs --at 0`): it is the thumbnail,
+so it should already show the question and the key picture. Review in rounds: name the two or three worst things as times and
 numbers, fix those, re-shoot those moments.
 
 *Gate: `node tools/check.mjs` reports 0 errors and no WARN you cannot justify (add `--captions` when a captioned cut
@@ -130,7 +147,8 @@ is planned), and the whole-film sheet tells the story without sound.*
 - **ElevenLabs** (any machine, exact word timestamps, costs credits): set-up and commands in the playbook, "Voice".
 - **Monetized video, a new voice, pitch changes, alternate takes, a misread word:** the playbook, "Local voice".
 - **No voice available here:** render on placeholder timing with music only and say so plainly; the user can record
-  on their machine and rerun steps 6 to 8 without touching the film.
+  on their machine and rerun steps 6 to 8 without touching the film. With no voice the mix holds the music up so the
+  draft is audible, and its loudness reads lower than the target: that is expected, do not normalize it.
 
 Then, after any take or any change to the narration:
 
@@ -150,8 +168,8 @@ differently from the placeholder, so look again for beats that now crowd or drag
 node tools/render.mjs
 ```
 
-For a feed, also `node tools/render.mjs --captions --out out/<name>-x.mp4`, then `sh tools/master_x.sh` (playbook,
-"Last mile for X"). Pull two or three frames out of the MP4 and look at them. You cannot hear: report the measured
+For a feed, also `node tools/render.mjs --captions --out out/<name>-x-raw.mp4`, then
+`sh tools/master_x.sh out/<name>-x-raw.mp4 out/<name>-x.mp4` (loudness for feeds; playbook, "Last mile for X"). Pull two or three frames out of the MP4 and look at them. You cannot hear: report the measured
 loudness, then ask the user to listen for misread words (a voice can read "lead" as the metal) and for the music
 level. A misread word is respelled in `SAY` and that paragraph re-recorded.
 
@@ -186,7 +204,7 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
 - `assets/template/`: what a new project is made of. `video/stage.js`, `stage.css` (three looks) and fonts; `tools/`
   (clock, shots, check, render, audio chain, captions, music, hits, mix, voice post, X master); `narration/` (script
   parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
-- `assets/demo/bloom/`: a finished 99-second film, "How a Bloom filter works", as the model for a script with beat
+- `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
 - `assets/voices/`: the narrator of films 2 to 5 (synthetic, non-commercial). `assets/bakeoff/`: how to compare a new
   voice model by ear.

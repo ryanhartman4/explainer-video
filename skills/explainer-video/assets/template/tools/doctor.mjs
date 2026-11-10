@@ -16,7 +16,10 @@ major >= 20 ? ok("Node", process.version) : miss("Node", `${process.version} is 
 const enc = run("ffmpeg", ["-hide_banner", "-encoders"]);
 if (!enc) miss("ffmpeg", "not found (macOS: brew install ffmpeg)");
 else { for (const c of ["libx264", "aac", "libmp3lame"]) enc.includes(c) ? 0 : miss("ffmpeg " + c, "this ffmpeg lacks it (macOS: brew install ffmpeg)"); if (["libx264", "aac", "libmp3lame"].every(c => enc.includes(c))) ok("ffmpeg", "libx264, aac, libmp3lame"); }
-run("uv", ["--version"]) ? ok("uv", "for the music, the mix and the local voice") : miss("uv", "not found (macOS: brew install uv): music, sound hits and the mix need it");
+if (!run("uv", ["--version"])) miss("uv", "not found (macOS: brew install uv): music, sound hits and the mix need it");
+else { ok("uv", "for the music, the mix and the local voice");
+  run("uv", ["run", "-q", "--offline", "--python", "3.12", "--with", "numpy", "--with", "scipy", "python", "-I", "-c", "import numpy, scipy"]) !== null ? ok("numpy, scipy", "in uv's cache")
+    : note("numpy, scipy", "not in uv's cache: the first  sh tools/audio.sh  downloads them (about 60 MB, plus Python 3.12 if uv lacks it). Ask the user first."); }
 try {
   const b = await launch(), p = await b.newPage({ viewport: { width: 320, height: 180 } });
   await p.setContent("<body style='background:#123'>"); const shot = await p.screenshot();
