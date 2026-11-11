@@ -51,11 +51,13 @@ sound hits only until a voice is recorded: step 6 of the skill).
 
 ## Formations
 
-`formations/` is "How an NFL offense lines up", 2:21, 7 paragraphs, in a wide cut and a vertical cut that share one
+`formations/` is "How an NFL offense lines up", 3:23, 7 paragraphs, in a wide cut and a vertical cut that share one
 script, one voice and one beat sheet. Its picture is a football field drawn in perspective on one canvas, with a
-camera that swings between a straight-down playbook view and the broadcast angle. It is the model for three things:
-a picture with depth that does not need the 3D layer, a film with its own look, and two cuts that are each composed
-for their own frame. Its first version was a flat diagram in the `paper` look; `NOTES.md` says why it was rebuilt.
+camera that swings between a straight-down playbook view and the broadcast angle. It is the model for four things:
+a picture with depth that does not need the 3D layer, a film with its own look, two cuts that are each composed
+for their own frame, and narration written as talk (its `SCRIPT.md` is the one to copy for how a script should
+sound; Bloom's and One Sitting's were written before that rule). Its first version was a flat diagram in the
+`paper` look and its second had a written-style script; `NOTES.md` says why each was redone.
 Read it in this order:
 
 1. `formations/SCRIPT.md` and `formations/DESIGN.md`: the two camera seats, what each is used for, and each cut's
@@ -82,6 +84,10 @@ cp -R <skill>/assets/demo/formations/. /path/to/formations/
 ```bash
 cd /path/to/formations && node tools/doctor.mjs && node tools/clock.mjs && node tools/check.mjs --captions && node tools/shots.mjs --film
 ```
+
+On the placeholder clock, which is slower than this voice, `script_check` and `check` warn about holds of five to
+eight seconds under the linking sentences, and about paragraph 3's length (it holds the count and the usage
+figures). On the recorded voice both cuts check clean and no hold is longer than five and a half seconds.
 
 ## One Sitting
 

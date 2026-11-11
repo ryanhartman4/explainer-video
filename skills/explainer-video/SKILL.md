@@ -94,6 +94,12 @@ If the user said yes to clips, follow `references/method.md` section 14: a clip 
 line and the clip's own words typed from the recording, it is listed under `## Sources`, and any download is
 asked for first. With no yes, there are none.
 
+Write the narration as talk to one person, never as text to be read: contractions, a verb where a colon would go,
+one rounded number a sentence, "you", and sentences that link aloud (`references/method.md` section 3). The user's
+style rules for prose do not apply to it. Talk needs more words: about 30 seconds for each question the film answers. Tell the user the length the full
+ladder needs before writing. If they want all of it, write all of it and name the cleanest cuts: it is easier to cut
+a section they have heard than to add one they have not.
+
 Write the narration in words the voice can read as they stand ("ten bits", "zero point one"). Where the written form
 must differ from the spoken one (`FLT4` read as "F L T four"), add the pair to `SAY` at the top of
 `narration/script.mjs` and its reverse to `WRITE` at the top of `tools/captions.mjs`. Cue phrases, in the beat sheet
@@ -109,13 +115,18 @@ tenth of the length you promised.
 *Gate: no ERROR; every WARN fixed or justified; the length is on target. Then show the user the takeaway, the anchor
 picture and the script and wait for their answer, unless they told you to just make it.*
 
-### 4. Fact-check, then lock the script
+### 4. Fact-check, listen, then lock the script
 
-Before any animation or recording, check the script against the subject. With subagents available, start two fresh
-ones at once: a **fact-checker** (every claim and every stated reason against the source, with file and line; flag
-true-but-misleading claims, missing credit for borrowed ideas, and results presented as new that the subject's own
-notes already have) and a **builder check** (what would someone animating this still have to guess?). Without
-subagents, do both passes yourself with the script in one window and the source in the other. Fix what they find.
+Before any animation, check the script against the subject and against the ear. With subagents available, start
+three fresh ones at once: a **fact-checker** (every claim and every stated reason against the source, with file and
+line; flag true-but-misleading claims, missing credit for borrowed ideas, and results presented as new that the
+subject's own notes already have), a **builder check** (what would someone animating this still have to guess?) and
+a **listener** (one pass through the narration at speaking pace with no looking back, then: where it got lost, what
+still sounds written, what is padding, and what it could now explain). Without subagents, do the passes yourself
+with the script in one window and the source in the other. Fix what they find.
+
+A fact-check fix arrives as a written qualifier. Say each fix as talk, and put the exact form on screen or in
+`## Sources`: the voice says "nearly six plays out of ten", the screen says 58%.
 
 Whatever the subject, test each sentence against these: is it the worst case or the typical case, and does the
 sentence say which ("at most four looks")? Is a number off by one at the boundary? Is "always", "never" or "must"
@@ -124,8 +135,12 @@ borrowed idea credited? The playbook's "Accuracy" section lists what five films'
 For each clip: is the voice the person named, are the typed words what the recording says, and does the cut keep
 the meaning the speaker gave it?
 
-*Gate: every finding fixed or answered; `script_check` still clean. The script is now locked: later changes go
-through this step again.*
+Then let the user hear it. With a local voice, record a scratch take in the background (the step 6 command) and
+send them the audio: a script is approved by ear, since nobody can hear a page. With no voice here, say that it has
+not been heard.
+
+*Gate: every finding fixed or answered; `script_check` still clean; the user has heard the scratch take, or knows
+there is none. The script is now locked: later changes go through this step again.*
 
 ### 5. Design and build
 
@@ -176,8 +191,9 @@ is planned), and the whole-film sheet tells the story without sound.*
 - **Local, free (Apple Silicon Mac):** Breeze TTS 2, cloning the bundled narrator.
   `uv run --project ~/Developer/mlx-audio python narration/tts_local.py scenes --ref narration/voices/w_mid.wav all`
   Run it in the background: about 2.5 minutes of compute per minute of speech. Research and non-commercial licence:
-  personal and unmonetized posts only. It re-takes any sentence that comes out over 176 words a minute and prints a
-  `pace:` line for each: report those lines to the user with the loudness.
+  personal and unmonetized posts only. It prints a `tail:` line when it cuts hiss a take ran on into. If the user
+  hears rushing, `--pace-limit` re-takes fast sentences (the playbook, "Local voice", says when it helped and
+  when it did not).
 - **ElevenLabs** (any machine, exact word timestamps, costs credits): set-up and commands in the playbook, "Voice".
 - **Monetized video, a new voice, pitch changes, alternate takes, a misread word:** the playbook, "Local voice".
 - **A clip paragraph is never recorded.** `sh tools/audio.sh` cuts the clip and uses its own sound; the voice
@@ -249,9 +265,9 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
   `narration/` (script parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
 - `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
-- `assets/demo/formations/`: a finished 2:21 film in a wide and a vertical cut, "How an NFL offense lines up": a
+- `assets/demo/formations/`: a finished 3:23 film in a wide and a vertical cut, "How an NFL offense lines up": a
   field drawn in perspective on one canvas, a camera that swings between two seats, the film's own look, and one
-  beat sheet in code that both cuts run.
+  beat sheet in code that both cuts run. Its script is the model for narration written as talk.
 - `assets/stage3d/`: what `--3d` adds to a project: `stage3d.js`, the forms in `forms3d/`, a 3D `film.html`, and
   the tall starter that `--3d --vertical` uses.
 - `assets/demo/one-sitting/`: a finished 3:52 3D film in nine scene files, with the brief its eight parallel

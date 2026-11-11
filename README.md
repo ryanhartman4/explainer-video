@@ -16,7 +16,7 @@ Three finished films, each a worked example in the plugin. Click a frame to down
 
 | | |
 |---|---|
-| [![How an NFL offense lines up](docs/examples/formations.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) | **How an NFL offense lines up** (2:21). A field drawn in perspective, with a camera that swings between the playbook view and the broadcast angle. [Wide cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) · [vertical cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations-vertical.mp4) |
+| [![How an NFL offense lines up](docs/examples/formations.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) | **How an NFL offense lines up** (3:23). A field drawn in perspective, with a camera that swings between the playbook view and the broadcast angle. [Wide cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) · [vertical cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations-vertical.mp4) |
 | [![One Sitting](docs/examples/one-sitting.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting-720p.mp4) | **One Sitting** (3:52). 30,000 points of light become word clusters, the Lorenz attractor, colliding galaxies and the film's own waveform. [720p, 28 MB](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting-720p.mp4) · [full quality, 231 MB](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting.mp4) |
 | [![How a Bloom filter works](docs/examples/bloom.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/bloom.mp4) | **How a Bloom filter works** (1:28). One row of bits that the whole film is told on. [Video](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/bloom.mp4) |
 
@@ -55,7 +55,8 @@ setting judged by ear, what each fact-check caught, and the original HyperFrames
 back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising the first five.
 
 **Worked examples** (`skills/explainer-video/assets/demo/`): "How a Bloom filter works" (93 seconds, 2D, one file);
-"How an NFL offense lines up" (2:21, a field in perspective with a moving camera, a wide and a vertical cut);
+"How an NFL offense lines up" (3:23, a field in perspective with a moving camera, narration written as talk, a wide
+and a vertical cut);
 "One Sitting" (3:52, 3D, nine scene files built by eight parallel agents, with the brief they worked from); and a
 gallery film of the ready-made 3D forms.
 

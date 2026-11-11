@@ -32,14 +32,19 @@ MODEL = os.environ.get("BREEZE_MODEL", "mlx-community/Breeze-TTS-2-mlx-8bit")
 DIRECTION = ("A warm, curious science narrator explaining an idea to a friend. Lively, varied pitch and natural "
              "emphasis; questions sound like real questions.")
 GUIDANCE = 4.0                                  # cfg_scale for a direction (Breeze's recommended value)
-# The pace limit (film 8, 2026-11-11). Breeze rushed five sentences of one take (185 to 218 words a minute in a take that
-# averaged 148), the author heard it, and glitch.py did not flag them: it looks for sentences far from the take's own
-# mean. A sentence that comes out faster than LIMIT is taken again with the CALM direction on two seeds, and the take
-# nearest TARGET is kept. Tested on those five: a new seed alone left them at 159 to 214 words a minute; the calm
-# direction brought them to 106 to 162. Each re-take prints a "pace:" line. The playbook, "Local voice", has the record.
-LIMIT, TARGET = 176, 158                        # words a minute
+# The pace limit is off unless asked for (scenes --pace-limit 176). Film 8 turned it on for every take after its author
+# heard rushing, at 176 words a minute. It then re-took 12 of 19 sentences of a talk-style script (short words read fast
+# when counted in words), and the author preferred the takes it had replaced: 193 words a minute while speaking, with
+# sentences up to 250. No pace number has yet matched this author's ear, so it does not run by itself. With the flag, a
+# sentence faster than the limit is taken again with the CALM direction on two seeds, a take that ends in hiss is never
+# chosen, and the take nearest nine tenths of the limit is kept. The playbook, "Local voice", has the record.
 CALM = ("A warm, unhurried science narrator explaining an idea to a friend. A steady, relaxed pace with a clear pause at "
         "every comma; natural emphasis; questions sound like real questions.")
+# After a sentence's last word Breeze sometimes holds up to two seconds of hiss, 24 to 38 dB under the peak, most often on
+# a slow or directed take, and the author hears it as a long pause. trim() ends a sentence at its last frame within 30 dB
+# of the peak. A quiet last word can sit 20 to 30 dB under the peak for up to 0.65 s, so that much is kept; when the quiet
+# stretch runs longer than TAIL it is hiss, and the sentence ends HISS after its last frame within 20 dB.
+TAIL, HISS = 0.7, 0.2
 PAUSE = {".": 0.42, "?": 0.5, "!": 0.45}        # silence after a sentence, by its last mark
 PAD = 0.04                                      # keep this much silence around each trimmed sentence
 FADE = 0.02                                     # fade out the last 20 ms, so a cut never clicks
@@ -67,16 +72,26 @@ def direction_for(sentence, scene):
     return DIRECTION
 
 
+def quiet_tail(db):
+    """(end, held): the 10 ms frame where the sentence ends, and how many seconds of quiet followed its last loud frame.
+    held over TAIL means the take ran on into hiss, and the end is capped there."""
+    pk = db.max()
+    e30 = np.flatnonzero(db > pk - 30)[-1] + 1                         # the last frame that can be a quiet word
+    e20 = np.flatnonzero(db > pk - 20)[-1] + 1                         # the last frame that is surely speech
+    held = (e30 - e20) * 0.01
+    return (e30 if held <= TAIL else e20 + int(HISS / 0.01)), held
+
+
 def trim(x, sr):
     """cut the silence around a sentence by its loudness envelope, then fade the end. Never by pitch: pYIN marks
     long stretches of Breeze's sentence-final words unvoiced, and a pitch-based end cut real words from 18 of film 5's
-    23 sentences. A take that runs on into seconds of hiss shows as a slow sentence in
-    tools/glitch.py: record that scene on another seed. tools/trim_check.py tests any change here."""
-    _, voiced = envelope(x, sr)
+    23 sentences. The end comes from quiet_tail(), so a take that runs on into hiss does not become a long pause. tools/trim_check.py tests any change here."""
+    db, voiced = envelope(x, sr)
     on = np.flatnonzero(voiced)
     if len(on) == 0:
         return x
-    a = max(0, int((on[0] * 0.01 - PAD) * sr)); b = min(len(x), int(((on[-1] + 1) * 0.01 + PAD) * sr))
+    end, _ = quiet_tail(db)
+    a = max(0, int((on[0] * 0.01 - PAD) * sr)); b = min(len(x), int((end * 0.01 + PAD) * sr))
     y = x[a:b].copy()
     n = min(len(y), int(FADE * sr)); y[len(y) - n:] *= np.linspace(1, 0, n, dtype=np.float32)
     return y
@@ -124,17 +139,21 @@ def scenes(args):
         # that was chosen; --seed K picks a different take and is stored in turn
         prev = json.load(open(base + ".json")) if os.path.exists(base + ".json") else {}
         seed = args.seed if args.seed is not None else prev.get("seed", 0)
+        limit = args.pace_limit if args.pace_limit is not None else prev.get("paceLimit", 0)   # like the seed: kept with the take
         parts, words, t = [], [], 0.0
         for i, sent in enumerate(sentences(sc["say"])):
             d = direction_for(sent, sc["n"])
             kw = dict(instruct=d, cfg_scale=GUIDANCE) if d else {}
-            x = trim(say_one(model, sent, seed=1000 * sc["n"] + i + seed, ref_audio=args.ref, ref_text=ref_text, **kw), sr)
-            wpm = lambda a: len(sent.split()) / (len(a) / sr) * 60
-            if d and wpm(x) > LIMIT:                         # rushed: two calmer takes, keep whichever lands nearest the target pace
-                first = wpm(x)
-                takes = [x] + [trim(say_one(model, sent, seed=1000 * sc["n"] + i + seed + k, ref_audio=args.ref, ref_text=ref_text, instruct=CALM, cfg_scale=GUIDANCE), sr) for k in (0, 500)]
-                x = min(takes, key=lambda a: abs(wpm(a) - TARGET))
-                print(f"  pace: {first:.0f} -> {wpm(x):.0f} words a minute  |  {sent[:60]}", flush=True)
+            raw = say_one(model, sent, seed=1000 * sc["n"] + i + seed, ref_audio=args.ref, ref_text=ref_text, **kw)
+            held = lambda r: quiet_tail(envelope(r, sr)[0])[1]
+            wpm = lambda r: len(sent.split()) / (len(trim(r, sr)) / sr) * 60
+            if limit and d and wpm(raw) > limit:             # asked for: two calmer takes; keep the one nearest the target that does not end in hiss
+                first = wpm(raw)
+                takes = [raw] + [say_one(model, sent, seed=1000 * sc["n"] + i + seed + k, ref_audio=args.ref, ref_text=ref_text, instruct=CALM, cfg_scale=GUIDANCE) for k in (0, 500)]
+                raw = min([r for r in takes if held(r) <= TAIL] or takes, key=lambda r: abs(wpm(r) - 0.9 * limit))
+                print(f"  pace: {first:.0f} -> {wpm(raw):.0f} words a minute  |  {sent[:60]}", flush=True)
+            if held(raw) > TAIL: print(f"  tail: cut {held(raw) - HISS:.1f} s of hiss after the last word  |  {sent[:60]}", flush=True)
+            x = trim(raw, sr)
             for w in align(x, sr, sent.split()):
                 words.append({"word": w["word"], "start": round(t + w["start"], 3), "end": round(t + w["end"], 3)})
             gap = PAUSE.get(sent[-1], 0.42)
@@ -143,7 +162,7 @@ def scenes(args):
         os.makedirs(os.path.dirname(base), exist_ok=True)
         write_mp3(audio, sr, base + ".mp3")
         json.dump({"voiceId": "breeze:" + os.path.basename(args.ref), "model": "Breeze-TTS-2 8-bit (MLX)", "text": sc["say"],
-                   "seed": seed, "duration": round(len(audio) / sr, 3), "words": words, "estimated": True},
+                   "seed": seed, "paceLimit": limit, "duration": round(len(audio) / sr, 3), "words": words, "estimated": True},
                   open(base + ".json", "w"), indent=1)
         print(f"{base}.mp3  {len(audio) / sr:.2f} s  {len(words)} words  seed {seed}", flush=True)
 
@@ -159,5 +178,9 @@ if __name__ == "__main__":                       # importable, so tests can call
                    help="added to every sentence seed: an alternate take of a scene (default: the seed stored in the "
                         "scene's .json in --out, else 0). It re-rolls every sentence of the scene, so re-check any "
                         "word the user already approved there")
+    s.add_argument("--pace-limit", type=float, default=None, metavar="WPM",
+                   help="re-take any sentence faster than this many words a minute with a calmer direction (default: the "
+                        "limit stored in the scene's .json, else off). Only when the user has heard rushing: see the "
+                        "comment at the top of this file")
     a = p.parse_args()
     design(a) if a.cmd == "design" else scenes(a)

@@ -3,7 +3,8 @@
       untrimmed sentences of scenes n (default all) -> narration/audio/raw_check/sNN_II.wav
   uv run --project ~/Developer/mlx-audio python tools/trim_check.py test [DIR]
       fails (exit 1) if trim() starts a sentence after its first 10 ms frame within 25 dB of its peak, ends it before
-      its last such frame, or leaves no fade. It finds the trimmed audio inside the raw take, so it does not trust
+      its last such frame, or leaves no fade. One cut is allowed: when more than T.TAIL of quiet (20 to 30 dB under the peak)
+      follows the last frame within 20 dB, the take ran on into hiss, and trim() ends it T.HISS after that frame. It finds the trimmed audio inside the raw take, so it does not trust
       trim()'s own arithmetic.
 gen once (the raw takes do not depend on trim()), then run test after every change to trim(). gen costs about 2.5
 minutes of compute per minute of speech, so name one or two scenes. Film 5's pitch-based trim failed 18 of 23
@@ -50,6 +51,8 @@ def check(path):
     db, _ = envelope(x, sr)
     loud = np.flatnonzero(db > db.max() - 25)                               # speech-loud 10 ms frames
     first, last = loud[0] * 0.01, (loud[-1] + 1) * 0.01
+    e20, e30 = ((np.flatnonzero(db > db.max() - k)[-1] + 1) * 0.01 for k in (20, 30))
+    if e30 - e20 > T.TAIL: last = min(last, e20 + T.HISS)                 # the take ran on into hiss: that may go
     y = T.trim(x, sr); a = located(x, y)
     if a is None:
         return "trimmed audio is not a slice of the raw take"

@@ -63,7 +63,16 @@ picture has to be illustrative, say so on screen.
 
 ## 3. Writing for the ear
 
-The narration is heard once, at the speaker's pace, with no way to re-read. Write it by saying it aloud.
+The narration is heard once, at the speaker's pace, with no way to re-read. **Write talk, not text.** Picture one
+person who knows what your viewer knows, sitting beside you while you point at the picture and tell them how it
+works. Write down what you would say to them.
+
+The habits of good prose work against you here. "Omit needless words" makes a page better and a voice worse: a
+listener cannot go back, so speech links its sentences aloud, says some things twice and talks to someone. If the
+user has a style guide for prose (short, no qualifiers, cut every word), it governs what they read: the notes, the
+design, your messages. It does not govern what they hear. Film 8's first script followed those habits, and its
+author said it sounded "meant to be written and read instead of spoken and heard". It had no contractions, eight
+colons, and no "you".
 
 **Structure.** Pick the template that fits and bend it:
 - *How something works:* the question it answers → the obvious way and what it costs → the trick → the trick
@@ -76,20 +85,62 @@ The narration is heard once, at the speaker's pace, with no way to re-read. Writ
 **The opening** (first 8 seconds) is a question, a surprising number or a thing to picture. Never a greeting, never
 "in this video". Frame 0 is also the thumbnail: it already shows the question and the key picture.
 
+**Talk.** The left column is how film 8 was first written. The right is the same facts as its author preferred
+them, by ear.
+
+| Written | Spoken |
+|---|---|
+| "First choice: who are those five?" | "So who are those five?" |
+| "A second tight end makes it twelve: twenty-four percent." | "Bring in a second tight end, and it's twelve. That was about one play in four." |
+| "Under center, the back sits behind the quarterback and can run to either side without tipping which." | "He can line up right behind the center. That's called under center. The running back sits a few yards behind him. From there the back can run left or right, and he doesn't tip off which way." |
+| "At least seven men on the line at the snap, and only the two on its ends are eligible." | "When the ball is snapped, the offense has to have at least seven men up on the line. But here's the catch. Of those seven, only the two on the ends are eligible to catch a pass." |
+
+- **Contract.** "It's", "that's", "can't", "they're". Keep a full form only for a stress you want.
+- **A verb where a colon would go.** A voice cannot say a colon, a semicolon, a dash or a bracket. Give each part its
+  own sentence.
+- **One number a sentence, rounded.** "Nearly six plays out of ten"; the exact 58% goes on screen. Two numbers with
+  only punctuation between them are heard as one long number.
+- **Say "you".** The viewer is being shown something: "you count each side", "the one you'll see the most".
+- **Link sentences aloud.** So, but, and, because, now, or. On a page the layout carries the logic. In speech only
+  the words can.
+- **Let some sentences add nothing new.** After two or three new facts, one that sets up, reacts or restates: "But
+  here's the catch." "It's tight for a reason." A compressed draft deletes these first and a listener needs them
+  most. They are also where the picture can hold.
+- **But do not chat.** "Next question." and "Last one." cost time and carry nothing. A linking sentence earns its
+  place by saying how two facts connect.
+- **Name the thing after showing it, with a verb.** "That's called under center." A bare label after a colon is a
+  caption.
+- **One name for each thing.** Film 8's draft called one man the running back, the runner, the back and the
+  halfback. The ear takes those for four men.
+- **Watch pronouns and words with two meanings.** The ear holds one "he" at a time. "Eleven" was both the players
+  and a personnel group; "picked off" means an interception to a fan.
+- **Vary how sentences open.** A dozen that start "That's ..." become a drumbeat once each has a pause before it.
+- **Statements for the voice.** A synthetic voice handles "Two on one side and two on the other is doubles" better
+  than a rising fragment and its answer.
+
 **Sentences.**
 - 25 words at most; most under 15. One new term per sentence, named the moment it appears on screen.
 - Concrete before abstract: show it happen to "cat", then state the rule.
 - Put the word that names the new thing near the end of its sentence. The picture changes on that word, so the
   sentence builds to the change.
-- Round numbers for the ear ("fewer than one in a hundred"); the exact figure goes on screen (0.82%).
 - Say what something is, then what it is called. Not the reverse.
-- No sentence the picture cannot show. "This is really important" has no picture; cut it.
+- Every sentence is about what is on screen. "This is really important" has no picture; cut it. A linking sentence
+  needs no change of its own.
 - The close is short and returns to the takeaway in the film's own words. No "thanks for watching".
 
-**Budget.** A voice reads about 155 words a minute, and a film adds silence around each paragraph, so a finished
-film runs about 2.2 words a second: 90 seconds is about 200 words, 3 minutes about 400. `tools/script_check.mjs`
-prints the length the film will really have; trust it over arithmetic. A paragraph is one idea and 10 to 25 seconds
-(25 to 55 words). When the film runs long, cut a question from the ladder; do not speed up.
+**Budget ideas, then words.** Talk takes more words than text. Film 8's facts took 300 words written and 525 as
+talk, and the film went from 2:21 to 3:23, although the voice spoke the talk faster (190 words a minute against
+150). Count on about 30 seconds for each question on the ladder: two minutes holds four questions, not seven. Tell
+the user that before writing. If the length is a ceiling, cut questions. If it is not, write the full ladder, say
+how long it runs and name the cleanest cuts: film 8's author, shown 3:23 against a two-minute brief, said it is
+"always better to have more content than needed and cut than to not have enough". `tools/script_check.mjs` prints the length the
+film will have on a placeholder clock, and warns about writing for the eye (punctuation a voice cannot say, forms a
+speaker would contract, numbers that run together, a script with no "you"). A paragraph is one idea: 15 to 35 seconds as talk, 40 to 95 words. To
+shorten a film, cut a question from the ladder; do not compress the talk back into text, and do not speed up.
+
+**Judge it by ear.** You cannot hear, and neither can a reader of SCRIPT.md. Before the picture is built, record a
+scratch take and give the user the audio (the skill's step 3). Have a fresh agent act as a listener: one pass, no
+looking back, then where it got lost, what still sounds written, what is padding, and what it could now explain.
 
 ## 4. The beat sheet
 

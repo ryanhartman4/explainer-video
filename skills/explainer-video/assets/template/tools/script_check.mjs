@@ -6,7 +6,9 @@
 //   | picks one bit | ADD three arrows from the hashes to bits 3, 7 and 12 | item, hashes, bit row, arrows |
 // ERROR  a cue phrase the narrator never says, a paragraph with no beats, a table row with the wrong columns
 // WARN   long sentences, long paragraphs, long stretches with no beat, beats too close together, a slow opening,
-//        a cue said more than once, a change that is not one verb, a crowded screen, tokens a voice may misread
+//        a cue said more than once, a change that is not one verb, a crowded screen, tokens a voice may misread,
+//        and writing for the eye: punctuation a voice cannot say, forms a speaker would contract, two numbers that
+//        run together, a script that never says "you"
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, say } from "../narration/script.mjs";
@@ -45,7 +47,16 @@ spoken.forEach((p, pi) => {
   p.dur = lay.end - lay.start; p.start = lay.start; words += w.length;
   const where = `p${p.n}`;
   for (const s of p.text.split(/(?<=[.?!])\s+/)) { const n = s.split(/\s+/).length; if (n > 26) add("WARN", where, `a ${n}-word sentence ("${s.slice(0, 44)}…"): the ear loses a sentence past about 25 words; split it`); }
-  if (w.length > 75) add("WARN", where, `${w.length} words in one paragraph (${p.dur.toFixed(0)} s): one paragraph is one idea; split it at the turn`);
+  if (!CL[p.n]) {                                    // the ear: this is heard once, never read (method section 3). A clip's words are the speaker's own.
+    const marks = [...new Set(p.text.match(/[:;()\u2014\u2013]/g) || [])];
+    if (marks.length) add("WARN", where, `the narration has ${marks.map(m => `"${m}"`).join(" ")}: a voice cannot say punctuation. Give each part its own sentence and its own verb ("That's called ...", "It was about ...")`);
+    const stiff = [...new Set((p.text.match(/\b(?:it is|that is|there is|here is|what is|do not|does not|did not|cannot|can not|is not|are not|was not|will not|would not|they are|we are|you are|you will|I am|I have|you have|they have)\b/gi) || []).map(x => x.toLowerCase()))];
+    if (stiff.length) add("WARN", where, `written forms a speaker would contract: ${stiff.map(x => `"${x}"`).join(", ")}. Write it the way it is said (it's, that's, can't, they're), unless the full form carries a stress you want`);
+    const NUM = "(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)";
+    const run = p.text.match(new RegExp(`\\b${NUM}(?:-${NUM})?[:;,.]\\s+${NUM}(?:-${NUM})?\\b[^.?!]{0,24}`, "i"));
+    if (run) add("WARN", where, `two numbers with only punctuation between them ("${run[0].trim()}"): the ear hears one long number. Put a verb between them, or give each its own sentence`);
+  }
+  if (w.length > 95) add("WARN", where, `${w.length} words in one paragraph (${p.dur.toFixed(0)} s): one paragraph is one idea; split it at the turn`);
   const risky = [...new Set((p.text.match(/\b(?:[A-Z]{2,}[0-9]*|[A-Za-z]+[0-9]+[A-Za-z0-9]*|\d+(?:[.,]\d+)+|\d+[A-Za-z]+)\b/g) || []))].filter(x => say(x) === x);
   if (risky.length && !CL[p.n]) add("WARN", where, `a voice may misread ${risky.map(x => `"${x}"`).join(", ")}: add spoken spellings to SAY in narration/script.mjs (and the reverse to WRITE in tools/captions.mjs), or write them as words`);
   if (!p.beats.length) { add("ERROR", where, p.rows ? "no valid beat rows" : "no beat sheet: add the table (on the words | change | then on screen) with a row for each change on screen"); return; }
@@ -70,6 +81,7 @@ spoken.forEach((p, pi) => {
   }
   if (times.length) { const tail = p.dur - times.at(-1).t; if (tail > 7.5) add("WARN", where, `${tail.toFixed(1)} s with no change after "${times.at(-1).b.cue}" to the end of the paragraph`); }
 });
+if (!/\byou(?:r|'re|'ll|'ve|'d)?\b/i.test(spoken.filter(p => !CL[p.n]).map(p => p.text).join(" "))) add("WARN", "film", `the narration never says "you": it is talk to one person. Address the viewer at least where they are asked to look, count or choose`);
 const first = spoken[0].text.split(/(?<=[.?!])\s+/)[0].split(/\s+/).length;
 if (first > 18) add("WARN", "p1", `the opening sentence is ${first} words: open on a short, concrete line (a question, a surprising number, a thing the viewer can picture)`);
 if (target && Math.abs(clock - target) > target * 0.1) add("WARN", "film", `estimated length ${clock.toFixed(0)} s against a target of ${target} s: ${clock > target ? "cut" : "add"} about ${Math.abs(Math.round((clock - target) * 2.4))} words`);

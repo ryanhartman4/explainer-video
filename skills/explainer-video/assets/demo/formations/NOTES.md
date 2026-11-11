@@ -19,6 +19,21 @@ explainer, 2:20.8, in three cuts. The first version (a flat diagram in the `pape
 thock hits at 19.928, 66.597 and 83.467 s land at 0.0 ms lag after AAC in all three. Frames pulled from the MP4s
 match the contact sheets. Each file is 65 to 70 MB: the grain on the turf costs bitrate.
 
+## Version 3: the narration as talk (2026-11-11)
+
+The author said the scripts sounded "meant to be written and read instead of spoken and heard". Version 3 keeps the
+picture and rewrites the narration as talk: 525 words against 300, 30 contractions against none, no colons against
+eight. It runs 3:23.3 against 2:20.8. Version 2's cuts are in `out/v2/`, its script in
+`review/SCRIPT-v2-as-written.md`, its take in `narration/audio/take2/`.
+
+- Measured: wide cut -17.4 LUFS, peak -2.4 dBFS; thock hits at 0.0 ms lag; `check.mjs --captions` clean for both
+  cuts; no pause inside a paragraph longer than 0.71 s.
+- The voice is at its natural pace (the pace limit is off). The trim now cuts hiss a take runs on into.
+- A fact-checker and a listener (two fresh agents) reviewed the rewrite before recording; their findings are folded in.
+- Only `video/play.js` changed in the picture: every cue phrase, three added beats, and the formation name now leaves
+  when the quarterback moves and returns when it is spoken.
+- Not settled: the length. The brief was about two minutes.
+
 ## Why it was rebuilt
 
 The author's review of the first version: it lacked the look of the One Sitting demo, had "a lot of white space",

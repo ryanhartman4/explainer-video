@@ -67,7 +67,7 @@ Stage.film({ look: "turf" }, film => {
   const line = t => { valL.show(t); capL.show(t + 0.15); }, lineOff = t => { valL.hide(t); capL.hide(t); };
   // how often each personnel grouping was used: beside the number
   const BX = 430, BY = TY + 34, bars = [];
-  const usage = t => bars.push(H.text("how often teams used it\n2025 · PFF", { x: BX, y: BY + 196, size: "note", color: "muted", id: "usage-caption" }).show(t));
+  const usage = t => bars.push(H.text("how often teams used it\n2025 · PFF", { x: BX, y: BY + 184, size: "note", color: "muted", id: "usage-caption" }).show(t));
   const bar = (i, t) => { const u = D.USAGE[i], y = BY + i * 62;
     bars.push(H.text(u.personnel, { x: BX, y: y + 2, size: "label", font: "mono", id: "bar-name-" + u.personnel }).show(t));
     bars.push(H.box({ x: BX + 64, y, w: 0, h: 44, fill: "ink", stroke: null, radius: 4, by: "fade", id: "bar-" + u.personnel }).show(t, { dur: 0.1 }).to(t, { w: u.pct * 6.6 }, { dur: 0.8, ease: "out" }));
@@ -75,7 +75,7 @@ Stage.film({ look: "turf" }, film => {
   const barsOff = t => bars.forEach(b => b.hide(t));
   const note = (words, t, until) => H.text(words, { x: BX, y: TY + 60, size: "body", id: "note" }).show(t).hide(until);
   // in the last paragraph the tag leaves with the name, so the number can come back large
-  const t8 = P[6].at("in two steps"), off = t => { nameOff(t); if (t > t8 - 1 && t < t8 + 1) tagOff(t); };
+  const t8 = P[6].at("how you read it"), off = t => { nameOff(t); if (t > t8 - 1 && t < t8 + 1) tagOff(t); };
 
   Play(film, F, { title, heading, showDigit, digits, pulseDigits, name, nameOff: off, line, lineOff, usage, bar, barsOff, note },
     { count: { L: [-8, 3.6], R: [8, 3.6], px: 110 }, depthX: 7.3, depthOff: [1.3, 0], defGap: 1.1, routeScale: 0.72, rel: { Z: [-2, 6.2, -0.15] } });
