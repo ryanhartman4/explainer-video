@@ -10,6 +10,18 @@ It holds two skills:
 - **explainer-video-setup**: checks your Mac for what the first skill needs, installs what is missing (asking
   first), and proves the voice works.
 
+## What it makes
+
+Three finished films, each a worked example in the plugin. Click a frame to download the video.
+
+| | |
+|---|---|
+| [![How an NFL offense lines up](docs/examples/formations.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) | **How an NFL offense lines up** (2:21). A field drawn in perspective, with a camera that swings between the playbook view and the broadcast angle. [Wide cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations.mp4) · [vertical cut](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/formations-vertical.mp4) |
+| [![One Sitting](docs/examples/one-sitting.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting-720p.mp4) | **One Sitting** (3:52). 30,000 points of light become word clusters, the Lorenz attractor, colliding galaxies and the film's own waveform. [720p, 28 MB](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting-720p.mp4) · [full quality, 231 MB](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/one-sitting.mp4) |
+| [![How a Bloom filter works](docs/examples/bloom.jpg)](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/bloom.mp4) | **How a Bloom filter works** (1:28). One row of bits that the whole film is told on. [Video](https://github.com/ryanhartman4/explainer-video/releases/download/examples-1/bloom.mp4) |
+
+All the videos are on the [examples release](https://github.com/ryanhartman4/explainer-video/releases/tag/examples-1).
+
 ## What it is made of
 
 **A design method** (`skills/explainer-video/references/method.md`). The film is one picture that builds, not a deck

@@ -4,6 +4,12 @@ Four films: `bloom/` (2D, one file), `formations/` (a 2.5D picture with a moving
 cut), `one-sitting/` (3D, nine scene files, built by parallel agents) and `forms3d/` (a gallery of the ready-made
 3D forms).
 
+Each example folder holds `film.jpg`, the whole-film contact sheet of the finished film (`formations/` also has
+`film-9x16.jpg`). Open it first: it is what the film looks like, and what your own `node tools/shots.mjs --film`
+sheet should stand beside. The finished videos are on the repository's `examples-1` release
+(https://github.com/ryanhartman4/explainer-video/releases/tag/examples-1): `bloom.mp4`, `formations.mp4`,
+`formations-vertical.mp4`, `one-sitting.mp4` and `one-sitting-720p.mp4`. Ask the user before downloading one.
+
 ## Bloom
 
 `bloom/` is a finished film made with this skill's method and engine: "How a Bloom filter works", 93 seconds,

@@ -18,6 +18,7 @@ and an MP4. It has two layers.
 
 Read the first two before the first film, and the third before a 3D one. A complete film made this way is in
 `assets/demo/bloom/` (script, design, film): read its `SCRIPT.md` and `video/film.html` and work in the same shape.
+Each example folder has `film.jpg`, the finished film's contact sheet: look at one before you design.
 A film with a picture in perspective, a moving camera and a vertical cut is in `assets/demo/formations/`.
 A complete 3D film, built by parallel scene builders, is in `assets/demo/one-sitting/`.
 
