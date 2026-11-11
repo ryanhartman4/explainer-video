@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>How an NFL offense lines up</title>
+<link rel="stylesheet" href="stage.css">
+<link rel="stylesheet" href="look.css">
+<script src="data/timing.js"></script>
+<script src="data/captions.js"></script>
+<script src="stage.js"></script>
+<script src="shared.js"></script>
+<script src="field.js"></script>
+<script src="play.js"></script>
+</head><body>
+<script>
+// How an NFL offense lines up: the wide cut, composed for 1920 x 1080. The field fills the frame. It is seen from
+// straight above (the playbook view) or from the sideline stands (the broadcast view), and the type sits on it:
+// the chapter top left, the formation's name bottom left, the personnel number bottom right.
+// What happens at each phrase is in play.js; the formations are data in shared.js; the field is drawn by field.js.
+Stage.film({ look: "turf" }, film => {
+  const D = window.SHARED, A = film.scene(film.paras[0], film.paras.at(-1)), H = A.hud;
+
+  // ---------- this frame's field ----------
+  // where each spot is, in yards: across from the ball, and back from the line. Schematic: the splits are pulled in so
+  // the men can be large; a man "on the line" touches it, and a man off it stands a yard behind that.
+  const LAT = { wideL: -16.4, wideRoff: 16.4, slotL: -9.6, slotR: 9.6, wingL: -5.3, endR: 5.1, beside: 3.5, bunchPoint: 8.2, bunchIn: 6.1, bunchOut: 10.3 };
+  const DEPTH = { on: 0.95, off: 1.95, qbUnder: 2.6, qbGun: 5.0, qbPistol: 4.0, full: 4.9, deep: 7.3, beside: 5.3, pistolBack: 6.7, bunchIn: 2.35, bunchOut: 2.35 };
+  const spots = {}; for (const k in D.SPOT) spots[k] = [LAT[k] ?? D.SPOT[k].lat, DEPTH[k] ?? (D.SPOT[k].on ? DEPTH.on : DEPTH.off)];
+  const cam = {
+    top:  { az: 0, el: 90, dist: 60, f: 60 * 44, tx: 0, tz: 0, cx: 960, cy: 420 },        // 44 px to the yard, the line of scrimmage at y 420
+    rule: { az: 0, el: 90, dist: 60, f: 60 * 50, tx: 0, tz: 0, cx: 960, cy: 440 },        // the same, a step closer
+    tv:   { az: -72, el: 23, dist: 75, f: 75 * 50, tx: 0, tz: -1.5, cx: 960, cy: 555 },   // from the stands on the offense's right, a little behind it: it faces right, as on television
+    tvBox: { az: -80, el: 23, dist: 75, f: 75 * 58, tx: 0.6, tz: -3.0, cx: 960, cy: 545 }, // nearly square to the line and closer: depth behind it reads right to left
+  };
+  const F = Field(film, A, { spots, R: 40, SQ: 62, cam, start: "tv" });
+
+  // ---------- this frame's type ----------
+  const BY = 800;                                                                // the bottom row: captions burn in below y 960
+  const title = H.text("How an NFL offense lines up", { x: 96, y: 46, size: 84, font: "display", id: "title" });      // the opening frame is the poster
+  let last = null;
+  const heading = (words, t, id) => { if (last) last.hide(t - 0.25); last = H.text(words, { x: 96, y: 40, size: "head", id }).show(t); };
+  // (a thing whose first call is show() is hidden until then)
+  const cap = (s, x, id, o = {}) => H.text(s, { x, y: BY - 16, size: "note", font: "mono", color: "muted", id, ...o });
+  const capF = cap("FORMATION", 96, "cap-formation"), valF = H.text("Singleback", { x: 96, y: BY + 30, size: "title", id: "formation" });
+  let nameOn = false;
+  const name = (key, t) => { const s = D.STATE[key].name; if (nameOn) valF.set(t, { text: s }).pulse(t); else { valF.set(t - 0.01, { text: s }); capF.show(t); valF.show(t); nameOn = true; } };
+  const nameOff = t => { if (nameOn) { capF.hide(t); valF.hide(t); nameOn = false; } };
+  // the personnel number: first digit the backs (in their colour), second the tight ends (in theirs)
+  const RX = 1824, capP = cap("PERSONNEL", RX, "cap-personnel", { align: "right" });
+  const dTE = H.text("1", { x: RX, y: BY + 30, size: "title", font: "mono", color: "red", align: "right", id: "digit-tight-ends" });
+  const dRB = H.text("1", { x: RX - 62, y: BY + 30, size: "title", font: "mono", color: "purple", align: "right", id: "digit-backs" });
+  const kRB = H.text("backs", { x: RX - 150, y: BY + 46, size: "note", color: "purple", align: "right", id: "key-backs" });
+  const kTE = H.text("tight ends", { x: RX - 150, y: BY + 82, size: "note", color: "red", align: "right", id: "key-tight-ends" });
+  const showDigit = (which, t) => { if (which === "rb") { capP.show(t); dRB.show(t); kRB.show(t + 0.1); } else { dTE.show(t); kTE.show(t + 0.1); } };
+  const digits = (key, t) => { const r = D.read(D.STATE[key]); if (dRB.cur !== r.rb) dRB.set(t, { text: String(r.rb) }).pulse(t); if (dTE.cur !== r.te) dTE.set(t, { text: String(r.te) }).pulse(t); dRB.cur = r.rb; dTE.cur = r.te; };
+  dRB.cur = dTE.cur = 1;
+  const pulseDigits = t => { dRB.pulse(t); dTE.pulse(t + 0.12); };
+  // the count on the line
+  const LX = 1240, capL = cap("ON THE LINE", LX, "cap-line"), valL = H.text("7", { x: LX, y: BY + 30, size: "title", font: "mono", color: "accent", id: "on-the-line" });
+  const line = t => { capL.show(t); valL.show(t + 0.1); }, lineOff = t => { capL.hide(t); valL.hide(t); };
+  // how often each personnel grouping was used: downfield, top right
+  const TOP = { x: 1060, y: 150 }, bars = [];
+  const usage = t => bars.push(H.text("how often teams used it, 2025 · PFF", { x: TOP.x, y: TOP.y, size: "note", color: "muted", id: "usage-caption" }).show(t));
+  const bar = (i, t) => { const u = D.USAGE[i], y = TOP.y + 46 + i * 58;
+    bars.push(H.text(u.personnel, { x: TOP.x, y: y + 2, size: "label", font: "mono", id: "bar-name-" + u.personnel }).show(t));
+    bars.push(H.box({ x: TOP.x + 70, y, w: 0, h: 42, fill: "ink", stroke: null, radius: 4, by: "fade", id: "bar-" + u.personnel }).show(t, { dur: 0.1 }).to(t, { w: u.pct * 9 }, { dur: 0.8, ease: "out" }));
+    bars.push(H.number(0, { x: 1790, y: y + 2, size: "label", suffix: "%", align: "right", id: "bar-value-" + u.personnel }).show(t).to(t, { value: Math.round(u.pct) }, { dur: 0.8, ease: "out" })); };
+  const barsOff = t => bars.forEach(b => b.hide(t));
+  const note = (words, t, until) => H.text(words, { x: LX, y: BY + 34, size: "label", id: "note" }).show(t).hide(until);
+
+  Play(film, F, { title, heading, showDigit, digits, pulseDigits, name, nameOff, line, lineOff, usage, bar, barsOff, note },
+    { count: { L: [-10.5, 3.5], R: [10.5, 3.5], px: 120 } });
+});
+</script>
+</body></html>

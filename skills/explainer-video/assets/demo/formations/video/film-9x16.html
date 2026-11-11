@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>How an NFL offense lines up, the vertical cut</title>
+<link rel="stylesheet" href="stage.css">
+<link rel="stylesheet" href="look.css">
+<script>window.STAGE_FORMAT = "9x16";</script>   <!-- this file is composed for the 1080 x 1920 frame -->
+<script src="data/timing.js"></script>
+<script src="data/captions.js"></script>
+<script src="stage.js"></script>
+<script src="shared.js"></script>
+<script src="field.js"></script>
+<script src="play.js"></script>
+</head><body>
+<script>
+// How an NFL offense lines up: the vertical cut, composed for 1080 x 1920. The same script, voice, beats (play.js) and
+// formation data (shared.js) as film.html, drawn for a phone held upright. The field fills the frame; the formation
+// sits in its upper half at this frame's own spacing, seen from a higher seat so its width runs up the tall frame;
+// and beneath it one large piece of type carries each beat: the personnel number, the formation's name, the count
+// on the line. Nothing here is the wide cut moved around.
+Stage.film({ look: "turf" }, film => {
+  const D = window.SHARED, P = film.paras, A = film.scene(P[0], P.at(-1)), H = A.hud;
+
+  // ---------- this frame's field: a phone is narrow, so the receivers stand closer in ----------
+  const LAT = { lt: -3.1, lg: -1.55, rg: 1.55, rt: 3.1, wideL: -12.6, wideRoff: 12.6, slotL: -8.1, slotR: 8.1, wingL: -5.6, endR: 5.4, beside: 3.2, bunchPoint: 8.6, bunchIn: 6.5, bunchOut: 10.7 };
+  const DEPTH = { on: 1.0, off: 2.0, qbUnder: 2.75, qbGun: 5.0, qbPistol: 4.0, full: 5.05, deep: 7.4, beside: 5.3, pistolBack: 6.4, bunchIn: 2.45, bunchOut: 2.45 };
+  const spots = {}; for (const k in D.SPOT) spots[k] = [LAT[k] ?? D.SPOT[k].lat, DEPTH[k] ?? (D.SPOT[k].on ? DEPTH.on : DEPTH.off)];
+  const cam = {
+    top:   { az: 0, el: 90, dist: 60, f: 60 * 36, tx: 0, tz: 0, cx: 540, cy: 640 },          // 36 px to the yard, the line of scrimmage at y 640
+    rule:  { az: 0, el: 90, dist: 60, f: 60 * 38, tx: 0, tz: 0, cx: 540, cy: 660 },
+    tv:    { az: -72, el: 30, dist: 75, f: 75 * 56, tx: 0, tz: 0, cx: 540, cy: 665 },         // a higher seat than the wide cut's: the formation's width runs up the frame
+    tvBox: { az: -80, el: 29, dist: 75, f: 75 * 60, tx: 0.6, tz: -2.2, cx: 560, cy: 675 },
+  };
+  const F = Field(film, A, { spots, R: 38, SQ: 50, cam, start: "tv", numbersX: 12.2, shadeTop: 420, shadeBottom: 1000, shadeBottomKnee: 0.35, shadeBottomAlpha: 0.62 });
+
+  // ---------- this frame's type: the chapter at the top, one large thing under the field ----------
+  const TY = 1090;                                                               // top of the type zone; nothing sits below y 1400 (captions)
+  const title = H.text("How an NFL\noffense lines up", { x: 72, y: TY + 8, size: "title", id: "title" });      // the poster: the formation above, the title beneath it
+  let last = null;
+  const heading = (words, t, id) => { if (last) last.hide(t - 0.25); last = H.text(words, { x: 72, y: 156, size: "head", id }).show(t); };
+  // the formation's name, the hero from paragraph 4 on
+  const NAME = H.text("Singleback", { x: 72, y: TY, size: "display", id: "formation" }), capF = H.text("FORMATION", { x: 78, y: TY - 52, size: "note", font: "mono", color: "muted", id: "cap-formation" });
+  // the personnel number, large: first digit the backs (their colour), second the tight ends (theirs)
+  const BIG = 230, bigY = TY - 6;
+  const dRB = H.text("1", { x: 72, y: bigY, size: BIG, font: "mono", color: "purple", lineHeight: 1, id: "digit-backs" });
+  const dTE = H.text("1", { x: 72 + BIG * 0.6, y: bigY, size: BIG, font: "mono", color: "red", lineHeight: 1, id: "digit-tight-ends" });
+  const capP = H.text("personnel", { x: 78, y: bigY + BIG + 4, size: "label", id: "cap-personnel" });
+  // the same number as a small tag, top right, while the formation's name has the type zone
+  const tagCap = H.text("PERSONNEL", { x: 1008, y: 160, size: "note", font: "mono", color: "muted", align: "right", id: "tag-caption" });
+  const tRBs = H.text("1", { x: 1008 - 40, y: 192, size: "head", font: "mono", color: "purple", align: "right", id: "tag-backs" });
+  const tTEs = H.text("1", { x: 1008, y: 192, size: "head", font: "mono", color: "red", align: "right", id: "tag-tight-ends" });
+  let big = false, tag = false, nameOn = false, cur = { rb: 1, te: 1 };
+  const bigOn = t => { if (!big) { dRB.show(t); dTE.show(t + 0.12); capP.show(t + 0.2); big = true; } };
+  const bigOff = t => { if (big) { [dRB, dTE, capP].forEach(n => n.hide(t)); big = false; } };
+  const tagOn = t => { if (!tag) { [tagCap, tRBs, tTEs].forEach(n => n.show(t)); tag = true; } }, tagOff = t => { if (tag) { [tagCap, tRBs, tTEs].forEach(n => n.hide(t)); tag = false; } };
+  const showDigit = (which, t) => { if (which === "rb") { dRB.show(t); capP.show(t + 0.15); } else { dTE.show(t); big = true; } };
+  const digits = (key, t) => { const r = D.read(D.STATE[key]);
+    if (r.rb !== cur.rb) { dRB.set(t, { text: String(r.rb) }); tRBs.set(t, { text: String(r.rb) }); (big ? dRB : tRBs).pulse(t); }
+    if (r.te !== cur.te) { dTE.set(t, { text: String(r.te) }); tTEs.set(t, { text: String(r.te) }); (big ? dTE : tTEs).pulse(t); }
+    cur = r; };
+  const pulseDigits = t => { if (!big && !nameOn) { tagOff(t - 0.3); bigOn(t); } else { (big ? dRB : tRBs).pulse(t); (big ? dTE : tTEs).pulse(t + 0.12); } };   // in the last paragraph the number comes back large
+  const name = (key, t) => { const s = D.STATE[key].name;
+    if (nameOn) NAME.set(t, { text: s }).pulse(t);
+    else { bigOff(t - 0.4); tagOn(t - 0.3); NAME.set(t - 0.01, { text: s }); capF.show(t); NAME.show(t); nameOn = true; } };   // the number steps aside to the corner; the name takes the type zone
+  const nameOff = t => { if (nameOn) { NAME.hide(t); capF.hide(t); nameOn = false; } };
+  // the count on the line
+  const valL = H.text("7", { x: 72, y: bigY, size: BIG, font: "mono", color: "accent", lineHeight: 1, id: "on-the-line" });
+  const capL = H.text("on the line", { x: 78, y: bigY + BIG + 4, size: "label", id: "cap-line" });
+  const line = t => { valL.show(t); capL.show(t + 0.15); }, lineOff = t => { valL.hide(t); capL.hide(t); };
+  // how often each personnel grouping was used: beside the number
+  const BX = 430, BY = TY + 34, bars = [];
+  const usage = t => bars.push(H.text("how often teams used it\n2025 · PFF", { x: BX, y: BY + 196, size: "note", color: "muted", id: "usage-caption" }).show(t));
+  const bar = (i, t) => { const u = D.USAGE[i], y = BY + i * 62;
+    bars.push(H.text(u.personnel, { x: BX, y: y + 2, size: "label", font: "mono", id: "bar-name-" + u.personnel }).show(t));
+    bars.push(H.box({ x: BX + 64, y, w: 0, h: 44, fill: "ink", stroke: null, radius: 4, by: "fade", id: "bar-" + u.personnel }).show(t, { dur: 0.1 }).to(t, { w: u.pct * 6.6 }, { dur: 0.8, ease: "out" }));
+    bars.push(H.number(0, { x: 1008, y: y + 2, size: "label", suffix: "%", align: "right", id: "bar-value-" + u.personnel }).show(t).to(t, { value: Math.round(u.pct) }, { dur: 0.8, ease: "out" })); };
+  const barsOff = t => bars.forEach(b => b.hide(t));
+  const note = (words, t, until) => H.text(words, { x: BX, y: TY + 60, size: "body", id: "note" }).show(t).hide(until);
+  // in the last paragraph the tag leaves with the name, so the number can come back large
+  const t8 = P[6].at("in two steps"), off = t => { nameOff(t); if (t > t8 - 1 && t < t8 + 1) tagOff(t); };
+
+  Play(film, F, { title, heading, showDigit, digits, pulseDigits, name, nameOff: off, line, lineOff, usage, bar, barsOff, note },
+    { count: { L: [-8, 3.6], R: [8, 3.6], px: 110 }, depthX: 7.3, depthOff: [1.3, 0], defGap: 1.1, routeScale: 0.72, rel: { Z: [-2, 6.2, -0.15] } });
+});
+</script>
+</body></html>

@@ -38,11 +38,12 @@ A *vertical cut* is a second film composed for the 1080 by 1920 frame of a phone
 and visual ideas; neither cut is the other rearranged. *Real clips* let a paragraph play a short recording of a real person, credited on screen, in place
 of the narrator; the narrator's voice never speaks a real person's words.
 
-**A record of seven films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness
+**A record of eight films** (`skills/explainer-video/references/playbook.md`): every voice, music and loudness
 setting judged by ear, what each fact-check caught, and the original HyperFrames pipeline, which stays as the
 back-up engine (`skills/explainer-video/assets/hyperframes/`) for a 3D character or for revising the first five.
 
 **Worked examples** (`skills/explainer-video/assets/demo/`): "How a Bloom filter works" (93 seconds, 2D, one file);
+"How an NFL offense lines up" (2:21, a field in perspective with a moving camera, a wide and a vertical cut);
 "One Sitting" (3:52, 3D, nine scene files built by eight parallel agents, with the brief they worked from); and a
 gallery film of the ready-made 3D forms.
 

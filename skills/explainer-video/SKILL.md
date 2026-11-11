@@ -18,6 +18,7 @@ and an MP4. It has two layers.
 
 Read the first two before the first film, and the third before a 3D one. A complete film made this way is in
 `assets/demo/bloom/` (script, design, film): read its `SCRIPT.md` and `video/film.html` and work in the same shape.
+A film with a picture in perspective, a moving camera and a vertical cut is in `assets/demo/formations/`.
 A complete 3D film, built by parallel scene builders, is in `assets/demo/one-sitting/`.
 
 The two rules everything else follows:
@@ -128,7 +129,9 @@ through this step again.*
 ### 5. Design and build
 
 Fill in `DESIGN.md` (one page: the anchor picture's layout with coordinates, the look, what each colour means).
-Choose the look by `references/method.md` section 11. For a film with a vertical cut, sketch both frames there
+Choose the look by `references/method.md` section 11, and make the picture fill the frame: a correct diagram in a
+panel with empty margin reads as boring. When the subject is a place and a camera should move over it, see
+`references/stage.md`, "A picture with depth on one canvas". For a film with a vertical cut, sketch both frames there
 first, each as its own composition (`references/method.md` section 13), then build `video/film.html` for the wide
 frame and `video/film-9x16.html` for the tall one (`references/stage.md`, "A vertical cut"). Build each for its own
 frame; never produce one by rearranging the other.
@@ -172,7 +175,8 @@ is planned), and the whole-film sheet tells the story without sound.*
 - **Local, free (Apple Silicon Mac):** Breeze TTS 2, cloning the bundled narrator.
   `uv run --project ~/Developer/mlx-audio python narration/tts_local.py scenes --ref narration/voices/w_mid.wav all`
   Run it in the background: about 2.5 minutes of compute per minute of speech. Research and non-commercial licence:
-  personal and unmonetized posts only.
+  personal and unmonetized posts only. It re-takes any sentence that comes out over 176 words a minute and prints a
+  `pace:` line for each: report those lines to the user with the loudness.
 - **ElevenLabs** (any machine, exact word timestamps, costs credits): set-up and commands in the playbook, "Voice".
 - **Monetized video, a new voice, pitch changes, alternate takes, a misread word:** the playbook, "Local voice".
 - **A clip paragraph is never recorded.** `sh tools/audio.sh` cuts the clip and uses its own sound; the voice
@@ -244,6 +248,9 @@ engines and are the reference for steps 4, 6 and 7. Its HyperFrames set-up and g
   `narration/` (script parser, ElevenLabs and local voice, word alignment); `SCRIPT.md` and `DESIGN.md` to fill in.
 - `assets/demo/bloom/`: a finished 93-second film, "How a Bloom filter works", as the model for a script with beat
   sheets, a one-page design and a film file.
+- `assets/demo/formations/`: a finished 2:21 film in a wide and a vertical cut, "How an NFL offense lines up": a
+  field drawn in perspective on one canvas, a camera that swings between two seats, the film's own look, and one
+  beat sheet in code that both cuts run.
 - `assets/stage3d/`: what `--3d` adds to a project: `stage3d.js`, the forms in `forms3d/`, a 3D `film.html`, and
   the tall starter that `--3d --vertical` uses.
 - `assets/demo/one-sitting/`: a finished 3:52 3D film in nine scene files, with the brief its eight parallel

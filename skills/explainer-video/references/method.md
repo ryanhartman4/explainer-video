@@ -276,6 +276,16 @@ and do not mix looks in one film.
 | `chalk` | near-black, cream Computer Modern, the 3Blue1Brown palette | mathematics, machine learning, anything with equations; the house look of films 1 to 5 |
 | `night` | near-black blue, warm white, a serif display face, one coral accent | films with the 3D point layer (`references/stage3d.md`), whose points are additive light; a showcase; anything that should feel like a night sky |
 
+**Fill the frame.** Whatever the look, the picture should reach the edges of the frame and have some depth or
+movement of its own: a ground with texture, light that falls off toward the corners, a camera that moves between
+ideas. A light diagram inside a panel with empty margin around it passes every check and still reads as boring
+(film 8's first version did, and its author said so). Shoot frame 0 and one busy frame early and compare them with
+the best film you have made.
+
+A film can have its own look when the subject has a ground of its own (a field, a map, a chalkboard, a night sky).
+Put it in `video/look.css`, loaded after `stage.css`, with the same tokens, and name it in `Stage.film({ look })`.
+`assets/demo/formations/video/look.css` is one: a football field at night.
+
 To make a new look, copy a block in `stage.css` and change the tokens: a ground, an ink at 12:1 or better against
 it, a muted grey at 4.5:1, a faint grey for outlines, a panel one step off the ground, one accent, four hues each at
 4.5:1 on the ground (3:1 if used only for shapes). Two typefaces at most plus a mono. Then run the demo film in it
@@ -289,6 +299,7 @@ The failures this method exists to prevent, so you can recognise them in your ow
 - **The lecture:** the voice explains for ten seconds while one static diagram sits there.
 - **The screensaver:** everything drifts, pulses and glows, and none of it is tied to a word.
 - **The dashboard:** twelve things on screen at once in six colours, all equally loud.
+- **The diagram in a box:** a correct picture in the middle third of a panel, flat, with margin on every side.
 - **The stock look:** purple-to-blue gradients, glass cards, emoji icons, centred everything.
 - **The magic trick:** the picture changes a second before the narrator gets there, or a result appears from nowhere.
 - **The unverified claim:** a number on screen that nobody computed or cited.

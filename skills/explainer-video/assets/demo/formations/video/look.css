@@ -1,0 +1,14 @@
+/* look.css: this film's own look, "turf". A football field at night under the lights: deep green ground with a
+   lighter mown stripe every five yards, chalk-white ink, and a yellow accent used the way a broadcast telestrator is.
+   Loaded after stage.css by both film files; new_film.mjs --update never touches it.
+   Green is the ground here, so no player is green: receivers are blue, tight ends coral, backs violet. */
+#stage[data-look="turf"] {
+  --bg: #0d3a2a; --panel: #124a35; --ink: #f7f4ea; --muted: #a9c9b9; --faint: #3b7d63;
+  --accent: #ffd84d; --yellow: #ffd84d; --blue: #7cc6ff; --red: #ff8f78; --purple: #d0b6ff; --green: #9fe6a0;
+  --display: "Space Grotesk", Helvetica, Arial, sans-serif; --text: "Instrument Sans", Helvetica, Arial, sans-serif; --mono: "JetBrains Mono", Menlo, monospace;
+  --display-weight: 600; --display-track: -0.03em; --text-weight: 500; --stroke: 3px; --radius: 10px;
+  /* field.js reads these: the two mown stripes, the ground beyond the sidelines, a player's unpainted chip */
+  --turf-a: #17583f; --turf-b: #124a35; --turf-off: #061a13; --chip: #0a2c20;
+}
+/* type sits on the turf, over yard lines: a soft dark halo keeps it readable without a box */
+#stage[data-look="turf"] .t { text-shadow: 0 2px 18px rgba(4, 22, 15, 0.85), 0 0 3px rgba(4, 22, 15, 0.6); }

@@ -32,6 +32,14 @@ MODEL = os.environ.get("BREEZE_MODEL", "mlx-community/Breeze-TTS-2-mlx-8bit")
 DIRECTION = ("A warm, curious science narrator explaining an idea to a friend. Lively, varied pitch and natural "
              "emphasis; questions sound like real questions.")
 GUIDANCE = 4.0                                  # cfg_scale for a direction (Breeze's recommended value)
+# The pace limit (film 8, 2026-11-11). Breeze rushed five sentences of one take (185 to 218 words a minute in a take that
+# averaged 148), the author heard it, and glitch.py did not flag them: it looks for sentences far from the take's own
+# mean. A sentence that comes out faster than LIMIT is taken again with the CALM direction on two seeds, and the take
+# nearest TARGET is kept. Tested on those five: a new seed alone left them at 159 to 214 words a minute; the calm
+# direction brought them to 106 to 162. Each re-take prints a "pace:" line. The playbook, "Local voice", has the record.
+LIMIT, TARGET = 176, 158                        # words a minute
+CALM = ("A warm, unhurried science narrator explaining an idea to a friend. A steady, relaxed pace with a clear pause at "
+        "every comma; natural emphasis; questions sound like real questions.")
 PAUSE = {".": 0.42, "?": 0.5, "!": 0.45}        # silence after a sentence, by its last mark
 PAD = 0.04                                      # keep this much silence around each trimmed sentence
 FADE = 0.02                                     # fade out the last 20 ms, so a cut never clicks
@@ -121,6 +129,12 @@ def scenes(args):
             d = direction_for(sent, sc["n"])
             kw = dict(instruct=d, cfg_scale=GUIDANCE) if d else {}
             x = trim(say_one(model, sent, seed=1000 * sc["n"] + i + seed, ref_audio=args.ref, ref_text=ref_text, **kw), sr)
+            wpm = lambda a: len(sent.split()) / (len(a) / sr) * 60
+            if d and wpm(x) > LIMIT:                         # rushed: two calmer takes, keep whichever lands nearest the target pace
+                first = wpm(x)
+                takes = [x] + [trim(say_one(model, sent, seed=1000 * sc["n"] + i + seed + k, ref_audio=args.ref, ref_text=ref_text, instruct=CALM, cfg_scale=GUIDANCE), sr) for k in (0, 500)]
+                x = min(takes, key=lambda a: abs(wpm(a) - TARGET))
+                print(f"  pace: {first:.0f} -> {wpm(x):.0f} words a minute  |  {sent[:60]}", flush=True)
             for w in align(x, sr, sent.split()):
                 words.append({"word": w["word"], "start": round(t + w["start"], 3), "end": round(t + w["end"], 3)})
             gap = PAUSE.get(sent[-1], 0.42)

@@ -133,6 +133,26 @@ Two `to()` calls on the same property are fine: the later one starts from wherev
 fits a node or `{ x, y, w, h }`; `scene.camera.reset(t)` returns. The camera moves the scene's world, not its `hud`.
 Zoom modestly (1.1 to 1.6) and come back out before the next beat.
 
+## A picture with depth on one canvas
+
+When the subject is a place (a field, a board, a map, a floor plan) and the film wants a camera that tilts and
+swings over it, draw it on one `canvas()` node with a small pinhole camera. It needs nothing from the 3D layer.
+`assets/demo/formations/video/field.js` is a complete one, and the pattern is:
+
+- **The camera is `film.value()` tracks:** angle around, angle up, distance, focal length, the target on the ground,
+  and where the target sits on screen. A named seat is a set of those values; a swing is one `to()` per track.
+  The scale at the target is focal length over distance, in pixels per unit.
+- **Everything is in the subject's own units** (yards there). Project a ground point to the screen, draw ground
+  marks as projected polylines, and draw standing things far to near so the near one covers the far one.
+- **A thing that should stay readable keeps its size on screen** and lifts off the ground as the camera tilts, with
+  a shadow under it. Letters are never drawn in perspective.
+- **Type stays in the DOM**, on `scene.hud`, over the canvas. Give the canvas `overlap: true`, and draw a soft shade
+  on the canvas where the type sits, after the ground marks and before the standing things.
+- **What happens at each phrase is in the subject's units too**, so one choreography file serves a wide and a
+  vertical cut; each film file brings its own positions, camera seats and type.
+
+The checker cannot see inside a canvas: it checks the type over it and nothing else, so look at more frames.
+
 ## Text helpers
 
 - `text.mark("phrase", t, { color, until })`: the phrase takes the accent colour and an underline draws under it.
@@ -308,5 +328,12 @@ A script change after the builders start costs a round, because cue phrases brea
 - **The captioned cut is its own page.** `check.mjs --captions`, `shots.mjs --captions` and `render.mjs --captions`
   open the film with `?captions=1`. A film may lay itself out differently there (the 3D layer's `captionLift` raises
   the whole picture clear of the caption strip), so check and shoot the captioned cut with the flag.
+- **A thing that should start hidden gets `show()` as its first call.** `hide(0)` leaves it visible for the first
+  quarter second, which is frame 0, the thumbnail.
+- **A negative `z` puts a thing behind the stage's own background.** Order things by creating them in order.
+- **A caption above a value that pulses** needs about 16 px more room than above a still one: the checker reports
+  the overlap only during the pulse.
+- **On a canvas with a tilted camera, standing things hide the ground behind them.** Put a ground mark on the near
+  side of the thing it belongs to, or downfield of it.
 - **A number shown on screen about the film itself** (lines of code, frames) goes stale with the next edit. Write
   it from a script as the last step before the render, and have the film call `film.problem` when it disagrees.

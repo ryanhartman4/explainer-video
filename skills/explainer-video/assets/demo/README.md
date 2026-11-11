@@ -1,7 +1,8 @@
 # The worked examples
 
-Three films: `bloom/` (2D, one file), `one-sitting/` (3D, nine scene files, built by parallel agents) and
-`forms3d/` (a gallery of the ready-made 3D forms).
+Four films: `bloom/` (2D, one file), `formations/` (a 2.5D picture with a moving camera, in a wide and a vertical
+cut), `one-sitting/` (3D, nine scene files, built by parallel agents) and `forms3d/` (a gallery of the ready-made
+3D forms).
 
 ## Bloom
 
@@ -41,6 +42,40 @@ node tools/clock.mjs && node tools/check.mjs --captions && node tools/shots.mjs 
 
 Then open `video/film.html` in a browser, or `sh tools/audio.sh && node tools/render.mjs` for an MP4 (music and
 sound hits only until a voice is recorded: step 6 of the skill).
+
+## Formations
+
+`formations/` is "How an NFL offense lines up", 2:21, 7 paragraphs, in a wide cut and a vertical cut that share one
+script, one voice and one beat sheet. Its picture is a football field drawn in perspective on one canvas, with a
+camera that swings between a straight-down playbook view and the broadcast angle. It is the model for three things:
+a picture with depth that does not need the 3D layer, a film with its own look, and two cuts that are each composed
+for their own frame. Its first version was a flat diagram in the `paper` look; `NOTES.md` says why it was rebuilt.
+Read it in this order:
+
+1. `formations/SCRIPT.md` and `formations/DESIGN.md`: the two camera seats, what each is used for, and each cut's
+   layout.
+2. `formations/video/shared.js`: the facts both cuts must agree on, with a `problems()` check both films run.
+3. `formations/video/field.js`: the canvas renderer. A pinhole camera made of eight `film.value()` tracks, the turf,
+   men drawn far to near, telestrator marks, labels. Every frame is drawn from the time alone.
+4. `formations/video/play.js`: the beat sheet as code, in yards, run by both cuts. It asks each film for its type
+   through a small `hud` object.
+5. `formations/video/film.html` and `film-9x16.html`: each cut's own spot table, camera seats and type.
+   `video/look.css` is the film's own look, `turf`.
+6. `formations/NOTES.md`: what the rebuild taught, and the pace limit on the voice.
+
+To run it:
+
+```bash
+node <skill>/scripts/new_film.mjs /path/to/formations --vertical
+```
+
+```bash
+cp -R <skill>/assets/demo/formations/. /path/to/formations/
+```
+
+```bash
+cd /path/to/formations && node tools/doctor.mjs && node tools/clock.mjs && node tools/check.mjs --captions && node tools/shots.mjs --film
+```
 
 ## One Sitting
 
